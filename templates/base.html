@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="LottoPro AI v2.0 - 5가지 독자적인 AI 모델로 분석하는 무료 로또 예측 서비스. QR스캔, 번호저장, 당첨확인, 시뮬레이션 등 15가지 프리미엄 기능 제공.">
+    <meta name="keywords" content="로또, 로또예측, AI로또, 로또번호추천, 로또당첨번호, 로또분석, QR스캔, 무료로또">
+    <meta name="author" content="LottoPro AI Team">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="LottoPro AI v2.0 - AI 로또 예측 서비스">
+    <meta property="og:description" content="5가지 독자적인 AI 모델이 과거 데이터를 분석하여 최적의 로또 예상번호를 무료로 추천해드립니다.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://lottopro-ai.onrender.com">
+    <meta property="og:image" content="https://lottopro-ai.onrender.com/static/images/og-image.jpg">
+    <meta property="og:site_name" content="LottoPro AI">
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="LottoPro AI v2.0 - AI 로또 예측 서비스">
+    <meta name="twitter:description" content="5가지 독자적인 AI 모델이 과거 데이터를 분석하여 최적의 로또 예상번호를 무료로 추천해드립니다.">
+    <meta name="twitter:image" content="https://lottopro-ai.onrender.com/static/images/twitter-card.jpg">
+    
+    <!-- Theme Colors -->
+    <meta name="theme-color" content="#667eea">
+    <meta name="msapplication-navbutton-color" content="#667eea">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="LottoPro AI">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <title>{% block title %}LottoPro AI v2.0 - 무료 AI 로또 예측 서비스{% endblock %}</title>
+    
+    <!-- Preconnect for faster loading -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet" integrity="sha512-t4GWSVZO1eC8BM339Xd7Uphw5s17a86tIZIj8qRxhnKub6WoyhnrxeCIMeAqBPgdZGlCcG2PrZjMc+Wr78+5Xg==" crossorigin="anonymous">
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous">
+    
+    <!-- Animate.css for enhanced animations -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet" integrity="sha512-c42qTSw/wPZ3/5LBzD+Bw5f7bSF2oxou6wEb+I/lqeaKV5FDIfMvvRp772y4jcJLKuGUOpbJMdg/BTl50fJYAw==" crossorigin="anonymous">
+    
+    <!-- Custom CSS -->
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    
+    <!-- Favicon and App Icons -->
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicon-16x16.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    
+    <!-- Structured Data for SEO -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "LottoPro AI v2.0",
+        "description": "5가지 독자적인 AI 모델이 과거 데이터를 분석하여 최적의 로또 예상번호를 무료로 추천하는 서비스",
+        "url": "https://lottopro-ai.onrender.com",
+        "applicationCategory": "UtilityApplication",
+        "operatingSystem": "Web Browser",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "KRW"
+        },
+        "creator": {
+            "@type": "Organization",
+            "name": "LottoPro AI Team"
+        },
+        "featureList": [
+            "5가지 AI 예측 모델",
+            "QR코드 당첨 확인",
+            "번호 저장 및 관리",
+            "당첨 시뮬레이션",
+            "로또 판매점 찾기",
+            "세금 계산기",
+            "실시간 통계 분석"
+        ]
+    }
+    </script>
+</head>
+<body>
+    <!-- Skip to main content for accessibility -->
+    <a href="#main-content" class="visually-hidden-focusable">메인 콘텐츠로 건너뛰기</a>
+    
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-content">
+            <div class="loading-logo">
+                <i class="fas fa-bullseye fa-3x text-primary mb-3"></i>
+                <h4 class="text-primary">LottoPro AI v2.0</h4>
+                <p class="text-muted">로딩 중...</p>
+            </div>
+            <div class="loading-spinner">
+                <div class="spinner-border text-primary" role="status"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-gradient-primary fixed-top shadow-lg">
+        <div class="container">
+            <a class="navbar-brand fw-bold d-flex align-items-center" href="/">
+                <i class="fas fa-bullseye me-2"></i>
+                <span class="d-none d-sm-inline">LottoPro AI</span>
+                <span class="d-inline d-sm-none">LottoPro</span>
+                <span class="badge bg-warning text-dark ms-2 animate__animated animate__pulse animate__infinite">v2.0</span>
+                <span class="badge bg-success ms-1">FREE</span>
+            </a>
+            
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="메뉴 토글">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#prediction">
+                            <i class="fas fa-robot me-1"></i>AI 예측
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#qr-scan">
+                            <i class="fas fa-qrcode me-1"></i>QR 스캔
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#my-numbers">
+                            <i class="fas fa-heart me-1"></i>내 번호
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#stats">
+                            <i class="fas fa-chart-bar me-1"></i>통계
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#tools">
+                            <i class="fas fa-tools me-1"></i>도구
+                        </a>
+                    </li>
+                </ul>
+                
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-info-circle me-1"></i>정보
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#about"><i class="fas fa-lightbulb me-2"></i>서비스 소개</a></li>
+                            <li><a class="dropdown-item" href="#features"><i class="fas fa-star me-2"></i>주요 기능</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/api/health" target="_blank"><i class="fas fa-heartbeat me-2"></i>서비스 상태</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="showVersionInfo()"><i class="fas fa-code-branch me-2"></i>버전 정보</a></li>
+                        </ul>
+                    </li>
+                    
+                    <!-- Install PWA Button -->
+                    <li class="nav-item">
+                        <button id="install-pwa" class="btn btn-outline-light btn-sm d-none" type="button">
+                            <i class="fas fa-download me-1"></i>앱 설치
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main id="main-content" style="padding-top: 76px;" role="main">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Enhanced Footer -->
+    <footer class="bg-dark text-light py-5 mt-5">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-4">
+                    <div class="footer-brand">
+                        <h5 class="text-warning mb-3">
+                            <i class="fas fa-bullseye me-2"></i>LottoPro AI v2.0
+                        </h5>
+                        <p class="text-light opacity-75 mb-3">
+                            5가지 독자적인 AI 모델로 분석된 예상번호를 무료 제공하는 차세대 로또 예측 서비스
+                        </p>
+                        <div class="footer-features">
+                            <small class="text-success d-block"><i class="fas fa-check me-1"></i>100% 무료 서비스</small>
+                            <small class="text-success d-block"><i class="fas fa-check me-1"></i>15가지 프리미엄 기능</small>
+                            <small class="text-success d-block"><i class="fas fa-check me-1"></i>실시간 AI 분석</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6 col-lg-2">
+                    <h6 class="text-warning mb-3">주요 기능</h6>
+                    <ul class="list-unstyled footer-links">
+                        <li><a href="#prediction" class="text-light opacity-75 text-decoration-none">AI 예측</a></li>
+                        <li><a href="#qr-scan" class="text-light opacity-75 text-decoration-none">QR 스캔</a></li>
+                        <li><a href="#my-numbers" class="text-light opacity-75 text-decoration-none">번호 저장</a></li>
+                        <li><a href="#stats" class="text-light opacity-75 text-decoration-none">통계 분석</a></li>
+                        <li><a href="#tools" class="text-light opacity-75 text-decoration-none">편의 도구</a></li>
+                    </ul>
+                </div>
+                
+                <div class="col-md-6 col-lg-3">
+                    <h6 class="text-warning mb-3">AI 모델</h6>
+                    <ul class="list-unstyled footer-links">
+                        <li><span class="text-light opacity-75">빈도분석 모델</span></li>
+                        <li><span class="text-light opacity-75">트렌드분석 모델</span></li>
+                        <li><span class="text-light opacity-75">패턴분석 모델</span></li>
+                        <li><span class="text-light opacity-75">통계분석 모델</span></li>
+                        <li><span class="text-light opacity-75">머신러닝 모델</span></li>
+                    </ul>
+                </div>
+                
+                <div class="col-md-6 col-lg-3">
+                    <h6 class="text-warning mb-3">연결하기</h6>
+                    <div class="social-links mb-3">
+                        <a href="#" class="text-light me-3" title="GitHub" aria-label="GitHub">
+                            <i class="fab fa-github fa-lg"></i>
+                        </a>
+                        <a href="#" class="text-light me-3" title="Twitter" aria-label="Twitter">
+                            <i class="fab fa-twitter fa-lg"></i>
+                        </a>
+                        <a href="#" class="text-light me-3" title="이메일" aria-label="이메일">
+                            <i class="fas fa-envelope fa-lg"></i>
+                        </a>
+                        <a href="#" class="text-light" title="Discord" aria-label="Discord">
+                            <i class="fab fa-discord fa-lg"></i>
+                        </a>
+                    </div>
+                    <div class="app-info">
+                        <small class="text-light opacity-75 d-block">버전: v2.0.0</small>
+                        <small class="text-light opacity-75 d-block">업데이트: 2024.08.19</small>
+                        <small class="text-light opacity-75 d-block">분석 회차: 1185회차</small>
+                    </div>
+                </div>
+            </div>
+            
+            <hr class="my-4 opacity-25">
+            
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <p class="mb-0 text-light opacity-75">
+                        <small>Made with ❤️ for lottery enthusiasts</small>
+                    </p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="mb-0 text-light opacity-75">
+                        <small>&copy; 2024 LottoPro AI. All rights reserved.</small>
+                    </p>
+                </div>
+            </div>
+            
+            <div class="row mt-3">
+                <div class="col-12">
+                    <div class="disclaimer p-3 bg-warning bg-opacity-10 rounded">
+                        <small class="text-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>면책 조항:</strong> 
+                            본 서비스는 예측 정보 제공 목적이며, 당첨을 보장하지 않습니다. 
+                            책임감 있는 구매를 권장하며, 모든 투자 결정에 대한 최종 책임은 사용자에게 있습니다.
+                            도박 중독 예방을 위해 적정 금액 내에서 이용해주세요.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Back to Top Button -->
+    <button id="back-to-top" class="btn btn-primary rounded-circle shadow-lg" title="맨 위로" aria-label="맨 위로 이동">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <!-- JavaScript Libraries -->
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js" integrity="sha512-VK2zcvntEufaimc+efOYi622VN5ZacdnufnmX7zIhCPmjhKnOi9ZDMtg1/ug5l183f19gG1/cBstPO4y8Fm2AQ==" crossorigin="anonymous"></script>
+    
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    
+    <!-- Block for additional scripts -->
+    {% block scripts %}{% endblock %}
+
+    <!-- Enhanced Global Scripts -->
+    <script>
+        // Loading Screen Management
+        document.addEventListener('DOMContentLoaded', function() {
+            // Hide loading screen when everything is loaded
+            window.addEventListener('load', function() {
+                const loadingScreen = document.getElementById('loading-screen');
+                if (loadingScreen) {
+                    loadingScreen.style.opacity = '0';
+                    setTimeout(() => {
+                        loadingScreen.style.display = 'none';
+                    }, 300);
+                }
+            });
+        });
+
+        // Back to Top Button
+        const backToTopButton = document.getElementById('back-to-top');
+        if (backToTopButton) {
+            window.addEventListener('scroll', function() {
+                if (window.scrollY > 300) {
+                    backToTopButton.style.display = 'block';
+                    backToTopButton.style.opacity = '1';
+                } else {
+                    backToTopButton.style.opacity = '0';
+                    setTimeout(() => {
+                        if (window.scrollY <= 300) {
+                            backToTopButton.style.display = 'none';
+                        }
+                    }, 300);
+                }
+            });
+
+            backToTopButton.addEventListener('click', function() {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+        }
+
+        // PWA Installation
+        let deferredPrompt;
+        const installButton = document.getElementById('install-pwa');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            if (installButton) {
+                installButton.classList.remove('d-none');
+            }
+        });
+
+        if (installButton) {
+            installButton.addEventListener('click', async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    console.log(`PWA 설치 결과: ${outcome}`);
+                    deferredPrompt = null;
+                    installButton.classList.add('d-none');
+                }
+            });
+        }
+
+        // Version Info Modal
+        function showVersionInfo() {
+            const versionInfo = {
+                version: 'v2.0.0',
+                releaseDate: '2024.08.19',
+                features: [
+                    '5가지 AI 예측 모델',
+                    'QR코드 당첨 확인',
+                    '번호 저장 및 관리',
+                    '당첨 시뮬레이션',
+                    '세금 계산기',
+                    '로또 판매점 찾기',
+                    '실시간 통계 분석',
+                    '이월수/궁합수 분석',
+                    '패턴 분석',
+                    'PWA 지원',
+                    '반응형 디자인',
+                    '다크모드 지원',
+                    '접근성 향상',
+                    '성능 최적화',
+                    '고급 애니메이션'
+                ]
+            };
+
+            const modal = document.createElement('div');
+            modal.className = 'modal fade';
+            modal.innerHTML = `
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header bg-gradient-primary text-white">
+                            <h5 class="modal-title">
+                                <i class="fas fa-info-circle me-2"></i>LottoPro AI ${versionInfo.version}
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <strong>릴리스 날짜:</strong> ${versionInfo.releaseDate}
+                            </div>
+                            <div class="mb-3">
+                                <strong>주요 기능:</strong>
+                                <ul class="mt-2">
+                                    ${versionInfo.features.map(feature => `<li>${feature}</li>`).join('')}
+                                </ul>
+                            </div>
+                            <div class="alert alert-info">
+                                <i class="fas fa-lightbulb me-2"></i>
+                                <strong>새로운 기능:</strong> 
+                                v2.0에서는 경쟁사 대비 압도적인 15가지 프리미엄 기능이 모두 무료로 제공됩니다!
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+                            <a href="/api/health" target="_blank" class="btn btn-primary">
+                                <i class="fas fa-heartbeat me-2"></i>서비스 상태 확인
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+            const bootstrapModal = new bootstrap.Modal(modal);
+            bootstrapModal.show();
+
+            modal.addEventListener('hidden.bs.modal', function() {
+                document.body.removeChild(modal);
+            });
+        }
+
+        // Enhanced Navigation
+        document.addEventListener('DOMContentLoaded', function() {
+            // Smooth scrolling for navigation links
+            const navLinks = document.querySelectorAll('.navbar-nav a[href^="#"]');
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href').substring(1);
+                    const targetElement = document.getElementById(targetId);
+                    
+                    if (targetElement) {
+                        const navbarHeight = document.querySelector('.navbar').offsetHeight;
+                        const targetPosition = targetElement.offsetTop - navbarHeight - 20;
+                        
+                        window.scrollTo({
+                            top: targetPosition,
+                            behavior: 'smooth'
+                        });
+
+                        // Close mobile menu if open
+                        const navbarCollapse = document.querySelector('.navbar-collapse');
+                        if (navbarCollapse.classList.contains('show')) {
+                            bootstrap.Collapse.getInstance(navbarCollapse).hide();
+                        }
+                    }
+                });
+            });
+
+            // Active navigation highlighting
+            window.addEventListener('scroll', function() {
+                const sections = document.querySelectorAll('section[id]');
+                const navLinks = document.querySelectorAll('.navbar-nav .nav-link[href^="#"]');
+                
+                let currentSection = '';
+                const scrollPos = window.scrollY + 200;
+
+                sections.forEach(section => {
+                    if (section.offsetTop <= scrollPos && section.offsetTop + section.offsetHeight > scrollPos) {
+                        currentSection = section.getAttribute('id');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href') === '#' + currentSection) {
+                        link.classList.add('active');
+                    }
+                });
+            });
+        });
+
+        // Social Links Click Handlers
+        document.addEventListener('DOMContentLoaded', function() {
+            const socialLinks = document.querySelectorAll('.social-links a[href="#"]');
+            socialLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const platform = this.title || this.getAttribute('aria-label');
+                    
+                    // Show coming soon message
+                    if (window.lottoPro && window.lottoPro.showToast) {
+                        window.lottoPro.showToast(`${platform} 연동 기능은 준비 중입니다 🚀`, 'info');
+                    } else {
+                        alert(`${platform} 연동 기능은 준비 중입니다.`);
+                    }
+                });
+            });
+        });
+
+        // Error Handling
+        window.addEventListener('error', function(e) {
+            console.error('Global error:', e.error);
+            // Optionally report to analytics or error tracking service
+        });
+
+        // Performance Monitoring
+        window.addEventListener('load', function() {
+            // Simple performance logging
+            const navigationStart = performance.timing.navigationStart;
+            const loadComplete = performance.timing.loadEventEnd;
+            const loadTime = loadComplete - navigationStart;
+            
+            console.log(`페이지 로드 시간: ${loadTime}ms`);
+            
+            // Optionally send to analytics
+            if (loadTime > 3000) {
+                console.warn('페이지 로드가 느립니다. 최적화가 필요할 수 있습니다.');
+            }
+        });
+    </script>
+
+    <!-- Additional Styles for Enhanced Features -->
+    <style>
+        /* Loading Screen */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            transition: opacity 0.3s ease;
+        }
+
+        .loading-content {
+            text-align: center;
+            color: white;
+        }
+
+        .loading-spinner {
+            margin-top: 2rem;
+        }
+
+        /* Back to Top Button */
+        #back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            display: none;
+            opacity: 0;
+            z-index: 1000;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        #back-to-top:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        /* Enhanced Navbar */
+        .navbar {
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .navbar-brand {
+            font-size: 1.4rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .navbar-nav .nav-link {
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            margin: 0 0.2rem;
+        }
+
+        .navbar-nav .nav-link:hover,
+        .navbar-nav .nav-link.active {
+            background: rgba(255,255,255,0.1);
+            transform: translateY(-1px);
+        }
+
+        /* Footer Enhancements */
+        .footer-links li {
+            margin-bottom: 0.5rem;
+        }
+
+        .footer-links a {
+            transition: all 0.3s ease;
+            padding: 0.25rem 0;
+            display: inline-block;
+        }
+
+        .footer-links a:hover {
+            color: #fff !important;
+            transform: translateX(5px);
+        }
+
+        .social-links a {
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .social-links a:hover {
+            transform: translateY(-3px) scale(1.1);
+            color: #ffc107 !important;
+        }
+
+        .disclaimer {
+            border-left: 4px solid #ffc107;
+        }
+
+        /* Skip Link for Accessibility */
+        .visually-hidden-focusable:not(:focus):not(:focus-within) {
+            position: absolute !important;
+            width: 1px !important;
+            height: 1px !important;
+            padding: 0 !important;
+            margin: -1px !important;
+            overflow: hidden !important;
+            clip: rect(0, 0, 0, 0) !important;
+            white-space: nowrap !important;
+            border: 0 !important;
+        }
+
+        .visually-hidden-focusable:focus {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: auto;
+            height: auto;
+            padding: 1rem;
+            margin: 0;
+            overflow: visible;
+            clip: auto;
+            white-space: normal;
+            background: #007bff;
+            color: white;
+            z-index: 10001;
+            text-decoration: none;
+            border-radius: 0 0 8px 0;
+        }
+
+        /* Mobile Improvements */
+        @media (max-width: 768px) {
+            .navbar-brand {
+                font-size: 1.2rem;
+            }
+
+            #back-to-top {
+                bottom: 20px;
+                right: 20px;
+                width: 45px;
+                height: 45px;
+            }
+
+            .footer-brand h5 {
+                font-size: 1.2rem;
+            }
+
+            .social-links {
+                text-align: center;
+            }
+        }
+
+        /* Print Styles */
+        @media print {
+            .navbar,
+            footer,
+            #back-to-top,
+            .loading-screen {
+                display: none !important;
+            }
+            
+            main {
+                padding-top: 0 !important;
+            }
+        }
+    </style>
+</body>
+</html>
