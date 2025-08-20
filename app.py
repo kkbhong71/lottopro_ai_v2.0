@@ -8,6 +8,8 @@ import base64
 from collections import Counter, defaultdict
 import hashlib
 import uuid
+import logging
+import traceback
 
 # Optional imports with fallbacks
 try:
@@ -38,8 +40,30 @@ except ImportError:
 
 # Flask 앱 초기화
 app = Flask(__name__)
+
+# 환경변수 기반 설정
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'lottopro-ai-v2-enhanced-2024')
+app.config['DEBUG'] = os.environ.get('DEBUG', 'False').lower() == 'true'
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
+
+# 프로덕션 환경에서의 보안 강화
+if not app.config['DEBUG']:
+    # 프로덕션 모드에서만 적용되는 보안 설정들
+    app.config['SESSION_COOKIE_SECURE'] = True
+    app.config['SESSION_COOKIE_HTTPONLY'] = True
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+
+# 로깅 설정
+if not app.config['DEBUG']:
+    # 프로덕션에서는 INFO 레벨로
+    logging.basicConfig(level=logging.INFO)
+    app.logger.setLevel(logging.INFO)
+    app.logger.info('LottoPro AI v2.0 starting in production mode')
+else:
+    # 개발에서는 DEBUG 레벨로
+    logging.basicConfig(level=logging.DEBUG)
+    app.logger.setLevel(logging.DEBUG)
+    app.logger.debug('LottoPro AI v2.0 starting in development mode')
 
 # 글로벌 변수
 sample_data = None
@@ -59,9 +83,25 @@ LOTTERY_STORES = [
 def safe_log(message):
     """안전한 로깅"""
     try:
+        app.logger.info(f"[LottoPro-AI v2.0] {message}")
         print(f"[LottoPro-AI v2.0] {message}")
-    except:
-        pass
+    except Exception as e:
+        print(f"[LottoPro-AI v2.0] Logging error: {str(e)}")
+
+# 보안 헤더 추가
+@app.after_request
+def add_security_headers(response):
+    """보안 헤더 추가"""
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    response.headers['Content-Security-Policy'] = "default-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://fonts.googleapis.com https://fonts.gstatic.com"
+    
+    # HTTPS 강제 (프로덕션에서만)
+    if not app.config['DEBUG']:
+        response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    
+    return response
 
 def load_csv_data_ultra_safe():
     """극도로 안전한 CSV 데이터 로드"""
@@ -583,13 +623,13 @@ def predict():
         
     except Exception as e:
         safe_log(f"predict API 전체 실패: {str(e)}")
-        import traceback
-        safe_log(f"Traceback: {traceback.format_exc()}")
+        if app.config['DEBUG']:
+            app.logger.error(f"Traceback: {traceback.format_exc()}")
         
         return jsonify({
             'success': False,
             'error': '서버 내부 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
-            'debug_info': str(e)
+            'debug_info': str(e) if app.config['DEBUG'] else None
         }), 500
 
 @app.route('/api/example-numbers')
@@ -992,6 +1032,7 @@ def health_check():
             'status': 'healthy',
             'timestamp': datetime.now().isoformat(),
             'version': '2.0.0 (Enhanced)',
+            'environment': 'production' if not app.config['DEBUG'] else 'development',
             'pandas_available': PANDAS_AVAILABLE,
             'qr_available': QR_AVAILABLE,
             'ml_available': ML_AVAILABLE,
@@ -1020,8 +1061,11 @@ def health_check():
             'timestamp': datetime.now().isoformat()
         }), 500
 
+# ===== 에러 핸들러들 =====
+
 @app.errorhandler(404)
 def not_found(error):
+    """404 에러 처리"""
     try:
         return render_template('index.html'), 404
     except:
@@ -1029,8 +1073,27 @@ def not_found(error):
 
 @app.errorhandler(500)
 def internal_error(error):
+    """500 에러 처리"""
     safe_log(f"500 에러 발생: {error}")
     return jsonify({'error': 'Internal server error', 'details': str(error)}), 500
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    """전역 예외 처리"""
+    app.logger.error(f'Unhandled exception: {str(e)}')
+    
+    if app.config['DEBUG']:
+        # 개발 환경에서는 상세 정보 제공
+        app.logger.error(f"Traceback: {traceback.format_exc()}")
+        return jsonify({
+            'error': str(e), 
+            'traceback': traceback.format_exc()
+        }), 500
+    else:
+        # 프로덕션에서는 일반적인 메시지만
+        return jsonify({
+            'error': 'Internal server error'
+        }), 500
 
 # 앱 시작 시 즉시 초기화
 try:
@@ -1041,4 +1104,13 @@ except Exception as e:
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    app.run(debug=True, host='0.0.0.0', port=port)
+    debug_mode = os.environ.get('DEBUG', 'False').lower() == 'true'
+    
+    safe_log(f"서버 시작 - 포트: {port}, 디버그 모드: {debug_mode}")
+    
+    # 환경별 다른 설정
+    if debug_mode:
+        app.run(debug=True, host='0.0.0.0', port=port)
+    else:
+        # 프로덕션에서는 gunicorn이 처리하므로 이 부분은 실행되지 않음
+        app.run(debug=False, host='0.0.0.0', port=port)
