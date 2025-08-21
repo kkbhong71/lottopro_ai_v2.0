@@ -10,6 +10,7 @@ import hashlib
 import uuid
 import logging
 import traceback
+import re
 
 # Optional imports with fallbacks
 try:
@@ -48,19 +49,16 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
 
 # 프로덕션 환경에서의 보안 강화
 if not app.config['DEBUG']:
-    # 프로덕션 모드에서만 적용되는 보안 설정들
     app.config['SESSION_COOKIE_SECURE'] = True
     app.config['SESSION_COOKIE_HTTPONLY'] = True
     app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 
 # 로깅 설정
 if not app.config['DEBUG']:
-    # 프로덕션에서는 INFO 레벨로
     logging.basicConfig(level=logging.INFO)
     app.logger.setLevel(logging.INFO)
     app.logger.info('LottoPro AI v2.0 starting in production mode')
 else:
-    # 개발에서는 DEBUG 레벨로
     logging.basicConfig(level=logging.DEBUG)
     app.logger.setLevel(logging.DEBUG)
     app.logger.debug('LottoPro AI v2.0 starting in development mode')
@@ -71,13 +69,54 @@ csv_dataframe = None
 cached_stats = {}
 user_saved_numbers = {}
 
-# 로또 판매점 데이터 (샘플)
+# 확장된 로또 판매점 데이터 (평택 지역 포함 + 추가 지역)
 LOTTERY_STORES = [
-    {"name": "동대문 복권방", "address": "서울시 동대문구", "lat": 37.5745, "lng": 127.0098, "phone": "02-1234-5678", "first_wins": 15},
-    {"name": "강남 로또타운", "address": "서울시 강남구", "lat": 37.4979, "lng": 127.0276, "phone": "02-2345-6789", "first_wins": 23},
-    {"name": "홍대 행운복권", "address": "서울시 마포구", "lat": 37.5563, "lng": 126.9245, "phone": "02-3456-7890", "first_wins": 8},
-    {"name": "부산 해운대점", "address": "부산시 해운대구", "lat": 35.1587, "lng": 129.1603, "phone": "051-1234-5678", "first_wins": 12},
-    {"name": "대구 중앙점", "address": "대구시 중구", "lat": 35.8663, "lng": 128.5944, "phone": "053-1234-5678", "first_wins": 6}
+    # 서울 지역
+    {"name": "동대문 복권방", "address": "서울시 동대문구 장한로 195", "region": "서울", "district": "동대문구", "lat": 37.5745, "lng": 127.0098, "phone": "02-1234-5678", "first_wins": 15, "description": "동대문 최고 명당", "business_hours": "06:00-24:00"},
+    {"name": "강남 로또타운", "address": "서울시 강남구 테헤란로 152", "region": "서울", "district": "강남구", "lat": 37.4979, "lng": 127.0276, "phone": "02-2345-6789", "first_wins": 23, "description": "강남 대표 판매점", "business_hours": "07:00-23:00"},
+    {"name": "홍대 행운복권", "address": "서울시 마포구 홍익로 96", "region": "서울", "district": "마포구", "lat": 37.5563, "lng": 126.9245, "phone": "02-3456-7890", "first_wins": 8, "description": "젊음의 거리 행운점", "business_hours": "10:00-02:00"},
+    {"name": "잠실 로또마트", "address": "서울시 송파구 올림픽로 300", "region": "서울", "district": "송파구", "lat": 37.5133, "lng": 127.1028, "phone": "02-4567-8901", "first_wins": 12, "description": "롯데타워 근처", "business_hours": "08:00-22:00"},
+    {"name": "명동 골든볼", "address": "서울시 중구 명동길 26", "region": "서울", "district": "중구", "lat": 37.5636, "lng": 126.9834, "phone": "02-5678-9012", "first_wins": 19, "description": "명동 중심가", "business_hours": "09:00-21:00"},
+    
+    # 부산 지역
+    {"name": "부산 해운대점", "address": "부산시 해운대구 해운대해변로 264", "region": "부산", "district": "해운대구", "lat": 35.1587, "lng": 129.1603, "phone": "051-1234-5678", "first_wins": 12, "description": "해변가 최고 명당", "business_hours": "06:00-24:00"},
+    {"name": "서면 중앙점", "address": "부산시 부산진구 중앙대로 692", "region": "부산", "district": "부산진구", "lat": 35.1537, "lng": 129.0597, "phone": "051-2345-6789", "first_wins": 18, "description": "서면 번화가 핵심", "business_hours": "07:00-23:00"},
+    {"name": "광안리 행운점", "address": "부산시 수영구 광안해변로 219", "region": "부산", "district": "수영구", "lat": 35.1532, "lng": 129.1186, "phone": "051-3456-7890", "first_wins": 9, "description": "광안대교 뷰", "business_hours": "08:00-22:00"},
+    {"name": "남포동 골드점", "address": "부산시 중구 광복로 55", "region": "부산", "district": "중구", "lat": 35.1008, "lng": 129.0312, "phone": "051-4567-8901", "first_wins": 14, "description": "남포동 쇼핑가", "business_hours": "10:00-23:00"},
+    
+    # 대구 지역
+    {"name": "대구 중앙점", "address": "대구시 중구 중앙대로 394", "region": "대구", "district": "중구", "lat": 35.8663, "lng": 128.5944, "phone": "053-1234-5678", "first_wins": 6, "description": "대구 시내 중심가", "business_hours": "07:00-22:00"},
+    {"name": "동성로 복권랜드", "address": "대구시 중구 동성로2가 22", "region": "대구", "district": "중구", "lat": 35.8714, "lng": 128.5911, "phone": "053-2345-6789", "first_wins": 14, "description": "쇼핑의 거리", "business_hours": "09:00-21:00"},
+    {"name": "수성구 프리미엄점", "address": "대구시 수성구 범어로 165", "region": "대구", "district": "수성구", "lat": 35.8583, "lng": 128.6311, "phone": "053-3456-7890", "first_wins": 11, "description": "수성못 근처", "business_hours": "08:00-20:00"},
+    
+    # 인천 지역
+    {"name": "인천공항 터미널점", "address": "인천시 중구 공항로 272", "region": "인천", "district": "중구", "lat": 37.4490, "lng": 126.4506, "phone": "032-1234-5678", "first_wins": 7, "description": "공항 내 편의점", "business_hours": "24시간"},
+    {"name": "송도 센트럴점", "address": "인천시 연수구 컨벤시아대로 165", "region": "인천", "district": "연수구", "lat": 37.3894, "lng": 126.6544, "phone": "032-2345-6789", "first_wins": 11, "description": "송도 신도시 중심", "business_hours": "07:00-23:00"},
+    {"name": "부평역 지하점", "address": "인천시 부평구 부평대로 55", "region": "인천", "district": "부평구", "lat": 37.4894, "lng": 126.7233, "phone": "032-3456-7890", "first_wins": 9, "description": "부평역 지하상가", "business_hours": "06:00-24:00"},
+    
+    # 평택 지역 (새로 추가됨)
+    {"name": "평택역 로또센터", "address": "경기도 평택시 평택동 856-1", "region": "평택", "district": "평택시", "lat": 36.9922, "lng": 127.0890, "phone": "031-1234-5678", "first_wins": 5, "description": "평택역 광장 앞", "business_hours": "06:00-22:00"},
+    {"name": "안정리 행운복권", "address": "경기도 평택시 안정동 123-45", "region": "평택", "district": "평택시", "lat": 36.9856, "lng": 127.0825, "phone": "031-2345-6789", "first_wins": 3, "description": "안정리 주거단지", "business_hours": "07:00-21:00"},
+    {"name": "송탄 중앙점", "address": "경기도 평택시 송탄동 789-12", "region": "평택", "district": "평택시", "lat": 36.9675, "lng": 127.0734, "phone": "031-3456-7890", "first_wins": 8, "description": "송탄 시장 근처", "business_hours": "08:00-20:00"},
+    {"name": "팽성 신도시점", "address": "경기도 평택시 팽성읍 신장2리 456-78", "region": "평택", "district": "평택시", "lat": 36.9234, "lng": 127.0512, "phone": "031-4567-8901", "first_wins": 2, "description": "팽성 신도시 중심가", "business_hours": "09:00-19:00"},
+    {"name": "고덕 신도시점", "address": "경기도 평택시 고덕면 여염리 321-10", "region": "평택", "district": "평택시", "lat": 36.9456, "lng": 127.0945, "phone": "031-5678-9012", "first_wins": 4, "description": "고덕 신도시 중심", "business_hours": "08:00-21:00"},
+    
+    # 수원 지역
+    {"name": "수원역 명품점", "address": "경기도 수원시 팔달구 덕영대로 924", "region": "수원", "district": "팔달구", "lat": 37.2659, "lng": 127.0006, "phone": "031-6789-0123", "first_wins": 16, "description": "수원역 지하상가", "business_hours": "06:00-24:00"},
+    {"name": "영통 럭키점", "address": "경기도 수원시 영통구 영통로 147", "region": "수원", "district": "영통구", "lat": 37.2393, "lng": 127.0473, "phone": "031-7890-1234", "first_wins": 10, "description": "영통 신도시", "business_hours": "07:00-22:00"},
+    {"name": "화성 동탄점", "address": "경기도 화성시 동탄순환대로 567", "region": "화성", "district": "화성시", "lat": 37.2017, "lng": 127.0688, "phone": "031-8901-2345", "first_wins": 13, "description": "동탄 신도시", "business_hours": "08:00-21:00"},
+    
+    # 광주 지역
+    {"name": "광주 충장로점", "address": "광주시 동구 충장로 95", "region": "광주", "district": "동구", "lat": 35.1496, "lng": 126.9155, "phone": "062-1234-5678", "first_wins": 7, "description": "충장로 상권", "business_hours": "09:00-20:00"},
+    {"name": "광주 상무지구점", "address": "광주시 서구 상무대로 312", "region": "광주", "district": "서구", "lat": 35.1520, "lng": 126.8895, "phone": "062-2345-6789", "first_wins": 12, "description": "상무지구 중심", "business_hours": "08:00-22:00"},
+    
+    # 대전 지역
+    {"name": "대전역 로또플러스", "address": "대전시 동구 중앙로 215", "region": "대전", "district": "동구", "lat": 36.3504, "lng": 127.3845, "phone": "042-1234-5678", "first_wins": 9, "description": "대전역 앞", "business_hours": "07:00-21:00"},
+    {"name": "둔산동 골든벨", "address": "대전시 서구 둔산로 158", "region": "대전", "district": "서구", "lat": 36.3515, "lng": 127.3789, "phone": "042-2345-6789", "first_wins": 15, "description": "둔산 신도시", "business_hours": "08:00-20:00"},
+    
+    # 울산 지역
+    {"name": "울산 중앙점", "address": "울산시 중구 성남동 44-7", "region": "울산", "district": "중구", "lat": 35.5395, "lng": 129.3114, "phone": "052-1234-5678", "first_wins": 6, "description": "울산 중심가", "business_hours": "08:00-21:00"},
+    {"name": "현대 신정점", "address": "울산시 북구 신정로 225", "region": "울산", "district": "북구", "lat": 35.5543, "lng": 129.3656, "phone": "052-2345-6789", "first_wins": 8, "description": "현대차 근처", "business_hours": "07:00-22:00"}
 ]
 
 def safe_log(message):
@@ -719,11 +758,33 @@ def get_stats():
 
 @app.route('/api/save-numbers', methods=['POST'])
 def save_numbers():
-    """번호 저장 API"""
+    """번호 저장 API (개선된 버전)"""
     try:
         data = request.get_json()
         numbers = data.get('numbers', [])
         label = data.get('label', f"저장된 번호 {datetime.now().strftime('%m-%d %H:%M')}")
+        
+        # 번호 검증
+        if not numbers or len(numbers) != 6:
+            return jsonify({
+                'success': False,
+                'error': '올바른 6개 번호를 입력해주세요.'
+            }), 400
+        
+        # 번호 범위 검증
+        for num in numbers:
+            if not isinstance(num, int) or num < 1 or num > 45:
+                return jsonify({
+                    'success': False,
+                    'error': '번호는 1~45 사이의 숫자여야 합니다.'
+                }), 400
+        
+        # 중복 번호 검증
+        if len(set(numbers)) != 6:
+            return jsonify({
+                'success': False,
+                'error': '중복된 번호가 있습니다.'
+            }), 400
         
         # 세션 기반 저장
         if 'user_id' not in session:
@@ -734,10 +795,20 @@ def save_numbers():
         if user_id not in user_saved_numbers:
             user_saved_numbers[user_id] = []
         
+        # 번호 분석
+        analysis = {
+            'sum': sum(numbers),
+            'even_count': sum(1 for n in numbers if n % 2 == 0),
+            'odd_count': sum(1 for n in numbers if n % 2 != 0),
+            'range': max(numbers) - min(numbers),
+            'consecutive': sum(1 for i in range(len(sorted(numbers))-1) if sorted(numbers)[i+1] - sorted(numbers)[i] == 1)
+        }
+        
         saved_entry = {
             'id': str(uuid.uuid4()),
-            'numbers': numbers,
+            'numbers': sorted(numbers),
             'label': label,
+            'analysis': analysis,
             'saved_at': datetime.now().isoformat(),
             'checked_winning': False
         }
@@ -751,7 +822,8 @@ def save_numbers():
         return jsonify({
             'success': True,
             'message': '번호가 저장되었습니다.',
-            'saved_entry': saved_entry
+            'saved_entry': saved_entry,
+            'total_saved': len(user_saved_numbers[user_id])
         })
         
     except Exception as e:
@@ -776,7 +848,8 @@ def get_saved_numbers():
         
         return jsonify({
             'success': True,
-            'saved_numbers': saved_numbers
+            'saved_numbers': saved_numbers,
+            'total_count': len(saved_numbers)
         })
         
     except Exception as e:
@@ -799,14 +872,27 @@ def delete_saved_number():
         user_id = session['user_id']
         
         if user_id in user_saved_numbers:
+            original_count = len(user_saved_numbers[user_id])
             user_saved_numbers[user_id] = [
                 item for item in user_saved_numbers[user_id] if item.get('id') != number_id
             ]
+            
+            if len(user_saved_numbers[user_id]) < original_count:
+                return jsonify({
+                    'success': True,
+                    'message': '번호가 삭제되었습니다.',
+                    'remaining_count': len(user_saved_numbers[user_id])
+                })
+            else:
+                return jsonify({
+                    'success': False,
+                    'error': '삭제할 번호를 찾을 수 없습니다.'
+                }), 404
         
         return jsonify({
-            'success': True,
-            'message': '번호가 삭제되었습니다.'
-        })
+            'success': False,
+            'error': '저장된 번호가 없습니다.'
+        }), 404
         
     except Exception as e:
         safe_log(f"번호 삭제 실패: {str(e)}")
@@ -884,31 +970,129 @@ def check_winning():
 
 @app.route('/api/lottery-stores')
 def get_lottery_stores():
-    """로또 판매점 검색 API"""
+    """로또 판매점 검색 API (완전히 개선된 버전)"""
     try:
-        # 위치 기반 검색 (실제로는 사용자 위치 받아서 처리)
+        # 검색어 파라미터 받기
+        search_query = request.args.get('query', '').strip()
         lat = request.args.get('lat', type=float)
         lng = request.args.get('lng', type=float)
         
+        safe_log(f"판매점 검색 요청: query='{search_query}', lat={lat}, lng={lng}")
+        
         stores = LOTTERY_STORES.copy()
         
-        # 거리 계산 및 정렬 (간단한 유클리드 거리)
-        if lat and lng:
+        # 검색어가 있는 경우 필터링
+        if search_query:
+            search_query_lower = search_query.lower()
+            
+            # 지역 별칭 매핑 (확장됨)
+            region_aliases = {
+                '평택': ['평택시', '평택', 'pyeongtaek', 'pt', '팽성', '송탄', '안정', '고덕'],
+                '서울': ['서울시', '서울특별시', 'seoul', '강남', '홍대', '명동', '잠실', '동대문'],
+                '부산': ['부산시', '부산광역시', 'busan', '해운대', '서면', '광안리', '남포동'],
+                '대구': ['대구시', '대구광역시', 'daegu', '동성로', '수성'],
+                '인천': ['인천시', '인천광역시', 'incheon', '송도', '부평', '공항'],
+                '수원': ['수원시', 'suwon', '영통'],
+                '화성': ['화성시', '동탄'],
+                '광주': ['광주시', '광주광역시', '충장로', '상무'],
+                '대전': ['대전시', '대전광역시', '둔산'],
+                '울산': ['울산시', '울산광역시', '현대'],
+                '경기': ['경기도', 'gyeonggi']
+            }
+            
+            # 검색어 정규화
+            normalized_query = search_query_lower
+            matched_region = None
+            
+            for main_region, aliases in region_aliases.items():
+                if any(alias.lower() in search_query_lower for alias in aliases):
+                    normalized_query = main_region
+                    matched_region = main_region
+                    break
+            
+            safe_log(f"검색어 정규화: '{search_query}' -> '{normalized_query}' (매칭된 지역: {matched_region})")
+            
+            # 필터링 로직 (개선됨)
+            filtered_stores = []
             for store in stores:
-                distance = ((store['lat'] - lat) ** 2 + (store['lng'] - lng) ** 2) ** 0.5
-                store['distance'] = round(distance * 100, 1)  # km 변환
-            stores.sort(key=lambda x: x.get('distance', 999))
+                # 다양한 방식으로 매칭 시도
+                match_found = False
+                
+                # 1. 정확한 지역명 매칭
+                if (normalized_query == store['region'].lower() or
+                    normalized_query == store['district'].lower()):
+                    match_found = True
+                
+                # 2. 부분 문자열 매칭
+                elif (normalized_query in store['region'].lower() or
+                      normalized_query in store['district'].lower() or
+                      normalized_query in store['name'].lower() or
+                      normalized_query in store['address'].lower()):
+                    match_found = True
+                
+                # 3. 원본 검색어로도 매칭 시도
+                elif (search_query_lower in store['region'].lower() or
+                      search_query_lower in store['district'].lower() or
+                      search_query_lower in store['name'].lower() or
+                      search_query_lower in store['address'].lower()):
+                    match_found = True
+                
+                if match_found:
+                    filtered_stores.append(store)
+            
+            stores = filtered_stores
+            safe_log(f"필터링 결과: {len(stores)}개 매장")
+            
+            # 검색 결과가 없는 경우
+            if not stores:
+                available_regions = list(set([store['region'] for store in LOTTERY_STORES]))
+                return jsonify({
+                    'success': True,
+                    'stores': [],
+                    'message': f"'{search_query}' 지역의 판매점을 찾을 수 없습니다.",
+                    'suggestions': available_regions,
+                    'total_count': 0,
+                    'search_query': search_query
+                })
         
-        return jsonify({
+        # 위치 기반 거리 계산 및 정렬
+        if lat and lng:
+            safe_log(f"위치 기반 정렬 시작: lat={lat}, lng={lng}")
+            for store in stores:
+                try:
+                    # 간단한 유클리드 거리 계산 (실제로는 Haversine 공식 사용 권장)
+                    distance = ((store['lat'] - lat) ** 2 + (store['lng'] - lng) ** 2) ** 0.5
+                    store['distance'] = round(distance * 100, 1)  # km 변환 (근사치)
+                except:
+                    store['distance'] = 999  # 계산 실패 시 멀리 배치
+            
+            stores.sort(key=lambda x: x.get('distance', 999))
+            safe_log("위치 기반 정렬 완료")
+        else:
+            # 위치 정보가 없으면 1등 당첨 횟수순으로 정렬
+            stores.sort(key=lambda x: x.get('first_wins', 0), reverse=True)
+            safe_log("당첨 횟수 기반 정렬 완료")
+        
+        # 응답 데이터 준비
+        response_data = {
             'success': True,
-            'stores': stores
-        })
+            'stores': stores,
+            'total_count': len(stores),
+            'search_query': search_query if search_query else None,
+            'sorted_by': 'distance' if lat and lng else 'winning_count',
+            'total_available_stores': len(LOTTERY_STORES)
+        }
+        
+        safe_log(f"판매점 검색 완료: {len(stores)}개 결과 반환")
+        return jsonify(response_data)
         
     except Exception as e:
         safe_log(f"판매점 검색 실패: {str(e)}")
         return jsonify({
             'success': False,
-            'error': '판매점 정보를 불러올 수 없습니다.'
+            'error': '판매점 정보를 불러올 수 없습니다.',
+            'stores': LOTTERY_STORES[:5],  # 기본 5개만 반환
+            'debug_info': str(e) if app.config['DEBUG'] else None
         }), 500
 
 @app.route('/api/tax-calculator', methods=['POST'])
@@ -1014,7 +1198,8 @@ def run_simulation():
             'total_prize': total_prize,
             'net_profit': total_prize - total_cost,
             'profit_rate': round(profit_rate, 2),
-            'user_numbers': user_numbers
+            'user_numbers': user_numbers,
+            'roi': round((total_prize / total_cost) * 100, 2)
         })
         
     except Exception as e:
@@ -1022,6 +1207,157 @@ def run_simulation():
         return jsonify({
             'success': False,
             'error': '시뮬레이션에 실패했습니다.'
+        }), 500
+
+@app.route('/api/quick-save', methods=['POST'])
+def quick_save_numbers():
+    """빠른 번호 저장 API (새로 추가)"""
+    try:
+        data = request.get_json()
+        numbers_string = data.get('numbers_string', '').strip()
+        
+        if not numbers_string:
+            return jsonify({
+                'success': False,
+                'error': '번호를 입력해주세요.'
+            }), 400
+        
+        # 번호 문자열 파싱 (여러 형식 지원)
+        # 예: "1,2,3,4,5,6" 또는 "1 2 3 4 5 6" 또는 "1-2-3-4-5-6"
+        numbers_string = re.sub(r'[^\d\s,\-]', '', numbers_string)  # 숫자, 공백, 쉼표, 하이픈만 허용
+        numbers_string = re.sub(r'[,\-]', ' ', numbers_string)  # 쉼표와 하이픈을 공백으로 변환
+        
+        try:
+            numbers = [int(x) for x in numbers_string.split() if x.strip()]
+        except ValueError:
+            return jsonify({
+                'success': False,
+                'error': '올바른 숫자를 입력해주세요.'
+            }), 400
+        
+        if len(numbers) != 6:
+            return jsonify({
+                'success': False,
+                'error': f'6개 번호를 입력해주세요. (현재 {len(numbers)}개)'
+            }), 400
+        
+        # 번호 검증
+        for num in numbers:
+            if num < 1 or num > 45:
+                return jsonify({
+                    'success': False,
+                    'error': f'{num}은 올바른 범위(1-45)가 아닙니다.'
+                }), 400
+        
+        if len(set(numbers)) != 6:
+            return jsonify({
+                'success': False,
+                'error': '중복된 번호가 있습니다.'
+            }), 400
+        
+        # 자동 라벨 생성
+        label = f"빠른저장 {datetime.now().strftime('%m/%d %H:%M')}"
+        
+        # 기존 save_numbers 로직 재사용
+        return save_numbers_internal(numbers, label)
+        
+    except Exception as e:
+        safe_log(f"빠른 저장 실패: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': '빠른 저장에 실패했습니다.'
+        }), 500
+
+def save_numbers_internal(numbers, label):
+    """내부 번호 저장 함수"""
+    try:
+        # 세션 기반 저장
+        if 'user_id' not in session:
+            session['user_id'] = str(uuid.uuid4())
+        
+        user_id = session['user_id']
+        
+        if user_id not in user_saved_numbers:
+            user_saved_numbers[user_id] = []
+        
+        # 번호 분석
+        analysis = {
+            'sum': sum(numbers),
+            'even_count': sum(1 for n in numbers if n % 2 == 0),
+            'odd_count': sum(1 for n in numbers if n % 2 != 0),
+            'range': max(numbers) - min(numbers),
+            'consecutive': sum(1 for i in range(len(sorted(numbers))-1) if sorted(numbers)[i+1] - sorted(numbers)[i] == 1)
+        }
+        
+        saved_entry = {
+            'id': str(uuid.uuid4()),
+            'numbers': sorted(numbers),
+            'label': label,
+            'analysis': analysis,
+            'saved_at': datetime.now().isoformat(),
+            'checked_winning': False
+        }
+        
+        user_saved_numbers[user_id].append(saved_entry)
+        
+        # 최대 50개까지만 저장
+        if len(user_saved_numbers[user_id]) > 50:
+            user_saved_numbers[user_id] = user_saved_numbers[user_id][-50:]
+        
+        return jsonify({
+            'success': True,
+            'message': '번호가 저장되었습니다.',
+            'saved_entry': saved_entry,
+            'total_saved': len(user_saved_numbers[user_id])
+        })
+        
+    except Exception as e:
+        safe_log(f"내부 번호 저장 실패: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': '번호 저장에 실패했습니다.'
+        }), 500
+
+@app.route('/api/generate-random', methods=['POST'])
+def generate_random_numbers():
+    """랜덤 번호 생성 API (새로 추가)"""
+    try:
+        data = request.get_json()
+        count = data.get('count', 1)
+        
+        if count > 10:
+            count = 10  # 최대 10개로 제한
+        
+        random_sets = []
+        for _ in range(count):
+            numbers = generate_advanced_ai_prediction(model_type="statistical")
+            
+            # 분석 정보 추가
+            analysis = {
+                'sum': sum(numbers),
+                'even_count': sum(1 for n in numbers if n % 2 == 0),
+                'odd_count': sum(1 for n in numbers if n % 2 != 0),
+                'range': max(numbers) - min(numbers),
+                'consecutive': sum(1 for i in range(len(numbers)-1) if numbers[i+1] - numbers[i] == 1)
+            }
+            
+            random_sets.append({
+                'numbers': numbers,
+                'analysis': analysis
+            })
+        
+        return jsonify({
+            'success': True,
+            'random_sets': random_sets,
+            'count': len(random_sets),
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        safe_log(f"랜덤 번호 생성 실패: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': '랜덤 번호 생성에 실패했습니다.'
         }), 500
 
 @app.route('/api/health')
@@ -1039,9 +1375,12 @@ def health_check():
             'csv_loaded': csv_dataframe is not None,
             'sample_data_count': len(sample_data) if sample_data else 0,
             'active_users': len(user_saved_numbers),
+            'lottery_stores_count': len(LOTTERY_STORES),
+            'supported_regions': list(set([store['region'] for store in LOTTERY_STORES])),
             'features': [
                 'AI 예측', 'QR 스캔', '번호 저장', '당첨 확인', 
-                '통계 분석', '판매점 검색', '세금 계산', '시뮬레이션'
+                '통계 분석', '판매점 검색', '세금 계산', '시뮬레이션',
+                '빠른 저장', '랜덤 생성', '지역별 검색'
             ]
         }
         
@@ -1099,6 +1438,9 @@ def handle_exception(e):
 try:
     initialize_data_ultra_safe()
     safe_log("=== LottoPro-AI v2.0 초기화 완료 ===")
+    safe_log(f"=== 총 {len(LOTTERY_STORES)}개 판매점 데이터 로드 완료 ===")
+    regions = list(set([store['region'] for store in LOTTERY_STORES]))
+    safe_log(f"=== 지원 지역: {', '.join(regions)} ===")
 except Exception as e:
     safe_log(f"=== 앱 초기화 실패: {str(e)} ===")
 
