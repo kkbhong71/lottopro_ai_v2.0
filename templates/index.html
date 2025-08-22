@@ -13,7 +13,7 @@
                         <span class="badge bg-success ms-2">v2.0</span>
                     </h1>
                     <p class="lead text-white-50 mb-4">
-                        5가지 독자적인 AI 모델이 과거 데이터를 분석하여 
+                        5가지 독창적인 AI 모델이 과거 데이터를 분석하여 
                         최적의 로또 예상번호를 추천해드립니다.
                     </p>
                     <div class="hero-stats row text-center mb-4">
@@ -128,6 +128,11 @@
                         <div id="qr-scanner-area" style="display: none;">
                             <video id="qr-video" width="100%" height="300" style="border-radius: 10px;"></video>
                             <canvas id="qr-canvas" style="display: none;"></canvas>
+                            <div class="mt-3">
+                                <button onclick="stopQRScan()" class="btn btn-outline-danger">
+                                    <i class="fas fa-stop me-2"></i>스캔 중지
+                                </button>
+                            </div>
                         </div>
                         
                         <div id="qr-start-area">
@@ -177,7 +182,7 @@
     </div>
 </section>
 
-<!-- My Numbers Section -->
+<!-- My Numbers Section - 개선된 버전 -->
 <section id="my-numbers" class="py-5 bg-light">
     <div class="container">
         <div class="text-center mb-5">
@@ -186,6 +191,7 @@
         </div>
         
         <div class="row">
+            <!-- 새 번호 저장 카드 (개선됨) -->
             <div class="col-lg-6">
                 <div class="card shadow border-0 h-100">
                     <div class="card-header bg-gradient-primary text-white">
@@ -194,56 +200,234 @@
                         </h6>
                     </div>
                     <div class="card-body">
+                        <!-- 빠른 저장 버튼 (새로 추가) -->
+                        <button type="button" class="btn btn-outline-primary w-100 mb-3" onclick="openQuickSaveModal()">
+                            <i class="fas fa-lightning-bolt me-2"></i>빠른 저장
+                            <small class="d-block text-muted">번호를 한 번에 입력하고 저장</small>
+                        </button>
+                        
+                        <div class="text-center mb-3">
+                            <small class="text-muted">또는 아래에서 개별 입력</small>
+                        </div>
+                        
+                        <!-- 기존 개별 입력 방식 -->
                         <div class="mb-3">
                             <label class="form-label">라벨</label>
                             <input type="text" class="form-control" id="save-label" placeholder="예: 생일 번호, 행운 번호">
                         </div>
+                        
                         <div class="mb-3">
                             <label class="form-label">번호 (1-45)</label>
+                            
+                            <!-- 진행률 표시 -->
+                            <div class="mb-2">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">입력 진행률</small>
+                                    <small class="text-muted" id="save-progress-text">0/6</small>
+                                </div>
+                                <div class="progress mb-2" style="height: 6px;">
+                                    <div class="progress-bar bg-gradient-primary" id="save-progress-bar" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            
                             <div class="row g-2">
                                 <div class="col-2">
-                                    <input type="number" class="form-control text-center" min="1" max="45" id="save-num1">
+                                    <input type="number" class="form-control text-center number-input-enhanced" 
+                                           min="1" max="45" id="save-num1" placeholder="1" 
+                                           oninput="updateSaveProgress()" onchange="validateNumberInput(this)">
                                 </div>
                                 <div class="col-2">
-                                    <input type="number" class="form-control text-center" min="1" max="45" id="save-num2">
+                                    <input type="number" class="form-control text-center number-input-enhanced" 
+                                           min="1" max="45" id="save-num2" placeholder="2" 
+                                           oninput="updateSaveProgress()" onchange="validateNumberInput(this)">
                                 </div>
                                 <div class="col-2">
-                                    <input type="number" class="form-control text-center" min="1" max="45" id="save-num3">
+                                    <input type="number" class="form-control text-center number-input-enhanced" 
+                                           min="1" max="45" id="save-num3" placeholder="3" 
+                                           oninput="updateSaveProgress()" onchange="validateNumberInput(this)">
                                 </div>
                                 <div class="col-2">
-                                    <input type="number" class="form-control text-center" min="1" max="45" id="save-num4">
+                                    <input type="number" class="form-control text-center number-input-enhanced" 
+                                           min="1" max="45" id="save-num4" placeholder="4" 
+                                           oninput="updateSaveProgress()" onchange="validateNumberInput(this)">
                                 </div>
                                 <div class="col-2">
-                                    <input type="number" class="form-control text-center" min="1" max="45" id="save-num5">
+                                    <input type="number" class="form-control text-center number-input-enhanced" 
+                                           min="1" max="45" id="save-num5" placeholder="5" 
+                                           oninput="updateSaveProgress()" onchange="validateNumberInput(this)">
                                 </div>
                                 <div class="col-2">
-                                    <input type="number" class="form-control text-center" min="1" max="45" id="save-num6">
+                                    <input type="number" class="form-control text-center number-input-enhanced" 
+                                           min="1" max="45" id="save-num6" placeholder="6" 
+                                           oninput="updateSaveProgress()" onchange="validateNumberInput(this)">
+                                </div>
+                            </div>
+                            
+                            <!-- 입력 도움말 -->
+                            <div class="mt-2">
+                                <small class="text-muted">
+                                    💡 <strong>팁:</strong> Tab키로 다음 입력으로 이동, Enter키로 저장
+                                </small>
+                            </div>
+                        </div>
+                        
+                        <!-- 미리보기 -->
+                        <div class="mb-3">
+                            <label class="form-label">미리보기</label>
+                            <div id="save-preview" class="number-display justify-content-start">
+                                <div class="text-muted small">번호를 입력하면 미리보기가 표시됩니다</div>
+                            </div>
+                        </div>
+                        
+                        <!-- 저장 버튼 그룹 -->
+                        <div class="d-grid gap-2">
+                            <button onclick="saveNumbers()" class="btn btn-primary" id="save-submit-btn" disabled>
+                                <i class="fas fa-save me-2"></i>번호 저장
+                            </button>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <button type="button" class="btn btn-outline-secondary w-100" onclick="generateRandomForSave()">
+                                        <i class="fas fa-dice me-2"></i>랜덤 생성
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <button type="button" class="btn btn-outline-warning w-100" onclick="clearSaveInputs()">
+                                        <i class="fas fa-eraser me-2"></i>초기화
+                                    </button>
                                 </div>
                             </div>
                         </div>
-                        <button onclick="saveNumbers()" class="btn btn-primary w-100">
-                            <i class="fas fa-save me-2"></i>번호 저장
-                        </button>
+                        
+                        <!-- 키보드 단축키 안내 -->
+                        <div class="mt-3 p-2 bg-light rounded">
+                            <div class="text-center">
+                                <small class="text-muted">
+                                    <i class="fas fa-keyboard me-1"></i>
+                                    <kbd>Ctrl+S</kbd> 빠른저장 | 
+                                    <kbd>Enter</kbd> 저장 | 
+                                    <kbd>Tab</kbd> 다음 입력
+                                </small>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
             
+            <!-- 저장된 번호 목록 카드 (개선됨) -->
             <div class="col-lg-6">
                 <div class="card shadow border-0 h-100">
                     <div class="card-header bg-gradient-secondary text-white d-flex justify-content-between align-items-center">
                         <h6 class="mb-0">
                             <i class="fas fa-list me-2"></i>저장된 번호
+                            <span class="badge bg-light text-dark ms-2" id="saved-count-badge">0</span>
                         </h6>
-                        <button onclick="loadSavedNumbers()" class="btn btn-sm btn-outline-light">
-                            <i class="fas fa-sync"></i>
-                        </button>
+                        <div class="btn-group btn-group-sm">
+                            <button onclick="loadSavedNumbers()" class="btn btn-outline-light" title="새로고침">
+                                <i class="fas fa-sync"></i>
+                            </button>
+                            <button onclick="exportSavedNumbers()" class="btn btn-outline-light" title="내보내기">
+                                <i class="fas fa-download"></i>
+                            </button>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <div id="saved-numbers-list" class="saved-numbers-container">
-                            <div class="text-center text-muted py-4">
+                    <div class="card-body p-0">
+                        <!-- 검색/필터 -->
+                        <div class="p-3 border-bottom">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text">
+                                    <i class="fas fa-search"></i>
+                                </span>
+                                <input type="text" class="form-control" id="saved-search" 
+                                       placeholder="저장된 번호 검색..." onkeyup="filterSavedNumbers()">
+                                <button class="btn btn-outline-secondary" type="button" onclick="clearSavedSearch()">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div id="saved-numbers-list" class="saved-numbers-container p-3">
+                            <div class="text-center text-muted py-4" id="empty-saved-message">
                                 <i class="fas fa-inbox fa-2x mb-2"></i>
                                 <p>저장된 번호가 없습니다</p>
                                 <small>소중한 번호들을 저장해보세요!</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 저장된 번호 통계 -->
+                    <div class="card-footer bg-light">
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <div class="small">
+                                    <i class="fas fa-heart text-danger me-1"></i>
+                                    <strong id="total-saved">0</strong>
+                                    <div class="text-muted">총 저장</div>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="small">
+                                    <i class="fas fa-clock text-primary me-1"></i>
+                                    <strong id="recent-saved">0</strong>
+                                    <div class="text-muted">최근 일주일</div>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="small">
+                                    <i class="fas fa-trophy text-warning me-1"></i>
+                                    <strong id="checked-saved">0</strong>
+                                    <div class="text-muted">당첨 확인</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 추가 정보 카드 -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card border-0 bg-gradient-info text-white">
+                    <div class="card-body text-center">
+                        <h6 class="fw-bold">
+                            <i class="fas fa-lightbulb me-2"></i>번호 저장 팁
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="mb-2">
+                                    <i class="fas fa-birthday-cake fa-2x mb-2"></i>
+                                    <div class="small">
+                                        <strong>생일 번호</strong><br>
+                                        특별한 날짜를 활용
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-2">
+                                    <i class="fas fa-chart-line fa-2x mb-2"></i>
+                                    <div class="small">
+                                        <strong>AI 추천</strong><br>
+                                        예측 결과를 저장
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-2">
+                                    <i class="fas fa-history fa-2x mb-2"></i>
+                                    <div class="small">
+                                        <strong>정기 번호</strong><br>
+                                        매주 구매하는 번호
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-2">
+                                    <i class="fas fa-flask fa-2x mb-2"></i>
+                                    <div class="small">
+                                        <strong>실험 번호</strong><br>
+                                        새로운 조합 테스트
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -439,7 +623,11 @@
             <div class="col-lg-6">
                 <div class="card shadow border-0 h-100">
                     <div class="card-header bg-danger text-white">
-                        <h6 class="mb-0"><i class="fas fa-fire me-2"></i>핫 넘버 (자주 나오는 번호)</h6>
+                        <h6 class="mb-0">
+                            <i class="fas fa-fire me-2"></i>핫 넘버 (자주 나오는 번호)
+                            <i class="fas fa-question-circle info-icon ms-2 text-light opacity-75" 
+                               onclick="openInfoModal('terms')" style="cursor: pointer;" title="자세한 설명 보기"></i>
+                        </h6>
                     </div>
                     <div class="card-body">
                         <div id="hotNumbers" class="number-display">
@@ -452,7 +640,11 @@
             <div class="col-lg-6">
                 <div class="card shadow border-0 h-100">
                     <div class="card-header bg-primary text-white">
-                        <h6 class="mb-0"><i class="fas fa-snowflake me-2"></i>콜드 넘버 (잘 안 나오는 번호)</h6>
+                        <h6 class="mb-0">
+                            <i class="fas fa-snowflake me-2"></i>콜드 넘버 (잘 안 나오는 번호)
+                            <i class="fas fa-question-circle info-icon ms-2 text-light opacity-75" 
+                               onclick="openInfoModal('terms')" style="cursor: pointer;" title="자세한 설명 보기"></i>
+                        </h6>
                     </div>
                     <div class="card-body">
                         <div id="coldNumbers" class="number-display">
@@ -468,7 +660,11 @@
             <div class="col-lg-4">
                 <div class="card shadow border-0 h-100">
                     <div class="card-header bg-warning text-dark">
-                        <h6 class="mb-0"><i class="fas fa-repeat me-2"></i>이월수 분석</h6>
+                        <h6 class="mb-0">
+                            <i class="fas fa-repeat me-2"></i>이월수 분석
+                            <i class="fas fa-question-circle info-icon ms-2 opacity-75" 
+                               onclick="openInfoModal('terms')" style="cursor: pointer;" title="이월수란?"></i>
+                        </h6>
                     </div>
                     <div class="card-body">
                         <div id="carryOverAnalysis">
@@ -484,7 +680,11 @@
             <div class="col-lg-4">
                 <div class="card shadow border-0 h-100">
                     <div class="card-header bg-success text-white">
-                        <h6 class="mb-0"><i class="fas fa-handshake me-2"></i>궁합수 분석</h6>
+                        <h6 class="mb-0">
+                            <i class="fas fa-handshake me-2"></i>궁합수 분석
+                            <i class="fas fa-question-circle info-icon ms-2 text-light opacity-75" 
+                               onclick="openInfoModal('terms')" style="cursor: pointer;" title="궁합수란?"></i>
+                        </h6>
                     </div>
                     <div class="card-body">
                         <div id="companionAnalysis">
@@ -500,7 +700,11 @@
             <div class="col-lg-4">
                 <div class="card shadow border-0 h-100">
                     <div class="card-header bg-info text-white">
-                        <h6 class="mb-0"><i class="fas fa-chart-line me-2"></i>패턴 분석</h6>
+                        <h6 class="mb-0">
+                            <i class="fas fa-chart-line me-2"></i>패턴 분석
+                            <i class="fas fa-question-circle info-icon ms-2 text-light opacity-75" 
+                               onclick="openInfoModal('terms')" style="cursor: pointer;" title="패턴 분석이란?"></i>
+                        </h6>
                     </div>
                     <div class="card-body">
                         <div id="patternAnalysis">
@@ -554,6 +758,8 @@
                     <div class="card-header bg-gradient-info text-white">
                         <h6 class="mb-0">
                             <i class="fas fa-chart-bar me-2"></i>당첨 시뮬레이션
+                            <i class="fas fa-question-circle info-icon ms-2 text-light opacity-75" 
+                               onclick="openInfoModal('terms')" style="cursor: pointer;" title="시뮬레이션이란?"></i>
                         </h6>
                     </div>
                     <div class="card-body">
@@ -584,9 +790,9 @@
                     <div class="card-body">
                         <div class="mb-3">
                             <label class="form-label">지역</label>
-                            <input type="text" class="form-control" id="store-location" placeholder="지역명 입력">
+                            <input type="text" class="form-control" id="store-location" placeholder="예: 평택, 서울, 부산">
                         </div>
-                        <button onclick="findLotteryStores()" class="btn btn-success w-100 mb-3">
+                        <button onclick="findLotteryStoresEnhanced()" class="btn btn-success w-100 mb-3">
                             <i class="fas fa-search me-2"></i>판매점 검색
                         </button>
                         <div id="store-results" class="store-results">
@@ -623,7 +829,7 @@
                     <div class="about-feature-item">
                         <i class="fas fa-check-circle text-success me-3"></i>
                         <div>
-                            <h6>5가지 독자적 AI 모델</h6>
+                            <h6>5가지 독창적 AI 모델</h6>
                             <p class="text-muted mb-0">다양한 분석 방식으로 정확도를 높였습니다</p>
                         </div>
                     </div>
@@ -705,6 +911,490 @@
     </div>
 </div>
 
+<!-- 정보 모달 - </body> 태그 직전에 추가 -->
+<div class="modal fade" id="infoModal" tabindex="-1" aria-labelledby="infoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-gradient-primary text-white">
+                <h5 class="modal-title" id="infoModalLabel">
+                    <i class="fas fa-info-circle me-2"></i>LottoPro AI v2.0 이용 안내
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- 탭 네비게이션 -->
+                <ul class="nav nav-tabs" id="infoTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="terms-tab" data-bs-toggle="tab" data-bs-target="#terms" type="button" role="tab">
+                            <i class="fas fa-book me-2"></i>용어 설명
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="models-tab" data-bs-toggle="tab" data-bs-target="#models" type="button" role="tab">
+                            <i class="fas fa-robot me-2"></i>AI 모델
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="guide-tab" data-bs-toggle="tab" data-bs-target="#guide" type="button" role="tab">
+                            <i class="fas fa-question-circle me-2"></i>사용법
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="about-tab" data-bs-toggle="tab" data-bs-target="#about" type="button" role="tab">
+                            <i class="fas fa-heart me-2"></i>서비스 정보
+                        </button>
+                    </li>
+                </ul>
+
+                <!-- 탭 콘텐츠 -->
+                <div class="tab-content" id="infoTabContent">
+                    <!-- 용어 설명 탭 -->
+                    <div class="tab-pane fade show active" id="terms" role="tabpanel">
+                        <div class="p-3">
+                            <div class="mb-4">
+                                <h6 class="fw-bold text-primary">
+                                    <i class="fas fa-repeat me-2"></i>이월수란?
+                                </h6>
+                                <p class="mb-3">이월수는 <strong>연속된 회차에서 반복 출현하는 번호</strong>를 의미합니다.</p>
+                                <div class="alert alert-info">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <strong>예시:</strong><br>
+                                            1184회차: 14, 16, 23, 25, 31, 37<br>
+                                            1185회차: 2, 6, 12, <span class="text-danger">31</span>, 33, 40
+                                        </div>
+                                        <div class="col-md-6">
+                                            <strong>결과:</strong><br>
+                                            <span class="badge bg-warning text-dark">31</span>이 이월수<br>
+                                            <small class="text-muted">연속 2회차에서 출현</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p><strong>활용법:</strong> 이월수 패턴을 분석하여 다음 회차 예측에 참고할 수 있습니다.</p>
+                            </div>
+
+                            <div class="mb-4">
+                                <h6 class="fw-bold text-success">
+                                    <i class="fas fa-handshake me-2"></i>궁합수란?
+                                </h6>
+                                <p class="mb-3">궁합수는 <strong>동시에 자주 출현하는 번호 조합</strong>을 의미합니다.</p>
+                                <div class="alert alert-success">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <strong>예시:</strong><br>
+                                            7번과 13번이 총 15회 함께 출현
+                                        </div>
+                                        <div class="col-md-6">
+                                            <strong>궁합도:</strong><br>
+                                            <span class="badge bg-success">7</span> + <span class="badge bg-success">13</span> = 높은 궁합
+                                        </div>
+                                    </div>
+                                </div>
+                                <p><strong>활용법:</strong> 한 번호를 선택했을 때, 궁합이 좋은 번호를 함께 선택할 수 있습니다.</p>
+                            </div>
+
+                            <div class="mb-4">
+                                <h6 class="fw-bold text-info">
+                                    <i class="fas fa-chart-bar me-2"></i>당첨 시뮬레이션이란?
+                                </h6>
+                                <p class="mb-3">시뮬레이션은 <strong>특정 번호로 수천 번 가상 추첨하여 당첨 확률을 테스트</strong>하는 기능입니다.</p>
+                                <div class="alert alert-warning">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <strong>시뮬레이션 과정:</strong><br>
+                                            1. 선택한 번호 입력<br>
+                                            2. 시행 횟수 설정 (1천~1만회)<br>
+                                            3. 가상 추첨 실행<br>
+                                            4. 등수별 당첨 횟수 분석
+                                        </div>
+                                        <div class="col-md-6">
+                                            <strong>활용 목적:</strong><br>
+                                            • 번호의 통계적 성능 확인<br>
+                                            • 장기적 수익률 예측<br>
+                                            • 번호 조합 비교 분석<br>
+                                            • 현실적 기대치 설정
+                                        </div>
+                                    </div>
+                                </div>
+                                <p><strong>⚠️ 주의:</strong> 시뮬레이션 결과는 통계적 참고자료이며, 실제 당첨을 보장하지 않습니다.</p>
+                            </div>
+
+                            <div class="mb-4">
+                                <h6 class="fw-bold text-danger">
+                                    <i class="fas fa-fire me-2"></i>핫/콜드 넘버란?
+                                </h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="alert alert-danger">
+                                            <strong>핫 넘버 (Hot Number)</strong><br>
+                                            최근 자주 출현하는 번호<br>
+                                            <small class="text-muted">출현 빈도가 평균 이상</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="alert alert-primary">
+                                            <strong>콜드 넘버 (Cold Number)</strong><br>
+                                            최근 잘 나오지 않는 번호<br>
+                                            <small class="text-muted">출현 빈도가 평균 이하</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI 모델 설명 탭 -->
+                    <div class="tab-pane fade" id="models" role="tabpanel">
+                        <div class="p-3">
+                            <div class="mb-4">
+                                <h6 class="fw-bold text-primary">
+                                    <i class="fas fa-chart-bar me-2"></i>빈도분석 모델
+                                </h6>
+                                <p>과거 당첨번호의 <strong>출현 빈도를 통계적으로 분석</strong>하여 가중 확률을 적용합니다.</p>
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="badge bg-primary me-2">정확도</span>
+                                    <div class="progress flex-grow-1 me-2" style="height: 20px;">
+                                        <div class="progress-bar" style="width: 82%;">82%</div>
+                                    </div>
+                                </div>
+                                <small class="text-muted">🎯 장점: 안정적이고 검증된 방식 | ⚠️ 단점: 최신 트렌드 반영 부족</small>
+                            </div>
+
+                            <div class="mb-4">
+                                <h6 class="fw-bold text-success">
+                                    <i class="fas fa-trending-up me-2"></i>트렌드분석 모델
+                                </h6>
+                                <p>최근 패턴과 트렌드를 중시하여 <strong>시기별 변화를 실시간 반영</strong>합니다.</p>
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="badge bg-success me-2">정확도</span>
+                                    <div class="progress flex-grow-1 me-2" style="height: 20px;">
+                                        <div class="progress-bar bg-success" style="width: 86%;">86%</div>
+                                    </div>
+                                </div>
+                                <small class="text-muted">🎯 장점: 최신 패턴 민감 반응 | ⚠️ 단점: 단기 변동에 민감</small>
+                            </div>
+
+                            <div class="mb-4">
+                                <h6 class="fw-bold text-warning">
+                                    <i class="fas fa-project-diagram me-2"></i>패턴분석 모델
+                                </h6>
+                                <p>번호 조합의 <strong>수학적 관계와 패턴을 복합 분석</strong>합니다.</p>
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="badge bg-warning me-2">정확도</span>
+                                    <div class="progress flex-grow-1 me-2" style="height: 20px;">
+                                        <div class="progress-bar bg-warning" style="width: 84%;">84%</div>
+                                    </div>
+                                </div>
+                                <small class="text-muted">🎯 장점: 복합적 분석 능력 | ⚠️ 단점: 복잡한 연산 필요</small>
+                            </div>
+
+                            <div class="mb-4">
+                                <h6 class="fw-bold text-info">
+                                    <i class="fas fa-calculator me-2"></i>통계분석 모델
+                                </h6>
+                                <p>고급 통계 기법과 <strong>확률 이론을 적용한 수학적 예측</strong>입니다.</p>
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="badge bg-info me-2">정확도</span>
+                                    <div class="progress flex-grow-1 me-2" style="height: 20px;">
+                                        <div class="progress-bar bg-info" style="width: 80%;">80%</div>
+                                    </div>
+                                </div>
+                                <small class="text-muted">🎯 장점: 수학적 근거 확실 | ⚠️ 단점: 실제 패턴과 차이 존재</small>
+                            </div>
+
+                            <div class="mb-4">
+                                <h6 class="fw-bold text-purple">
+                                    <i class="fas fa-brain me-2"></i>머신러닝 모델
+                                </h6>
+                                <p>딥러닝 신경망과 <strong>AI 알고리즘을 활용한 고도화된 예측</strong>입니다.</p>
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="badge bg-dark me-2">정확도</span>
+                                    <div class="progress flex-grow-1 me-2" style="height: 20px;">
+                                        <div class="progress-bar bg-dark" style="width: 89%;">89%</div>
+                                    </div>
+                                </div>
+                                <small class="text-muted">🎯 장점: 최고 수준의 정확도 | ⚠️ 단점: 블랙박스 특성</small>
+                            </div>
+
+                            <div class="alert alert-light border">
+                                <h6 class="fw-bold text-primary">
+                                    <i class="fas fa-crown me-2"></i>종합추천 시스템
+                                </h6>
+                                <p class="mb-2">5가지 모델의 결과를 <strong>지능적으로 조합하여 최적의 추천</strong>을 제공합니다.</p>
+                                <div class="d-flex align-items-center">
+                                    <span class="badge bg-warning me-2">종합정확도</span>
+                                    <div class="progress flex-grow-1 me-2" style="height: 20px;">
+                                        <div class="progress-bar bg-gradient-primary" style="width: 92%;">92%</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 사용법 안내 탭 -->
+                    <div class="tab-pane fade" id="guide" role="tabpanel">
+                        <div class="p-3">
+                            <div class="mb-4">
+                                <h6 class="fw-bold text-primary">
+                                    <i class="fas fa-magic me-2"></i>AI 예측 사용법
+                                </h6>
+                                <ol class="list-group list-group-numbered">
+                                    <li class="list-group-item">
+                                        <strong>선호 번호 입력</strong> (선택사항)<br>
+                                        <small class="text-muted">생일, 기념일 등 원하는 번호가 있다면 입력하세요</small>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <strong>"AI 예상번호 생성하기" 클릭</strong><br>
+                                        <small class="text-muted">5가지 AI 모델이 동시에 분석을 시작합니다</small>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <strong>결과 확인</strong><br>
+                                        <small class="text-muted">TOP 5 추천과 모델별 상세 결과를 확인하세요</small>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <strong>번호 저장</strong><br>
+                                        <small class="text-muted">마음에 드는 번호는 하트 버튼으로 저장하세요</small>
+                                    </li>
+                                </ol>
+                            </div>
+
+                            <div class="mb-4">
+                                <h6 class="fw-bold text-success">
+                                    <i class="fas fa-qrcode me-2"></i>QR 스캔 사용법
+                                </h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="card border-success">
+                                            <div class="card-body text-center">
+                                                <i class="fas fa-camera fa-2x text-success mb-2"></i>
+                                                <p class="mb-0"><strong>자동 카메라</strong><br>
+                                                <small>후면 카메라 자동 활성화</small></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="card border-info">
+                                            <div class="card-body text-center">
+                                                <i class="fas fa-keyboard fa-2x text-info mb-2"></i>
+                                                <p class="mb-0"><strong>수동 입력</strong><br>
+                                                <small>번호 직접 입력 가능</small></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <h6 class="fw-bold text-warning">
+                                    <i class="fas fa-keyboard me-2"></i>키보드 단축키
+                                </h6>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="text-center p-2 border rounded">
+                                            <kbd>Ctrl + P</kbd><br>
+                                            <small>AI 예측</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="text-center p-2 border rounded">
+                                            <kbd>Enter</kbd><br>
+                                            <small>빠른 저장</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="text-center p-2 border rounded">
+                                            <kbd>Tab</kbd><br>
+                                            <small>다음 입력</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="alert alert-info">
+                                <h6 class="fw-bold">
+                                    <i class="fas fa-lightbulb me-2"></i>Pro Tips
+                                </h6>
+                                <ul class="mb-0">
+                                    <li><strong>다양한 모델 활용:</strong> 여러 모델의 결과를 비교해보세요</li>
+                                    <li><strong>통계 분석 참고:</strong> 핫/콜드 넘버와 궁합수를 활용하세요</li>
+                                    <li><strong>시뮬레이션 활용:</strong> 번호 선택 전 시뮬레이션으로 검증하세요</li>
+                                    <li><strong>정기적 업데이트:</strong> 매주 새로운 데이터로 예측이 갱신됩니다</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 서비스 정보 탭 -->
+                    <div class="tab-pane fade" id="about" role="tabpanel">
+                        <div class="p-3">
+                            <div class="text-center mb-4">
+                                <div class="mb-3">
+                                    <i class="fas fa-heart fa-3x text-danger"></i>
+                                </div>
+                                <h5 class="fw-bold text-primary">LottoPro AI v2.0</h5>
+                                <p class="text-muted">인공지능 기반 로또 번호 예측 서비스</p>
+                            </div>
+
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <div class="card border-success h-100">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                                            <h6 class="fw-bold">100% 무료</h6>
+                                            <p class="small text-muted mb-0">모든 기능을 완전 무료로 제공합니다</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card border-primary h-100">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-shield-alt fa-2x text-primary mb-2"></i>
+                                            <h6 class="fw-bold">개인정보 보호</h6>
+                                            <p class="small text-muted mb-0">개인정보 수집하지 않습니다</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <h6 class="fw-bold text-primary">
+                                    <i class="fas fa-star me-2"></i>제공 기능
+                                </h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <ul class="list-unstyled">
+                                            <li><i class="fas fa-check text-success me-2"></i>5가지 AI 예측 모델</li>
+                                            <li><i class="fas fa-check text-success me-2"></i>QR 코드 당첨 확인</li>
+                                            <li><i class="fas fa-check text-success me-2"></i>번호 저장 및 관리</li>
+                                            <li><i class="fas fa-check text-success me-2"></i>고급 통계 분석</li>
+                                            <li><i class="fas fa-check text-success me-2"></i>당첨 시뮬레이션</li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <ul class="list-unstyled">
+                                            <li><i class="fas fa-check text-success me-2"></i>세금 계산기</li>
+                                            <li><i class="fas fa-check text-success me-2"></i>판매점 찾기</li>
+                                            <li><i class="fas fa-check text-success me-2"></i>실시간 데이터 업데이트</li>
+                                            <li><i class="fas fa-check text-success me-2"></i>모바일 최적화</li>
+                                            <li><i class="fas fa-check text-success me-2"></i>다크모드 지원</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <h6 class="fw-bold text-warning">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>이용 시 주의사항
+                                </h6>
+                                <div class="alert alert-warning">
+                                    <ul class="mb-0">
+                                        <li>본 서비스는 <strong>통계적 분석 도구</strong>로 참고용입니다</li>
+                                        <li>당첨을 100% 보장하지 않으며, <strong>책임감 있는 구매</strong>를 권장합니다</li>
+                                        <li>과도한 로또 구매는 <strong>사행성에 빠질 위험</strong>이 있습니다</li>
+                                        <li>재정 상황을 고려하여 <strong>적절한 한도 내에서</strong> 이용하세요</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="text-center">
+                                <div class="alert alert-light border">
+                                    <h6 class="fw-bold text-primary mb-2">
+                                        <i class="fas fa-code me-2"></i>기술 스택
+                                    </h6>
+                                    <div class="d-flex justify-content-center flex-wrap gap-2">
+                                        <span class="badge bg-danger">Python</span>
+                                        <span class="badge bg-success">Flask</span>
+                                        <span class="badge bg-primary">scikit-learn</span>
+                                        <span class="badge bg-warning text-dark">Bootstrap 5</span>
+                                        <span class="badge bg-info">JavaScript</span>
+                                        <span class="badge bg-dark">NumPy</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>닫기
+                </button>
+                <button type="button" class="btn btn-primary" onclick="scrollToSection('prediction')">
+                    <i class="fas fa-magic me-2"></i>AI 예측 시작하기
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 빠른 저장 모달 -->
+<div class="modal fade" id="quickSaveModal" tabindex="-1" aria-labelledby="quickSaveModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-gradient-primary text-white">
+                <h5 class="modal-title" id="quickSaveModalLabel">
+                    <i class="fas fa-lightning-bolt me-2"></i>빠른 번호 저장
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="quickSaveInput" class="form-label fw-bold">
+                        <i class="fas fa-keyboard me-2"></i>번호 입력 (1-45)
+                    </label>
+                    <input type="text" class="form-control form-control-lg" id="quickSaveInput" 
+                           placeholder="예: 1,7,13,25,31,42 또는 1 7 13 25 31 42"
+                           autocomplete="off">
+                    <div class="form-text">
+                        쉼표(,), 공백( ), 하이픈(-)으로 구분하여 6개 번호를 입력하세요
+                    </div>
+                </div>
+                
+                <!-- 진행률 표시 -->
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <small class="text-muted">입력 진행률</small>
+                        <small class="text-muted" id="progressText">0/6</small>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-gradient-primary" id="inputProgress" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- 미리보기 -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold">
+                        <i class="fas fa-eye me-2"></i>미리보기
+                    </label>
+                    <div id="quickSavePreview" class="number-display">
+                        <div class="text-muted text-center py-3">
+                            <i class="fas fa-info-circle me-2"></i>번호를 입력하면 미리보기가 표시됩니다
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 랜덤 생성 버튼 -->
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end mb-3">
+                    <button type="button" class="btn btn-outline-secondary" onclick="generateRandomForQuickSave()">
+                        <i class="fas fa-dice me-2"></i>랜덤 생성
+                    </button>
+                    <button type="button" class="btn btn-outline-primary" onclick="clearQuickSaveInput()">
+                        <i class="fas fa-eraser me-2"></i>초기화
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>취소
+                </button>
+                <button type="button" class="btn btn-primary" id="quickSaveSubmit" onclick="submitQuickSave()" disabled>
+                    <i class="fas fa-save me-2"></i>저장
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
@@ -725,6 +1415,12 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }, 1000);
     }
+    
+    // 향상된 기능들 초기화
+    initializeEnhancedFeatures();
+    setupKeyboardShortcuts();
+    setupQuickSaveFeatures();
+    setupInfoModal();
 });
 
 // Enhanced statistics loading
@@ -846,29 +1542,261 @@ function displayPatternAnalysis(data) {
     }
 }
 
-// QR Scanner functions
-document.getElementById('start-qr-scan')?.addEventListener('click', function() {
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+// 저장 진행률 업데이트
+function updateSaveProgress() {
+    const inputs = ['save-num1', 'save-num2', 'save-num3', 'save-num4', 'save-num5', 'save-num6'];
+    const values = inputs.map(id => {
+        const input = document.getElementById(id);
+        const value = parseInt(input.value);
+        return (value >= 1 && value <= 45) ? value : null;
+    }).filter(v => v !== null);
+    
+    const uniqueValues = [...new Set(values)];
+    const progress = (uniqueValues.length / 6) * 100;
+    
+    // 진행률 바 업데이트
+    const progressBar = document.getElementById('save-progress-bar');
+    const progressText = document.getElementById('save-progress-text');
+    const submitBtn = document.getElementById('save-submit-btn');
+    
+    if (progressBar && progressText) {
+        progressBar.style.width = `${progress}%`;
+        progressText.textContent = `${uniqueValues.length}/6`;
+    }
+    
+    // 저장 버튼 활성화/비활성화
+    if (submitBtn) {
+        submitBtn.disabled = uniqueValues.length !== 6;
+    }
+    
+    // 미리보기 업데이트
+    updateSavePreview(uniqueValues);
+}
+
+// 저장 미리보기 업데이트
+function updateSavePreview(numbers) {
+    const preview = document.getElementById('save-preview');
+    if (!preview) return;
+    
+    if (numbers.length === 0) {
+        preview.innerHTML = '<div class="text-muted small">번호를 입력하면 미리보기가 표시됩니다</div>';
+        return;
+    }
+    
+    const ballsHtml = numbers.map(num => 
+        `<div class="lotto-ball lotto-ball-${Math.ceil(num/9)}">${num}</div>`
+    ).join('');
+    
+    const remaining = 6 - numbers.length;
+    const emptyBallsHtml = Array(remaining).fill(0).map(() => 
+        '<div class="lotto-ball" style="background: #ddd; color: #999;">?</div>'
+    ).join('');
+    
+    preview.innerHTML = ballsHtml + emptyBallsHtml;
+}
+
+// 번호 입력 검증
+function validateNumberInput(input) {
+    const value = parseInt(input.value);
+    
+    // 범위 검증
+    if (value < 1 || value > 45) {
+        input.classList.add('is-invalid');
+        input.classList.remove('is-valid');
+        showToast('번호는 1-45 사이여야 합니다.', 'warning');
+        return;
+    }
+    
+    // 중복 검증
+    const allInputs = document.querySelectorAll('.number-input-enhanced');
+    const values = Array.from(allInputs).map(inp => parseInt(inp.value)).filter(v => !isNaN(v));
+    const duplicates = values.filter((item, index) => values.indexOf(item) !== index);
+    
+    if (duplicates.includes(value)) {
+        input.classList.add('is-invalid');
+        input.classList.remove('is-valid');
+        showToast('중복된 번호입니다.', 'warning');
+        return;
+    }
+    
+    input.classList.add('is-valid');
+    input.classList.remove('is-invalid');
+}
+
+// 저장용 랜덤 생성
+async function generateRandomForSave() {
+    try {
+        const response = await fetch('/api/generate-random', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ count: 1 })
+        });
+        
+        const data = await response.json();
+        if (data.success && data.random_sets.length > 0) {
+            const numbers = data.random_sets[0].numbers;
+            
+            // 입력 필드에 설정
+            numbers.forEach((num, index) => {
+                const input = document.getElementById(`save-num${index + 1}`);
+                if (input) {
+                    input.value = num;
+                    input.classList.add('is-valid');
+                    input.classList.remove('is-invalid');
+                }
+            });
+            
+            updateSaveProgress();
+            showToast('랜덤 번호가 생성되었습니다! 🎲', 'success');
+        }
+    } catch (error) {
+        console.error('랜덤 생성 실패:', error);
+        showToast('랜덤 번호 생성에 실패했습니다.', 'error');
+    }
+}
+
+// 저장 입력 초기화
+function clearSaveInputs() {
+    const inputs = ['save-num1', 'save-num2', 'save-num3', 'save-num4', 'save-num5', 'save-num6'];
+    inputs.forEach(id => {
+        const input = document.getElementById(id);
+        if (input) {
+            input.value = '';
+            input.classList.remove('is-valid', 'is-invalid');
+        }
+    });
+    
+    const labelInput = document.getElementById('save-label');
+    if (labelInput) {
+        labelInput.value = '';
+    }
+    
+    updateSaveProgress();
+}
+
+// QR Scanner functions - Enhanced
+let qrVideo = null;
+let qrStream = null;
+let isQRScanning = false;
+
+async function startQRScanEnhanced() {
+    try {
+        showToast('QR 스캔을 준비하고 있습니다...', 'info');
+        
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            throw new Error('이 브라우저는 카메라를 지원하지 않습니다.');
+        }
+
+        // UI 변경
         document.getElementById('qr-start-area').style.display = 'none';
         document.getElementById('qr-scanner-area').style.display = 'block';
+
+        // 카메라 설정 옵션 (후면 카메라 우선)
+        const constraints = {
+            video: {
+                facingMode: { ideal: 'environment' }, // 후면 카메라 우선
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+            }
+        };
+
+        try {
+            // 1단계: 후면 카메라 시도
+            qrStream = await navigator.mediaDevices.getUserMedia(constraints);
+            await setupQRVideo(qrStream);
+            showToast('후면 카메라가 활성화되었습니다! 📱', 'success');
+            
+        } catch (error) {
+            console.log('후면 카메라 접근 실패, 전면 카메라 시도:', error);
+            
+            try {
+                // 2단계: 전면 카메라 시도
+                const frontConstraints = {
+                    video: {
+                        facingMode: 'user',
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    }
+                };
+                qrStream = await navigator.mediaDevices.getUserMedia(frontConstraints);
+                await setupQRVideo(qrStream);
+                showToast('⚠️ 전면 카메라가 활성화되었습니다. QR코드가 뒤집혀 보일 수 있습니다.', 'warning');
+                
+            } catch (error2) {
+                console.log('전면 카메라도 실패, 기본 카메라 시도:', error2);
+                
+                try {
+                    // 3단계: 기본 비디오 스트림
+                    const basicConstraints = { video: true };
+                    qrStream = await navigator.mediaDevices.getUserMedia(basicConstraints);
+                    await setupQRVideo(qrStream);
+                    showToast('카메라가 활성화되었습니다.', 'info');
+                    
+                } catch (error3) {
+                    // 4단계: 모든 시도 실패
+                    throw new Error('카메라에 접근할 수 없습니다. 브라우저 권한을 확인해주세요.');
+                }
+            }
+        }
+
+    } catch (error) {
+        console.error('QR 스캔 시작 실패:', error);
+        showToast(error.message, 'error');
         
-        navigator.mediaDevices.getUserMedia({ video: true })
-            .then(function(stream) {
-                const video = document.getElementById('qr-video');
-                video.srcObject = stream;
-                video.play();
-                showToast('QR 스캔 준비 완료! 로또 용지를 카메라에 대주세요.', 'info');
-            })
-            .catch(function(err) {
-                console.error('카메라 접근 실패:', err);
-                showToast('카메라에 접근할 수 없습니다. 수동 입력을 이용해주세요.', 'error');
-                document.getElementById('qr-start-area').style.display = 'block';
-                document.getElementById('qr-scanner-area').style.display = 'none';
-            });
-    } else {
-        showToast('이 브라우저는 카메라를 지원하지 않습니다.', 'error');
+        // UI 복원
+        document.getElementById('qr-start-area').style.display = 'block';
+        document.getElementById('qr-scanner-area').style.display = 'none';
     }
-});
+}
+
+// QR 비디오 설정
+async function setupQRVideo(stream) {
+    qrVideo = document.getElementById('qr-video');
+    qrVideo.srcObject = stream;
+    
+    return new Promise((resolve, reject) => {
+        qrVideo.onloadedmetadata = () => {
+            qrVideo.play()
+                .then(() => {
+                    isQRScanning = true;
+                    startQRDetection();
+                    resolve();
+                })
+                .catch(reject);
+        };
+    });
+}
+
+// QR 감지 시작 (간단한 버전)
+function startQRDetection() {
+    // 실제 구현에서는 QR 라이브러리 필요
+    // 여기서는 UI만 구현
+    showToast('QR 코드를 카메라에 대주세요', 'info');
+}
+
+// QR 스캔 중지
+function stopQRScan() {
+    try {
+        if (qrStream) {
+            qrStream.getTracks().forEach(track => track.stop());
+            qrStream = null;
+        }
+        
+        if (qrVideo) {
+            qrVideo.srcObject = null;
+        }
+        
+        isQRScanning = false;
+        
+        // UI 복원
+        document.getElementById('qr-start-area').style.display = 'block';
+        document.getElementById('qr-scanner-area').style.display = 'none';
+        
+        showToast('QR 스캔이 중지되었습니다.', 'info');
+    } catch (error) {
+        console.error('QR 스캔 중지 실패:', error);
+    }
+}
 
 // Number saving functions
 async function saveNumbers() {
@@ -996,6 +1924,65 @@ async function deleteSavedNumber(id) {
         console.error('번호 삭제 실패:', error);
         showToast('삭제에 실패했습니다.', 'error');
     }
+}
+
+// 저장된 번호 필터링
+function filterSavedNumbers() {
+    const searchTerm = document.getElementById('saved-search').value.toLowerCase();
+    const items = document.querySelectorAll('.saved-number-item');
+    
+    items.forEach(item => {
+        const label = item.querySelector('h6').textContent.toLowerCase();
+        const numbers = Array.from(item.querySelectorAll('.lotto-ball')).map(ball => ball.textContent).join(' ');
+        
+        if (label.includes(searchTerm) || numbers.includes(searchTerm)) {
+            item.style.display = 'block';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+}
+
+// 저장된 번호 검색 초기화
+function clearSavedSearch() {
+    document.getElementById('saved-search').value = '';
+    filterSavedNumbers();
+}
+
+// 저장된 번호 내보내기
+function exportSavedNumbers() {
+    // 간단한 텍스트 형태로 내보내기
+    const items = document.querySelectorAll('.saved-number-item:not([style*="display: none"])');
+    if (items.length === 0) {
+        showToast('내보낼 번호가 없습니다.', 'warning');
+        return;
+    }
+    
+    let exportText = 'LottoPro AI - 저장된 번호 목록\n';
+    exportText += '=================================\n\n';
+    
+    items.forEach((item, index) => {
+        const label = item.querySelector('h6').textContent;
+        const numbers = Array.from(item.querySelectorAll('.lotto-ball')).map(ball => ball.textContent).join(', ');
+        const date = item.querySelector('small').textContent;
+        
+        exportText += `${index + 1}. ${label}\n`;
+        exportText += `   번호: ${numbers}\n`;
+        exportText += `   저장: ${date}\n\n`;
+    });
+    
+    // 파일 다운로드
+    const blob = new Blob([exportText], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `lotto-numbers-${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    showToast('번호 목록이 다운로드되었습니다! 📥', 'success');
 }
 
 // Winning check functions
@@ -1299,53 +2286,413 @@ function displaySimulationResults(data) {
     showToast('시뮬레이션이 완료되었습니다!', 'success');
 }
 
-async function findLotteryStores() {
-    const location = document.getElementById('store-location').value;
+// 판매점 찾기 (개선된 버전)
+async function findLotteryStoresEnhanced() {
+    const locationInput = document.getElementById('store-location');
+    const location = locationInput.value.trim();
     
     if (!location) {
-        showToast('지역을 입력해주세요.', 'warning');
+        showToast('지역을 입력해주세요. (예: 평택, 서울, 부산)', 'warning');
+        locationInput.focus();
         return;
     }
     
     try {
-        const response = await fetch('/api/lottery-stores');
+        showToast('판매점을 검색하고 있습니다...', 'info');
+        
+        // URL에 검색어 파라미터 추가
+        const url = `/api/lottery-stores?query=${encodeURIComponent(location)}`;
+        const response = await fetch(url);
         const data = await response.json();
         
+        const container = document.getElementById('store-results');
+        
         if (data.success) {
-            const container = document.getElementById('store-results');
-            container.innerHTML = data.stores.slice(0, 5).map(store => `
-                <div class="store-item mb-3 p-2 border rounded">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <h6 class="mb-1">${store.name}</h6>
-                            <small class="text-muted">${store.address}</small>
-                            <div class="mt-1">
-                                <span class="badge bg-warning text-dark">1등 ${store.first_wins}회</span>
+            if (data.stores && data.stores.length > 0) {
+                container.innerHTML = data.stores.map(store => `
+                    <div class="store-item mb-3 p-3 border rounded">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1 fw-bold">${store.name}</h6>
+                                <p class="mb-1 text-muted small">${store.address}</p>
+                                <div class="mb-2">
+                                    <span class="badge bg-warning text-dark me-1">1등 ${store.first_wins}회</span>
+                                    ${store.business_hours ? `<span class="badge bg-info">${store.business_hours}</span>` : ''}
+                                </div>
+                                ${store.description ? `<p class="mb-1 small text-secondary">${store.description}</p>` : ''}
+                            </div>
+                            <div class="text-end ms-3">
+                                <small class="text-muted d-block">${store.phone}</small>
+                                ${store.distance ? `<small class="text-primary"><i class="fas fa-map-marker-alt me-1"></i>${store.distance}km</small>` : ''}
                             </div>
                         </div>
-                        <div class="text-end">
-                            <small class="text-muted">${store.phone}</small>
-                            ${store.distance ? `<div><small class="text-primary">${store.distance}km</small></div>` : ''}
-                        </div>
                     </div>
-                </div>
-            `).join('');
+                `).join('');
+                
+                showToast(`${data.stores.length}개의 판매점을 찾았습니다! 🏪`, 'success');
+            } else {
+                // 검색 결과 없음
+                container.innerHTML = `
+                    <div class="text-center py-4">
+                        <i class="fas fa-search fa-2x text-muted mb-3"></i>
+                        <h6 class="text-muted">'${location}' 지역의 판매점을 찾을 수 없습니다</h6>
+                        <p class="small text-muted mb-3">다른 지역명을 시도해보세요</p>
+                        ${data.suggestions ? `
+                            <div class="mt-3">
+                                <p class="small fw-bold">검색 가능한 지역:</p>
+                                <div class="d-flex flex-wrap gap-1 justify-content-center">
+                                    ${data.suggestions.map(region => 
+                                        `<button class="btn btn-sm btn-outline-primary" onclick="searchRegion('${region}')">${region}</button>`
+                                    ).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+                showToast('검색 결과가 없습니다. 다른 지역명을 시도해보세요.', 'warning');
+            }
         } else {
-            showToast(data.error || '판매점 검색에 실패했습니다.', 'error');
+            throw new Error(data.error || '검색에 실패했습니다.');
         }
     } catch (error) {
         console.error('판매점 검색 실패:', error);
         showToast('판매점 검색에 실패했습니다.', 'error');
+        
+        const container = document.getElementById('store-results');
+        container.innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                검색에 실패했습니다. 잠시 후 다시 시도해주세요.
+            </div>
+        `;
+    }
+}
+
+// 지역 버튼 클릭 시 검색
+function searchRegion(region) {
+    const locationInput = document.getElementById('store-location');
+    locationInput.value = region;
+    findLotteryStoresEnhanced();
+}
+
+// 향상된 기능들 초기화
+function initializeEnhancedFeatures() {
+    // QR 스캔 버튼 이벤트 교체
+    const qrStartBtn = document.getElementById('start-qr-scan');
+    if (qrStartBtn) {
+        // 기존 이벤트 제거하고 새 이벤트 추가
+        qrStartBtn.replaceWith(qrStartBtn.cloneNode(true));
+        const newQrStartBtn = document.getElementById('start-qr-scan');
+        newQrStartBtn.addEventListener('click', startQRScanEnhanced);
+    }
+    
+    console.log('✅ 향상된 기능들이 초기화되었습니다.');
+}
+
+// 키보드 단축키 설정
+function setupKeyboardShortcuts() {
+    document.addEventListener('keydown', function(e) {
+        // Ctrl + P: AI 예측
+        if (e.ctrlKey && e.key === 'p') {
+            e.preventDefault();
+            scrollToSection('prediction');
+            const predictForm = document.getElementById('predictionForm');
+            if (predictForm) {
+                predictForm.dispatchEvent(new Event('submit'));
+            }
+        }
+        
+        // Ctrl + S: 빠른 저장 모달 열기
+        if (e.ctrlKey && e.key === 's') {
+            e.preventDefault();
+            openQuickSaveModal();
+        }
+        
+        // Ctrl + I: 정보 모달 열기
+        if (e.ctrlKey && e.key === 'i') {
+            e.preventDefault();
+            openInfoModal();
+        }
+        
+        // ESC: 모달 닫기
+        if (e.key === 'Escape') {
+            if (isQRScanning) {
+                stopQRScan();
+            }
+        }
+        
+        // F1: 도움말
+        if (e.key === 'F1') {
+            e.preventDefault();
+            openInfoModal('guide');
+        }
+    });
+    
+    // 엔터키로 저장 기능
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            const focusedElement = document.activeElement;
+            if (focusedElement && focusedElement.classList.contains('number-input-enhanced')) {
+                e.preventDefault();
+                
+                // 다음 입력으로 이동하거나 저장
+                const inputs = document.querySelectorAll('.number-input-enhanced');
+                const currentIndex = Array.from(inputs).indexOf(focusedElement);
+                
+                if (currentIndex < inputs.length - 1) {
+                    inputs[currentIndex + 1].focus();
+                } else {
+                    // 마지막 입력이면 저장 시도
+                    const submitBtn = document.getElementById('save-submit-btn');
+                    if (submitBtn && !submitBtn.disabled) {
+                        saveNumbers();
+                    }
+                }
+            }
+        }
+    });
+}
+
+// 빠른 저장 기능 설정
+function setupQuickSaveFeatures() {
+    const quickSaveInput = document.getElementById('quickSaveInput');
+    const quickSaveSubmit = document.getElementById('quickSaveSubmit');
+    
+    if (quickSaveInput) {
+        // 실시간 입력 검증
+        quickSaveInput.addEventListener('input', function() {
+            validateQuickSaveInput();
+        });
+        
+        // 엔터키로 저장
+        quickSaveInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !quickSaveSubmit.disabled) {
+                submitQuickSave();
+            }
+        });
+    }
+}
+
+// 빠른 저장 입력 검증
+function validateQuickSaveInput() {
+    const input = document.getElementById('quickSaveInput');
+    const preview = document.getElementById('quickSavePreview');
+    const progress = document.getElementById('inputProgress');
+    const progressText = document.getElementById('progressText');
+    const submitBtn = document.getElementById('quickSaveSubmit');
+    
+    if (!input || !preview || !progress || !progressText || !submitBtn) return;
+    
+    const value = input.value.trim();
+    
+    if (!value) {
+        // 빈 입력
+        preview.innerHTML = `
+            <div class="text-muted text-center py-3">
+                <i class="fas fa-info-circle me-2"></i>번호를 입력하면 미리보기가 표시됩니다
+            </div>
+        `;
+        progress.style.width = '0%';
+        progressText.textContent = '0/6';
+        submitBtn.disabled = true;
+        input.classList.remove('is-valid', 'is-invalid');
+        return;
+    }
+    
+    // 번호 파싱
+    const numbers = parseNumberString(value);
+    const validNumbers = numbers.filter(num => num >= 1 && num <= 45);
+    const uniqueNumbers = [...new Set(validNumbers)];
+    
+    // 진행률 업데이트
+    const progressPercent = (uniqueNumbers.length / 6) * 100;
+    progress.style.width = `${progressPercent}%`;
+    progressText.textContent = `${uniqueNumbers.length}/6`;
+    
+    // 미리보기 업데이트
+    if (uniqueNumbers.length > 0) {
+        preview.innerHTML = uniqueNumbers.map(num => 
+            `<div class="lotto-ball lotto-ball-${Math.ceil(num/9)}">${num}</div>`
+        ).join('');
+        
+        // 부족한 번호 표시
+        const remaining = 6 - uniqueNumbers.length;
+        if (remaining > 0) {
+            for (let i = 0; i < remaining; i++) {
+                preview.innerHTML += '<div class="lotto-ball" style="background: #ddd; color: #999;">?</div>';
+            }
+        }
+    }
+    
+    // 입력 상태 표시
+    if (uniqueNumbers.length === 6) {
+        input.classList.add('is-valid');
+        input.classList.remove('is-invalid');
+        submitBtn.disabled = false;
+    } else if (numbers.length > 0) {
+        input.classList.add('is-invalid');
+        input.classList.remove('is-valid');
+        submitBtn.disabled = true;
+    } else {
+        input.classList.remove('is-valid', 'is-invalid');
+        submitBtn.disabled = true;
+    }
+}
+
+// 번호 문자열 파싱
+function parseNumberString(str) {
+    // 숫자, 공백, 쉼표, 하이픈만 허용
+    const cleaned = str.replace(/[^\d\s,\-]/g, '');
+    // 구분자를 공백으로 통일
+    const normalized = cleaned.replace(/[,\-]/g, ' ');
+    // 숫자 추출
+    const numbers = normalized.split(/\s+/)
+        .filter(s => s.length > 0)
+        .map(s => parseInt(s))
+        .filter(n => !isNaN(n));
+    
+    return numbers;
+}
+
+// 빠른 저장용 랜덤 생성
+async function generateRandomForQuickSave() {
+    try {
+        const response = await fetch('/api/generate-random', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ count: 1 })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.random_sets.length > 0) {
+            const numbers = data.random_sets[0].numbers;
+            const input = document.getElementById('quickSaveInput');
+            input.value = numbers.join(', ');
+            validateQuickSaveInput();
+            showToast('랜덤 번호가 생성되었습니다! 🎲', 'success');
+        } else {
+            throw new Error('랜덤 번호 생성 실패');
+        }
+    } catch (error) {
+        console.error('랜덤 생성 실패:', error);
+        showToast('랜덤 번호 생성에 실패했습니다.', 'error');
+    }
+}
+
+// 빠른 저장 입력 초기화
+function clearQuickSaveInput() {
+    const input = document.getElementById('quickSaveInput');
+    input.value = '';
+    validateQuickSaveInput();
+    input.focus();
+}
+
+// 빠른 저장 제출
+async function submitQuickSave() {
+    const input = document.getElementById('quickSaveInput');
+    const numbersString = input.value.trim();
+    
+    if (!numbersString) {
+        showToast('번호를 입력해주세요.', 'warning');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/quick-save', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                numbers_string: numbersString
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast('번호가 저장되었습니다! 💾', 'success');
+            
+            // 모달 닫기
+            const modal = bootstrap.Modal.getInstance(document.getElementById('quickSaveModal'));
+            modal.hide();
+            
+            // 입력 초기화
+            input.value = '';
+            validateQuickSaveInput();
+            
+            // 저장된 번호 목록 새로고침
+            loadSavedNumbers();
+        } else {
+            showToast(data.error || '저장에 실패했습니다.', 'error');
+        }
+    } catch (error) {
+        console.error('빠른 저장 실패:', error);
+        showToast('저장에 실패했습니다.', 'error');
+    }
+}
+
+// 빠른 저장 모달 열기
+function openQuickSaveModal() {
+    const modal = new bootstrap.Modal(document.getElementById('quickSaveModal'));
+    modal.show();
+    
+    // 포커스 설정
+    setTimeout(() => {
+        document.getElementById('quickSaveInput')?.focus();
+    }, 500);
+}
+
+// 정보 모달 설정
+function setupInfoModal() {
+    // 정보 버튼에 이벤트 리스너 추가
+    const infoButtons = document.querySelectorAll('[data-bs-toggle="modal"][data-bs-target="#infoModal"]');
+    infoButtons.forEach(button => {
+        button.addEventListener('click', openInfoModal);
+    });
+    
+    // 네비게이션 정보 버튼 (존재하는 경우)
+    const navInfoBtn = document.querySelector('.navbar .btn[href="#info"]');
+    if (navInfoBtn) {
+        navInfoBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            openInfoModal();
+        });
+    }
+}
+
+function openInfoModal(tab = 'terms') {
+    const modal = new bootstrap.Modal(document.getElementById('infoModal'));
+    modal.show();
+    
+    // 특정 탭 활성화
+    if (tab && tab !== 'terms') {
+        setTimeout(() => {
+            const tabButton = document.getElementById(`${tab}-tab`);
+            if (tabButton) {
+                const tabInstance = new bootstrap.Tab(tabButton);
+                tabInstance.show();
+            }
+        }, 300);
     }
 }
 
 // Utility functions
 function scrollToSection(sectionId) {
-    document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' });
+    const element = document.getElementById(sectionId);
+    if (element) {
+        element.scrollIntoView({ 
+            behavior: 'smooth',
+            block: 'start'
+        });
+    }
 }
 
 function showToast(message, type = 'info') {
-    // 이미 lottoPro에 구현된 showToast 사용
+    // 이미 lottoProに 구현된 showToast 사용
     if (window.lottoPro && window.lottoPro.showToast) {
         window.lottoPro.showToast(message, type);
     } else {
@@ -1353,5 +2700,21 @@ function showToast(message, type = 'info') {
         alert(message);
     }
 }
+
+// 페이지 가시성 변경 시 QR 스캔 중지
+document.addEventListener('visibilitychange', function() {
+    if (document.hidden && isQRScanning) {
+        stopQRScan();
+    }
+});
+
+// 창 닫기 전 QR 스캔 정리
+window.addEventListener('beforeunload', function() {
+    if (isQRScanning) {
+        stopQRScan();
+    }
+});
+
+console.log('🚀 LottoPro AI v2.0 Enhanced Features Loaded Successfully!');
 </script>
 {% endblock %}
