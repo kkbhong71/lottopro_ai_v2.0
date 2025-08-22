@@ -794,31 +794,90 @@ html {
     box-shadow: var(--shadow-medium);
 }
 
+.qr-scanner-area {
+    position: relative;
+}
+
+.qr-scanner-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 200px;
+    height: 200px;
+    border: 2px solid var(--primary-color);
+    border-radius: var(--border-radius);
+    box-shadow: 0 0 0 99999px rgba(0, 0, 0, 0.5);
+    pointer-events: none;
+}
+
+.qr-scanner-overlay::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border: 2px solid var(--warning-color);
+    border-radius: var(--border-radius);
+    animation: qr-scan-pulse 2s infinite;
+}
+
+@keyframes qr-scan-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.1); }
+}
+
 /* Saved Numbers Styles */
 .saved-numbers-container {
     max-height: 400px;
     overflow-y: auto;
     padding-right: 0.5rem;
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary-color) #f1f1f1;
 }
 
 .saved-numbers-container::-webkit-scrollbar {
-    width: 6px;
+    width: 8px;
 }
 
 .saved-numbers-container::-webkit-scrollbar-track {
     background: #f1f1f1;
-    border-radius: 3px;
+    border-radius: var(--border-radius-sm);
 }
 
 .saved-numbers-container::-webkit-scrollbar-thumb {
     background: var(--primary-color);
-    border-radius: 3px;
+    border-radius: var(--border-radius-sm);
+}
+
+.saved-numbers-container::-webkit-scrollbar-thumb:hover {
+    background: var(--secondary-color);
 }
 
 .saved-number-item {
     transition: all var(--transition-normal);
     border: 1px solid #e9ecef !important;
     background: white;
+    border-radius: var(--border-radius) !important;
+    margin-bottom: 1rem !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.saved-number-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.1), transparent);
+    transition: left 0.6s;
+}
+
+.saved-number-item:hover::before {
+    left: 100%;
 }
 
 .saved-number-item:hover {
@@ -827,12 +886,84 @@ html {
     border-color: var(--primary-color) !important;
 }
 
+.saved-number-actions {
+    opacity: 0.7;
+    transition: opacity var(--transition-normal);
+}
+
+.saved-number-item:hover .saved-number-actions {
+    opacity: 1;
+}
+
 .saved-number-actions .btn {
     transition: all var(--transition-fast);
 }
 
 .saved-number-actions .btn:hover {
     transform: scale(1.1);
+}
+
+/* 향상된 번호 입력 필드 */
+.number-input-enhanced {
+    font-weight: bold;
+    font-size: 1.1rem;
+    transition: all var(--transition-normal);
+    border-radius: var(--border-radius-sm);
+}
+
+.number-input-enhanced:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    transform: scale(1.05);
+}
+
+.number-input-enhanced.is-valid {
+    border-color: var(--success-color);
+    background: rgba(40, 167, 69, 0.05);
+}
+
+.number-input-enhanced.is-invalid {
+    border-color: var(--danger-color);
+    background: rgba(220, 53, 69, 0.05);
+    animation: shake 0.5s ease-in-out;
+}
+
+/* 검색 입력 스타일 */
+#saved-search {
+    border-radius: var(--border-radius-sm);
+    transition: all var(--transition-normal);
+}
+
+#saved-search:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+/* 통계 카드 스타일 */
+.card-footer .row > div {
+    position: relative;
+}
+
+.card-footer .row > div:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 10%;
+    bottom: 10%;
+    width: 1px;
+    background: #dee2e6;
+}
+
+/* 정보 아이콘 스타일 */
+.info-icon {
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    font-size: 0.9em;
+}
+
+.info-icon:hover {
+    color: var(--warning-color) !important;
+    transform: scale(1.2);
 }
 
 /* Tools Section Styles */
@@ -871,44 +1002,6 @@ html {
     background: #f8f9fa;
     transform: translateX(5px);
     border-color: var(--primary-color);
-}
-
-/* Enhanced Toasts */
-.custom-toast {
-    font-size: 14px;
-    border: none;
-    border-radius: var(--border-radius);
-    backdrop-filter: blur(10px);
-    box-shadow: var(--shadow-heavy);
-    animation: slideInRight 0.3s ease-out;
-}
-
-@keyframes slideInRight {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
-}
-
-/* Enhanced Modal Styles */
-.modal-content {
-    border-radius: var(--border-radius);
-    border: none;
-    box-shadow: var(--shadow-heavy);
-}
-
-.modal-header {
-    border-radius: var(--border-radius) var(--border-radius) 0 0;
-    border-bottom: none;
-    padding: 1.5rem;
-}
-
-.modal-body {
-    padding: 2rem;
 }
 
 /* Simulation Results */
@@ -974,6 +1067,219 @@ html {
     padding: 1rem;
     border-radius: var(--border-radius-sm);
     border: 1px solid #e9ecef;
+}
+
+/* 토스트 스타일 개선 */
+.toast-container {
+    z-index: 10000 !important;
+}
+
+.custom-toast {
+    min-width: 300px;
+    box-shadow: var(--shadow-heavy);
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 14px;
+    backdrop-filter: blur(10px);
+    animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.toast-success {
+    background: var(--gradient-success);
+    color: white;
+}
+
+.toast-error {
+    background: var(--gradient-danger);
+    color: white;
+}
+
+.toast-warning {
+    background: var(--gradient-warning);
+    color: var(--dark-color);
+}
+
+.toast-info {
+    background: var(--gradient-info);
+    color: white;
+}
+
+.toast-body {
+    padding: 1rem;
+    font-weight: 500;
+}
+
+/* 정보 모달 스타일 */
+.modal-content {
+    border-radius: var(--border-radius);
+    border: none;
+    box-shadow: var(--shadow-heavy);
+}
+
+.modal-header {
+    border-radius: var(--border-radius) var(--border-radius) 0 0;
+    border-bottom: none;
+    padding: 1.5rem;
+}
+
+.modal-body {
+    padding: 2rem;
+}
+
+.modal-dialog-scrollable .modal-body {
+    max-height: 70vh;
+}
+
+.nav-tabs .nav-link {
+    border-radius: var(--border-radius-sm) var(--border-radius-sm) 0 0;
+    transition: all var(--transition-normal);
+    font-weight: 500;
+}
+
+.nav-tabs .nav-link:hover {
+    transform: translateY(-2px);
+    border-color: var(--primary-color);
+}
+
+.nav-tabs .nav-link.active {
+    background: var(--gradient-primary);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.tab-content {
+    border: 1px solid #dee2e6;
+    border-top: none;
+    border-radius: 0 0 var(--border-radius) var(--border-radius);
+    background: white;
+}
+
+/* 빠른 저장 모달 스타일 */
+#quickSaveModal .modal-content {
+    border: none;
+    box-shadow: var(--shadow-heavy);
+}
+
+#quickSaveModal .form-control-lg {
+    font-size: 1.1rem;
+    padding: 0.75rem 1rem;
+    border-radius: var(--border-radius-sm);
+}
+
+#quickSaveModal .number-display {
+    min-height: 60px;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: var(--border-radius-sm);
+    border: 2px dashed #dee2e6;
+    justify-content: center;
+    align-items: center;
+}
+
+/* 진행률 표시 스타일 */
+.progress {
+    background-color: #e9ecef;
+    border-radius: var(--border-radius-sm);
+    overflow: hidden;
+}
+
+.progress-bar {
+    transition: width 0.3s ease;
+    border-radius: var(--border-radius-sm);
+}
+
+/* 키보드 단축키 스타일 */
+kbd {
+    background-color: var(--dark-color);
+    color: white;
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+    font-size: 0.8em;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* 팁 카드 스타일 */
+.bg-gradient-info .col-md-3 {
+    transition: all var(--transition-normal);
+}
+
+.bg-gradient-info .col-md-3:hover {
+    transform: translateY(-5px);
+}
+
+/* 향상된 버튼 스타일 */
+.btn-group-sm .btn {
+    transition: all var(--transition-fast);
+}
+
+.btn-group-sm .btn:hover {
+    transform: scale(1.1);
+    z-index: 2;
+}
+
+/* 로딩 스피너 개선 */
+.spinner-border {
+    animation-duration: 0.75s;
+}
+
+.spinner-grow {
+    animation-duration: 0.75s;
+}
+
+/* 배지 스타일 개선 */
+.badge {
+    transition: all var(--transition-normal);
+}
+
+.badge:hover {
+    transform: scale(1.1);
+}
+
+/* 알림 스타일 개선 */
+.alert {
+    border: none;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-light);
+}
+
+.alert-info {
+    background: var(--gradient-info);
+    color: white;
+}
+
+.alert-warning {
+    background: var(--gradient-warning);
+    color: var(--dark-color);
+}
+
+.alert-success {
+    background: var(--gradient-success);
+    color: white;
+}
+
+.alert-danger {
+    background: var(--gradient-danger);
+    color: white;
+}
+
+/* 카드 애니메이션 개선 */
+.card {
+    transition: all var(--transition-normal);
+}
+
+.card:hover {
+    transform: translateY(-2px);
 }
 
 /* Responsive Design */
@@ -1049,9 +1355,42 @@ html {
     }
     
     .custom-toast {
-        right: 10px;
-        left: 10px;
-        max-width: none;
+        min-width: 280px;
+        margin: 0 1rem;
+    }
+    
+    .modal-dialog {
+        margin: 1rem;
+    }
+    
+    #quickSaveModal .modal-dialog {
+        margin: 0.5rem;
+    }
+    
+    .nav-tabs {
+        flex-wrap: wrap;
+    }
+    
+    .nav-tabs .nav-link {
+        font-size: 0.9rem;
+        padding: 0.5rem 0.75rem;
+    }
+    
+    .number-input-enhanced {
+        font-size: 1rem;
+    }
+    
+    .card-footer .row > div {
+        margin-bottom: 0.5rem;
+    }
+    
+    .card-footer .row > div::after {
+        display: none;
+    }
+    
+    kbd {
+        font-size: 0.7em;
+        padding: 0.1rem 0.3rem;
     }
 }
 
@@ -1090,18 +1429,57 @@ html {
         padding: 0.375rem 0.5rem;
         font-size: 0.8rem;
     }
+    
+    .btn-group-sm .btn {
+        padding: 0.25rem 0.4rem;
+        font-size: 0.8rem;
+    }
+    
+    .badge {
+        font-size: 0.7em;
+    }
+    
+    .number-display {
+        gap: 0.3rem !important;
+    }
+    
+    .lotto-ball {
+        width: 40px !important;
+        height: 40px !important;
+        font-size: 14px !important;
+    }
+    
+    .saved-number-item {
+        padding: 0.75rem !important;
+    }
 }
 
-/* Accessibility */
+/* 접근성 개선 */
 @media (prefers-reduced-motion: reduce) {
     * {
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
     }
+    
+    .number-input-enhanced:focus {
+        transform: none;
+    }
+    
+    .saved-number-item:hover {
+        transform: none;
+    }
+    
+    .btn-group-sm .btn:hover {
+        transform: none;
+    }
+    
+    .qr-scanner-overlay::before {
+        animation: none;
+    }
 }
 
-/* Dark mode support */
+/* 다크모드 추가 지원 */
 @media (prefers-color-scheme: dark) {
     :root {
         --light-color: #1a1a1a;
@@ -1125,30 +1503,121 @@ html {
         border-color: #404040;
     }
     
-    .number-input {
+    .number-input,
+    .number-input-enhanced {
         background: #2d2d2d;
         color: #ffffff;
         border-color: #404040;
     }
     
-    .number-input:focus {
+    .number-input:focus,
+    .number-input-enhanced:focus {
         background: #2d2d2d;
     }
     
     .qr-placeholder {
         background: #2d2d2d;
         border-color: #404040;
+        color: #ffffff;
+    }
+    
+    .tab-content {
+        background: #2d2d2d;
+        border-color: #404040;
+    }
+    
+    .nav-tabs .nav-link {
+        color: #ffffff;
+        border-color: #404040;
+    }
+    
+    .nav-tabs .nav-link:hover {
+        border-color: var(--primary-color);
+        background: rgba(102, 126, 234, 0.1);
+    }
+    
+    .progress {
+        background-color: #404040;
+    }
+    
+    .saved-numbers-container::-webkit-scrollbar-track {
+        background: #404040;
+    }
+    
+    #quickSaveModal .number-display {
+        background: #404040;
+        border-color: #555;
     }
 }
 
-/* Print styles */
+/* 고대비 모드 지원 */
+@media (prefers-contrast: high) {
+    .btn {
+        border-width: 2px;
+    }
+    
+    .form-control {
+        border-width: 2px;
+    }
+    
+    .lotto-ball {
+        border: 2px solid #000 !important;
+    }
+    
+    .progress {
+        border: 1px solid #000;
+    }
+}
+
+/* 포커스 표시 개선 */
+.btn:focus-visible,
+.form-control:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+    border-color: var(--primary-color);
+}
+
+/* 애니메이션 최적화 */
+.number-input-enhanced,
+.saved-number-item,
+.lotto-ball {
+    will-change: transform;
+}
+
+/* 터치 디바이스 최적화 */
+@media (hover: none) and (pointer: coarse) {
+    .btn {
+        min-height: 44px;
+        min-width: 44px;
+    }
+    
+    .form-control {
+        min-height: 44px;
+    }
+    
+    .lotto-ball {
+        min-width: 44px;
+        min-height: 44px;
+    }
+    
+    .info-icon {
+        font-size: 1.2em;
+        padding: 0.25rem;
+    }
+}
+
+/* 인쇄 스타일 */
 @media print {
     .navbar,
     .hero-section,
     footer,
     .quick-action-card,
-    .result-actions {
-        display: none;
+    .result-actions,
+    .modal,
+    .toast-container,
+    .btn,
+    .card-footer {
+        display: none !important;
     }
     
     .prediction-result {
@@ -1161,7 +1630,22 @@ html {
     
     .lotto-ball {
         box-shadow: none;
-        border: 1px solid #333;
+        border: 1px solid #333 !important;
+        color: black !important;
+        background: white !important;
+    }
+    
+    .saved-number-item {
+        break-inside: avoid;
+        border: 1px solid #ddd !important;
+        background: white !important;
+        color: black !important;
+    }
+    
+    .number-display .lotto-ball {
+        border: 1px solid #333 !important;
+        color: black !important;
+        background: white !important;
     }
     
     body {
@@ -1335,14 +1819,6 @@ html {
     border-radius: 50%;
 }
 
-/* Focus States for Accessibility */
-.btn:focus,
-.form-control:focus,
-.lotto-ball:focus {
-    outline: 2px solid var(--primary-color);
-    outline-offset: 2px;
-}
-
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
     width: 8px;
@@ -1373,4 +1849,3 @@ html {
     background: var(--primary-color);
     color: white;
 }
-
