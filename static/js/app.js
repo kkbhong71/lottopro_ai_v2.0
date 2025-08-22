@@ -1,4 +1,4 @@
-// LottoPro AI v2.0 Enhanced JavaScript Application - 완전 수정 버전
+// LottoPro AI v2.0 Enhanced JavaScript Application - 통합 완성 버전
 
 class LottoProAI {
     constructor() {
@@ -21,7 +21,8 @@ class LottoProAI {
         this.setupQRScanner();
         this.loadSavedNumbers();
         this.initializeServiceWorker();
-        this.initializeInfoButton(); // 정보 버튼 초기화 추가
+        this.initializeInfoButton();
+        this.initializeHeroExampleNumbers();
     }
     
     initializeEventListeners() {
@@ -68,10 +69,10 @@ class LottoProAI {
             }
         }
         
-        // QR 스캔 버튼 이벤트
+        // QR 스캔 버튼 이벤트 (향상된 버전)
         const qrButton = document.getElementById('start-qr-scan');
         if (qrButton) {
-            qrButton.addEventListener('click', () => this.startQRScan());
+            qrButton.addEventListener('click', () => this.startQRScanEnhanced());
         }
         
         // 스크롤 애니메이션
@@ -403,124 +404,136 @@ class LottoProAI {
         }
     }
 
-    // ===== QR 스캔 기능 (완전 수정 버전) =====
+    // ===== QR 스캔 기능 (향상된 버전) =====
     
     setupQRScanner() {
         this.log('QR 스캐너 설정 초기화');
+        this.qrVideo = null;
+        this.qrStream = null;
+        this.isQRScanning = false;
     }
     
-    async startQRScan() {
+    async startQRScanEnhanced() {
         try {
-            this.log('QR 스캔 시작');
+            this.log('향상된 QR 스캔 시작');
             
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
                 throw new Error('이 브라우저는 카메라를 지원하지 않습니다.');
             }
-            
+
             // UI 변경
-            document.getElementById('qr-start-area').style.display = 'none';
-            document.getElementById('qr-scanner-area').style.display = 'block';
+            const startArea = document.getElementById('qr-start-area');
+            const scannerArea = document.getElementById('qr-scanner-area');
             
-            // 후면 카메라 강제 설정을 위한 다단계 시도
-            let stream = null;
-            
-            try {
-                // 1차 시도: 후면 카메라 직접 지정
-                stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { 
-                        facingMode: { exact: 'environment' },  // exact로 후면 카메라 강제
+            if (startArea) startArea.style.display = 'none';
+            if (scannerArea) scannerArea.style.display = 'block';
+
+            // 4단계 카메라 접근 시도
+            const cameraConfigs = [
+                // 1단계: 후면 카메라 (이상적)
+                {
+                    video: {
+                        facingMode: { ideal: 'environment' },
                         width: { ideal: 1280 },
                         height: { ideal: 720 }
-                    } 
-                });
-            } catch (error) {
-                this.log('후면 카메라 exact 모드 실패, ideal 모드 시도');
+                    }
+                },
+                // 2단계: 후면 카메라 (필수)
+                {
+                    video: {
+                        facingMode: { exact: 'environment' },
+                        width: { ideal: 640 },
+                        height: { ideal: 480 }
+                    }
+                },
+                // 3단계: 전면 카메라
+                {
+                    video: {
+                        facingMode: 'user',
+                        width: { ideal: 640 },
+                        height: { ideal: 480 }
+                    }
+                },
+                // 4단계: 기본 비디오
+                {
+                    video: true
+                }
+            ];
+
+            let cameraActivated = false;
+            
+            for (let i = 0; i < cameraConfigs.length; i++) {
                 try {
-                    // 2차 시도: ideal 모드로 후면 카메라 요청
-                    stream = await navigator.mediaDevices.getUserMedia({ 
-                        video: { 
-                            facingMode: { ideal: 'environment' },
-                            width: { ideal: 1280 },
-                            height: { ideal: 720 }
-                        } 
-                    });
-                } catch (error2) {
-                    this.log('후면 카메라 ideal 모드도 실패, 기본 후면 카메라 시도');
-                    try {
-                        // 3차 시도: 기본 environment 모드
-                        stream = await navigator.mediaDevices.getUserMedia({ 
-                            video: { 
-                                facingMode: 'environment'
-                            } 
-                        });
-                    } catch (error3) {
-                        this.log('모든 후면 카메라 시도 실패, 디바이스 ID로 시도');
-                        
-                        // 4차 시도: 사용 가능한 카메라 목록에서 후면 카메라 찾기
-                        const devices = await navigator.mediaDevices.enumerateDevices();
-                        const videoDevices = devices.filter(device => device.kind === 'videoinput');
-                        
-                        // 후면 카메라 찾기 (라벨에 'back', 'rear', 'environment' 포함)
-                        const backCamera = videoDevices.find(device => {
-                            const label = device.label.toLowerCase();
-                            return label.includes('back') || 
-                                   label.includes('rear') || 
-                                   label.includes('environment') ||
-                                   label.includes('후면') ||
-                                   !label.includes('front') && !label.includes('user') && !label.includes('전면');
-                        });
-                        
-                        if (backCamera) {
-                            stream = await navigator.mediaDevices.getUserMedia({
-                                video: {
-                                    deviceId: { exact: backCamera.deviceId },
-                                    width: { ideal: 1280 },
-                                    height: { ideal: 720 }
-                                }
-                            });
-                            this.log('디바이스 ID로 후면 카메라 성공');
-                        } else {
-                            // 최후의 수단: 첫 번째 카메라 (대부분 후면)
-                            if (videoDevices.length > 0) {
-                                stream = await navigator.mediaDevices.getUserMedia({
-                                    video: {
-                                        deviceId: { exact: videoDevices[0].deviceId }
-                                    }
-                                });
-                                this.log('첫 번째 카메라로 폴백');
-                            } else {
-                                throw new Error('사용 가능한 카메라가 없습니다.');
-                            }
-                        }
+                    this.log(`카메라 설정 ${i + 1} 시도:`, cameraConfigs[i]);
+                    this.qrStream = await navigator.mediaDevices.getUserMedia(cameraConfigs[i]);
+                    
+                    await this.setupQRVideo(this.qrStream);
+                    cameraActivated = true;
+                    
+                    // 성공 메시지 표시
+                    if (i === 0) {
+                        this.showToast('후면 카메라가 활성화되었습니다! 📱', 'success');
+                    } else if (i === 1) {
+                        this.showToast('후면 카메라가 활성화되었습니다! 📱', 'success');
+                    } else if (i === 2) {
+                        this.showToast('⚠️ 전면 카메라가 활성화되었습니다. QR코드가 뒤집혀 보일 수 있습니다.', 'warning');
+                    } else {
+                        this.showToast('카메라가 활성화되었습니다.', 'info');
+                    }
+                    
+                    break;
+                    
+                } catch (error) {
+                    this.log(`카메라 설정 ${i + 1} 실패:`, error);
+                    if (i === cameraConfigs.length - 1) {
+                        throw new Error('카메라에 접근할 수 없습니다. 브라우저 권한을 확인해주세요.');
                     }
                 }
             }
-            
-            this.currentStream = stream;
-            const video = document.getElementById('qr-video');
-            video.srcObject = stream;
-            await video.play();
-            
-            // 비디오 스트림 방향 확인 및 조정
-            const track = stream.getVideoTracks()[0];
-            const settings = track.getSettings();
-            this.log(`카메라 설정: facingMode=${settings.facingMode}, width=${settings.width}, height=${settings.height}`);
-            
-            // 전면 카메라인 경우 사용자에게 알림
-            if (settings.facingMode === 'user') {
-                this.showToast('⚠️ 전면 카메라가 활성화되었습니다. 로또 용지 스캔을 위해 후면 카메라를 권장합니다.', 'warning');
-            } else {
-                this.showToast('📱 후면 카메라가 활성화되었습니다. 로또 용지를 카메라에 대주세요.', 'success');
+
+            if (!cameraActivated) {
+                throw new Error('모든 카메라 설정이 실패했습니다.');
             }
-            
-            // QR 코드 감지 시작
-            this.startQRDetection(video);
-            
+
         } catch (error) {
             console.error('QR 스캔 시작 실패:', error);
-            this.showToast(error.message || '카메라에 접근할 수 없습니다. 브라우저 설정에서 카메라 권한을 확인해주세요.', 'error');
-            this.stopQRScan();
+            this.showToast(error.message, 'error');
+            
+            // UI 복원
+            const startArea = document.getElementById('qr-start-area');
+            const scannerArea = document.getElementById('qr-scanner-area');
+            
+            if (startArea) startArea.style.display = 'block';
+            if (scannerArea) scannerArea.style.display = 'none';
         }
+    }
+    
+    // QR 비디오 설정 (향상된 버전)
+    async setupQRVideo(stream) {
+        return new Promise((resolve, reject) => {
+            this.qrVideo = document.getElementById('qr-video');
+            if (!this.qrVideo) {
+                reject(new Error('QR 비디오 엘리먼트를 찾을 수 없습니다.'));
+                return;
+            }
+            
+            this.qrVideo.srcObject = stream;
+            
+            this.qrVideo.onloadedmetadata = () => {
+                this.qrVideo.play()
+                    .then(() => {
+                        this.isQRScanning = true;
+                        this.log('QR 비디오 재생 시작');
+                        this.startQRDetection(this.qrVideo);
+                        resolve();
+                    })
+                    .catch(reject);
+            };
+            
+            this.qrVideo.onerror = () => {
+                reject(new Error('비디오 로드 실패'));
+            };
+        });
     }
     
     startQRDetection(video) {
@@ -543,7 +556,7 @@ class LottoProAI {
                 }
             }
             
-            if (this.currentStream) {
+            if (this.isQRScanning) {
                 requestAnimationFrame(detectQR);
             }
         };
@@ -571,13 +584,36 @@ class LottoProAI {
     }
     
     stopQRScan() {
-        if (this.currentStream) {
-            this.currentStream.getTracks().forEach(track => track.stop());
-            this.currentStream = null;
+        try {
+            this.log('QR 스캔 중지');
+            
+            if (this.qrStream) {
+                this.qrStream.getTracks().forEach(track => {
+                    track.stop();
+                    this.log('카메라 트랙 중지:', track.label);
+                });
+                this.qrStream = null;
+            }
+            
+            if (this.qrVideo) {
+                this.qrVideo.srcObject = null;
+                this.qrVideo.pause();
+            }
+            
+            this.isQRScanning = false;
+            
+            // UI 복원
+            const startArea = document.getElementById('qr-start-area');
+            const scannerArea = document.getElementById('qr-scanner-area');
+            
+            if (startArea) startArea.style.display = 'block';
+            if (scannerArea) scannerArea.style.display = 'none';
+            
+            this.showToast('QR 스캔이 중지되었습니다.', 'info');
+            
+        } catch (error) {
+            console.error('QR 스캔 중지 실패:', error);
         }
-        
-        document.getElementById('qr-start-area').style.display = 'block';
-        document.getElementById('qr-scanner-area').style.display = 'none';
     }
     
     async checkWinningNumbers(numbers) {
@@ -715,7 +751,7 @@ class LottoProAI {
         }
     }
     
-    // ===== 번호 저장 및 관리 (기존 기능 유지) =====
+    // ===== 번호 저장 및 관리 =====
     
     async loadSavedNumbers() {
         try {
@@ -1588,6 +1624,92 @@ class LottoProAI {
             ).join('');
         }
     }
+
+    // ===== 판매점 찾기 (향상된 버전) =====
+    
+    async findLotteryStoresEnhanced() {
+        const locationInput = document.getElementById('store-location');
+        const location = locationInput ? locationInput.value.trim() : '';
+        
+        if (!location) {
+            this.showToast('지역을 입력해주세요. (예: 평택, 서울, 부산)', 'warning');
+            if (locationInput) locationInput.focus();
+            return;
+        }
+        
+        try {
+            this.showToast('판매점을 검색하고 있습니다...', 'info');
+            
+            // URL에 검색어 파라미터 추가
+            const url = `/api/lottery-stores?query=${encodeURIComponent(location)}`;
+            const response = await fetch(url);
+            const data = await response.json();
+            
+            const container = document.getElementById('store-results');
+            if (!container) return;
+            
+            if (data.success) {
+                if (data.stores && data.stores.length > 0) {
+                    container.innerHTML = data.stores.map(store => `
+                        <div class="store-item mb-3 p-3 border rounded animate__animated animate__fadeInUp">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1 fw-bold">${store.name}</h6>
+                                    <p class="mb-1 text-muted small">${store.address}</p>
+                                    <div class="mb-2">
+                                        <span class="badge bg-warning text-dark me-1">1등 ${store.first_wins || 0}회</span>
+                                        ${store.business_hours ? `<span class="badge bg-info">${store.business_hours}</span>` : ''}
+                                    </div>
+                                    ${store.description ? `<p class="mb-1 small text-secondary">${store.description}</p>` : ''}
+                                </div>
+                                <div class="text-end ms-3">
+                                    <small class="text-muted d-block">${store.phone || '전화번호 없음'}</small>
+                                    ${store.distance ? `<small class="text-primary"><i class="fas fa-map-marker-alt me-1"></i>${store.distance}km</small>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                    
+                    this.showToast(`${data.stores.length}개의 판매점을 찾았습니다! 🏪`, 'success');
+                } else {
+                    // 검색 결과 없음
+                    container.innerHTML = `
+                        <div class="text-center py-4 animate__animated animate__fadeIn">
+                            <i class="fas fa-search fa-2x text-muted mb-3"></i>
+                            <h6 class="text-muted">'${location}' 지역의 판매점을 찾을 수 없습니다</h6>
+                            <p class="small text-muted mb-3">다른 지역명을 시도해보세요</p>
+                            ${data.suggestions ? `
+                                <div class="mt-3">
+                                    <p class="small fw-bold">검색 가능한 지역:</p>
+                                    <div class="d-flex flex-wrap gap-1 justify-content-center">
+                                        ${data.suggestions.map(region => 
+                                            `<button class="btn btn-sm btn-outline-primary" onclick="searchRegion('${region}')">${region}</button>`
+                                        ).join('')}
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                    this.showToast('검색 결과가 없습니다. 다른 지역명을 시도해보세요.', 'warning');
+                }
+            } else {
+                throw new Error(data.error || '검색에 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('판매점 검색 실패:', error);
+            this.showToast('판매점 검색에 실패했습니다.', 'error');
+            
+            const container = document.getElementById('store-results');
+            if (container) {
+                container.innerHTML = `
+                    <div class="alert alert-danger animate__animated animate__fadeIn">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        검색에 실패했습니다. 잠시 후 다시 시도해주세요.
+                    </div>
+                `;
+            }
+        }
+    }
     
     // ===== 유틸리티 함수들 =====
     
@@ -1819,7 +1941,7 @@ class LottoProAI {
             }
             
             // Escape: QR 스캔 중지
-            if (e.key === 'Escape' && this.currentStream) {
+            if (e.key === 'Escape' && this.isQRScanning) {
                 this.stopQRScan();
             }
         });
@@ -1846,7 +1968,6 @@ class LottoProAI {
             oscillator.connect(gainNode);
             gainNode.connect(audioContext.destination);
             
-            oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
             oscillator.frequency.setValueAtTime(1000, audioContext.currentTime + 0.1);
             oscillator.frequency.setValueAtTime(1200, audioContext.currentTime + 0.2);
             
@@ -1895,20 +2016,21 @@ class LottoProAI {
             clearInterval(this.exampleUpdateInterval);
         }
         
-        if (this.currentStream) {
-            this.currentStream.getTracks().forEach(track => track.stop());
+        if (this.qrStream) {
+            this.qrStream.getTracks().forEach(track => track.stop());
         }
         
         this.animationTimeouts.forEach(timeout => clearTimeout(timeout));
     }
 }
 
-// ===== 빠른 번호 저장 클래스 =====
+// ===== 빠른 번호 저장 클래스 (향상된 버전) =====
 class QuickNumberSave {
     constructor() {
         this.initializeQuickSave();
+        this.setupEventListeners();
     }
-    
+
     initializeQuickSave() {
         // 빠른 저장 버튼들 추가
         this.addQuickSaveButtons();
@@ -1916,36 +2038,122 @@ class QuickNumberSave {
         this.setupEnterKeyHandlers();
         // 번호 입력 시 실시간 검증
         this.setupRealTimeValidation();
+        console.log('빠른 저장 기능 초기화 완료');
     }
-    
+
     addQuickSaveButtons() {
         // 예측 결과에 빠른 저장 버튼 추가
-        const numberDisplays = document.querySelectorAll('.number-display');
-        numberDisplays.forEach(display => {
-            if (!display.querySelector('.quick-save-btn')) {
-                const quickSaveBtn = document.createElement('button');
-                quickSaveBtn.className = 'btn btn-sm btn-success ms-2 quick-save-btn';
-                quickSaveBtn.innerHTML = '<i class="fas fa-heart-plus"></i>';
-                quickSaveBtn.title = '이 번호 바로 저장';
-                quickSaveBtn.onclick = () => this.quickSaveFromDisplay(display);
-                display.appendChild(quickSaveBtn);
-            }
+        const resultElements = document.querySelectorAll('.prediction-result');
+        resultElements.forEach((element, index) => {
+            this.addQuickSaveToResult(element, index);
         });
     }
-    
-    quickSaveFromDisplay(display) {
+
+    addQuickSaveToResult(resultElement, index) {
+        const actionsDiv = resultElement.querySelector('.result-actions');
+        if (!actionsDiv) return;
+
+        // 이미 빠른 저장 버튼이 있는지 확인
+        if (actionsDiv.querySelector('.quick-save-btn')) return;
+
+        const quickSaveBtn = document.createElement('button');
+        quickSaveBtn.className = 'btn btn-sm btn-outline-danger quick-save-btn';
+        quickSaveBtn.innerHTML = '<i class="fas fa-heart"></i>';
+        quickSaveBtn.title = '빠른 저장';
+        quickSaveBtn.style.transition = 'all 0.3s ease';
+
+        // 번호 추출
+        const numberBalls = resultElement.querySelectorAll('.lotto-ball');
+        const numbers = Array.from(numberBalls).map(ball => parseInt(ball.textContent)).filter(n => !isNaN(n));
+
+        quickSaveBtn.onclick = () => this.quickSaveNumbers(numbers, `AI 추천 ${index + 1}`);
+
+        // 호버 효과
+        quickSaveBtn.addEventListener('mouseenter', () => {
+            quickSaveBtn.style.transform = 'scale(1.1)';
+        });
+        
+        quickSaveBtn.addEventListener('mouseleave', () => {
+            quickSaveBtn.style.transform = 'scale(1)';
+        });
+
+        actionsDiv.appendChild(quickSaveBtn);
+    }
+
+    async quickSaveNumbers(numbers, label = null) {
+        if (!numbers || numbers.length !== 6) {
+            this.showToast('올바른 번호가 아닙니다.', 'error');
+            return;
+        }
+
         try {
-            const balls = display.querySelectorAll('.lotto-ball');
-            const numbers = Array.from(balls).map(ball => parseInt(ball.textContent)).filter(n => !isNaN(n));
-            
-            if (numbers.length === 6) {
-                this.showQuickSaveModal(numbers);
+            const response = await fetch('/api/quick-save', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    numbers: numbers.sort((a, b) => a - b),
+                    label: label || `빠른 저장 ${new Date().toLocaleString()}`
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                this.showToast('번호가 저장되었습니다! ❤️', 'success');
+                
+                // 저장된 번호 목록 새로고침
+                if (window.lottoPro && window.lottoPro.loadSavedNumbers) {
+                    await window.lottoPro.loadSavedNumbers();
+                }
             } else {
-                window.lottoPro.showToast('유효한 6개 번호를 찾을 수 없습니다.', 'error');
+                this.showToast(data.error || '저장에 실패했습니다.', 'error');
             }
         } catch (error) {
-            console.error('빠른 저장 오류:', error);
-            window.lottoPro.showToast('번호 저장 중 오류가 발생했습니다.', 'error');
+            console.error('빠른 저장 실패:', error);
+            this.showToast('저장에 실패했습니다.', 'error');
+        }
+    }
+
+    setupEventListeners() {
+        // 엔터키로 빠른 저장
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 's') {
+                e.preventDefault();
+                this.openQuickSaveModal();
+            }
+        });
+
+        // 예측 결과가 업데이트될 때마다 빠른 저장 버튼 추가
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.type === 'childList') {
+                    mutation.addedNodes.forEach((node) => {
+                        if (node.nodeType === Node.ELEMENT_NODE) {
+                            if (node.classList && node.classList.contains('prediction-result')) {
+                                this.addQuickSaveToResult(node, 0);
+                            }
+                            // 하위 요소들도 검사
+                            const resultElements = node.querySelectorAll && node.querySelectorAll('.prediction-result');
+                            if (resultElements) {
+                                resultElements.forEach((element, index) => {
+                                    this.addQuickSaveToResult(element, index);
+                                });
+                            }
+                        }
+                    });
+                }
+            });
+        });
+
+        // 결과 섹션 관찰
+        const resultsSection = document.getElementById('resultsSection');
+        if (resultsSection) {
+            observer.observe(resultsSection, {
+                childList: true,
+                subtree: true
+            });
         }
     }
     
@@ -2060,7 +2268,7 @@ class QuickNumberSave {
             window.lottoPro.showToast('저장 중 오류가 발생했습니다.', 'error');
         }
     }
-    
+
     setupEnterKeyHandlers() {
         // 저장 폼에서 Enter키 처리
         document.addEventListener('keypress', (e) => {
@@ -2080,7 +2288,7 @@ class QuickNumberSave {
             }
         });
     }
-    
+
     setupRealTimeValidation() {
         // 실시간 진행률 업데이트
         document.addEventListener('input', (e) => {
@@ -2089,11 +2297,11 @@ class QuickNumberSave {
             }
         });
     }
-    
+
     updateSaveProgress() {
         const progressContainer = document.getElementById('save-progress');
         if (!progressContainer) return;
-        
+
         let filledCount = 0;
         for (let i = 1; i <= 6; i++) {
             const input = document.getElementById(`save-num${i}`);
@@ -2104,19 +2312,43 @@ class QuickNumberSave {
                 }
             }
         }
-        
+
         const percentage = (filledCount / 6) * 100;
         const progressBar = progressContainer.querySelector('.progress-bar');
         const progressText = progressContainer.querySelector('.progress-text');
-        
+
         if (progressBar) {
             progressBar.style.width = `${percentage}%`;
             progressBar.className = `progress-bar ${percentage === 100 ? 'bg-success' : 'bg-primary'}`;
         }
-        
+
         if (progressText) {
             progressText.textContent = `${filledCount}/6 번호 입력됨`;
             progressText.className = `progress-text ${percentage === 100 ? 'text-success' : 'text-muted'}`;
+        }
+    }
+
+    openQuickSaveModal() {
+        const modal = document.getElementById('quickSaveModal');
+        if (modal) {
+            const bootstrapModal = new bootstrap.Modal(modal);
+            bootstrapModal.show();
+            
+            // 포커스 설정
+            setTimeout(() => {
+                const input = document.getElementById('quickSaveInput');
+                if (input) {
+                    input.focus();
+                }
+            }, 500);
+        }
+    }
+
+    showToast(message, type = 'info') {
+        if (window.lottoPro && window.lottoPro.showToast) {
+            window.lottoPro.showToast(message, type);
+        } else {
+            console.log(`Toast [${type}]: ${message}`);
         }
     }
 }
@@ -2229,7 +2461,7 @@ const additionalCSS = `
 
 .result-header {
     display: flex;
-    justify-content: between;
+    justify-content: space-between;
     align-items: center;
     margin-bottom: 1rem;
 }
@@ -2385,6 +2617,17 @@ document.head.appendChild(style);
 let lottoPro;
 let quickNumberSave;
 
+// 지역 버튼 클릭 시 검색
+function searchRegion(region) {
+    const locationInput = document.getElementById('store-location');
+    if (locationInput) {
+        locationInput.value = region;
+        if (window.lottoPro && window.lottoPro.findLotteryStoresEnhanced) {
+            window.lottoPro.findLotteryStoresEnhanced();
+        }
+    }
+}
+
 // DOM 로드 완료 시 앱 초기화
 document.addEventListener('DOMContentLoaded', function() {
     try {
@@ -2392,19 +2635,18 @@ document.addEventListener('DOMContentLoaded', function() {
         quickNumberSave = new QuickNumberSave();
         console.log('✅ LottoPro AI v2.0이 성공적으로 초기화되었습니다.');
         
-        // 실시간 예시번호 시스템 초기화 (약간의 지연 후)
-        setTimeout(() => {
-            if (lottoPro && lottoPro.initializeHeroExampleNumbers) {
-                lottoPro.initializeHeroExampleNumbers();
-            }
-        }, 1000);
-        
     } catch (error) {
         console.error('❌ 앱 초기화 실패:', error);
     }
 });
 
-// 페이지 언로드 시 정리
+// 페이지 가시성 변경 및 언로드 시 정리
+document.addEventListener('visibilitychange', function() {
+    if (document.hidden && lottoPro && lottoPro.isQRScanning) {
+        lottoPro.stopQRScan();
+    }
+});
+
 window.addEventListener('beforeunload', function() {
     if (lottoPro) {
         lottoPro.destroy();
@@ -2488,3 +2730,19 @@ window.clearAllNumbers = function(prefix = 'save-') {
         quickNumberSave.updateSaveProgress();
     }
 };
+
+// 향상된 QR 스캔 및 판매점 찾기 함수들
+window.startQRScanEnhanced = function() {
+    if (lottoPro) lottoPro.startQRScanEnhanced();
+};
+
+window.stopQRScan = function() {
+    if (lottoPro) lottoPro.stopQRScan();
+};
+
+window.findLotteryStoresEnhanced = function() {
+    if (lottoPro) lottoPro.findLotteryStoresEnhanced();
+};
+
+window.searchRegion = searchRegion;AtTime(800, audioContext.currentTime);
+            oscillator.frequency.setValue
