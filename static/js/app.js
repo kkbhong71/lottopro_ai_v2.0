@@ -181,8 +181,8 @@ class LottoProAI {
                                                         
                                                         <div class="bg-light p-3 rounded">
                                                             <h6 class="mb-2">📊 예시:</h6>
-                                                            <p class="mb-1"><strong>1184회차 당첨번호:</strong> 14, 16, 23, 25, 31, 37</p>
-                                                            <p class="mb-1"><strong>1185회차 당첨번호:</strong> 2, 6, 12, 31, 33, 40</p>
+                                                            <p class="mb-1"><strong>1185회차 당첨번호:</strong> 6, 17, 22, 28, 29, 32</p>
+                                                            <p class="mb-1"><strong>1186회차 당첨번호:</strong> 2, 8, 13, 16, 23, 28</p>
                                                             <p class="mb-0"><strong>이월수:</strong> 31번 (연속 2회차 당첨)</p>
                                                         </div>
                                                     </div>
