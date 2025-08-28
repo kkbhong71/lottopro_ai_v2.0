@@ -1,1820 +1,538 @@
-{% extends "base.html" %}
-
-{% block content %}
-<!-- Hero Section - 개선사항 적용 -->
-<section class="hero-section">
-    <div class="container">
-        <div class="row align-items-center min-vh-100">
-            <div class="col-lg-6">
-                <div class="hero-content">
-                    <!-- 과대광고 표현 수정 -->
-                    <h1 class="display-4 fw-bold text-white mb-4">
-                        🎯 AI 기반 로또 번호<br>
-                        <span class="text-warning">추천 서비스</span>
-                        <span class="badge bg-success ms-2">v2.0</span>
-                    </h1>
-                    <p class="lead text-white-50 mb-4">
-                        5가지 독자적인 AI 모델이 과거 데이터를 분석하여 
-                        로또 번호를 제안해드립니다.
-                    </p>
-                    
-                    <!-- 법적 고지사항 추가 -->
-                    <div class="legal-notice alert alert-warning bg-warning bg-opacity-25 border-warning text-warning-emphasis mb-4">
-                        <div class="d-flex align-items-start">
-                            <i class="fas fa-exclamation-triangle me-2 mt-1"></i>
-                            <div>
-                                <strong>중요 고지:</strong> 본 서비스는 오락 목적이며, 로또 당첨을 보장하지 않습니다. 
-                                로또는 순수한 확률게임으로 AI 예측 역시 참고용일 뿐입니다.
-                                <br><strong>만 19세 이상만 이용 가능하며, 책임감 있는 구매를 권장합니다.</strong>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- 투명성 관련 배지 추가 -->
-                    <div class="transparency-badges mb-4">
-                        <span class="badge bg-info text-dark me-2">
-                            <i class="fas fa-eye me-1"></i>100% 투명성
-                        </span>
-                        <span class="badge bg-success text-white me-2">
-                            <i class="fas fa-shield-alt me-1"></i>검증완료
-                        </span>
-                        <span class="badge bg-primary text-white me-2">
-                            <i class="fas fa-chart-line me-1"></i>성능공개
-                        </span>
-                        <span class="badge bg-warning text-dark">
-                            <i class="fas fa-gavel me-1"></i>법적준수
-                        </span>
-                    </div>
-                    
-                    <div class="hero-stats row text-center mb-4">
-                        <div class="col-3">
-                            <div class="stat-item">
-                                <h3 class="text-warning">5</h3>
-                                <small class="text-white-50">AI 모델</small>
-                            </div>
-                        </div>
-                        <div class="col-3">
-                            <div class="stat-item">
-                                <h3 class="text-warning">1185</h3>
-                                <small class="text-white-50">분석 회차</small>
-                            </div>
-                        </div>
-                        <div class="col-3">
-                            <div class="stat-item">
-                                <h3 class="text-warning">15+</h3>
-                                <small class="text-white-50">신기능</small>
-                            </div>
-                        </div>
-                        <div class="col-3">
-                            <div class="stat-item">
-                                <h3 class="text-warning">FREE</h3>
-                                <small class="text-white-50">완전 무료</small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="d-flex gap-2 flex-wrap">
-                        <a href="#prediction" class="btn btn-warning btn-lg px-4 py-3 rounded-pill">
-                            <i class="fas fa-magic me-2"></i>지금 예측 시작하기
-                        </a>
-                        <a href="#qr-scan" class="btn btn-outline-light btn-lg px-4 py-3 rounded-pill">
-                            <i class="fas fa-qrcode me-2"></i>QR 당첨확인
-                        </a>
-                        <a href="/ai_models" class="btn btn-outline-info btn-lg px-4 py-3 rounded-pill">
-                            <i class="fas fa-eye me-2"></i>투명성 보기
-                        </a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-6">
-                <div class="hero-animation text-center">
-                    <div class="lotto-ball-container" id="heroExampleNumbers">
-                        <!-- 실시간으로 업데이트되는 예시 번호들 -->
-                        <div class="lotto-ball lotto-ball-1">1</div>
-                        <div class="lotto-ball lotto-ball-2">7</div>
-                        <div class="lotto-ball lotto-ball-3">13</div>
-                        <div class="lotto-ball lotto-ball-4">25</div>
-                        <div class="lotto-ball lotto-ball-5">31</div>
-                        <div class="lotto-ball lotto-ball-6">42</div>
-                    </div>
-                    <p class="text-white-50 mt-3" id="exampleDescription">
-                        AI가 분석한 예상번호 예시
-                        <br><small class="text-warning">✨ 30초마다 실시간 업데이트</small>
-                    </p>
-                    <div class="example-info mt-2" id="exampleInfo">
-                        <!-- 예시 번호 분석 정보가 표시될 영역 -->
-                    </div>
-                </div>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LottoPro AI {{ version or 'v2.0' }} - AI 로또 번호 예측</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .hero-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            margin: 2rem 0;
+            padding: 3rem;
+        }
+        
+        .feature-card {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            margin: 1rem 0;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .btn-primary {
+            background: #3498db;
+            border: none;
+            border-radius: 25px;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            background: #2c3e50;
+            transform: translateY(-2px);
+        }
+        
+        .number-ball {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(45deg, #3498db, #2c3e50);
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 40px;
+            font-weight: bold;
+            margin: 2px;
+        }
+        
+        .prediction-result {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .spinner-border {
+            color: #3498db;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background: #27ae60;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .navbar {
+            backdrop-filter: blur(10px);
+        }
+        
+        .alert-warning {
+            border-left: 4px solid #f39c12;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background: rgba(0,0,0,0.1);">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#">
+                <i class="fas fa-magic me-2"></i>
+                LottoPro AI {{ version or 'v2.0' }}
+            </a>
+            <div class="ms-auto">
+                <span class="badge bg-success">
+                    <span class="status-indicator"></span>
+                    온라인
+                </span>
             </div>
         </div>
-    </div>
-</section>
+    </nav>
 
-<!-- 투명성 정보 섹션 추가 -->
-<section class="py-4 bg-gradient-info text-white">
+    <!-- Main Content -->
     <div class="container">
-        <div class="row align-items-center">
-            <div class="col-md-8">
-                <div class="d-flex align-items-center">
-                    <i class="fas fa-shield-check fa-2x me-3"></i>
+        <!-- Hero Section -->
+        <div class="hero-section text-center">
+            <h1 class="display-4 fw-bold mb-4" style="color: #2c3e50;">
+                <i class="fas fa-brain me-3"></i>
+                AI 기반 로또 번호 분석 시스템
+            </h1>
+            <p class="lead mb-4" style="color: #34495e;">
+                투명한 알고리즘과 검증된 통계 분석으로 최적의 번호 조합을 제공합니다
+            </p>
+            
+            <!-- 법적 고지사항 -->
+            <div class="alert alert-warning mb-4">
+                <div class="d-flex align-items-start">
+                    <i class="fas fa-exclamation-triangle me-2 mt-1"></i>
                     <div>
-                        <h6 class="mb-1 fw-bold">완전한 투명성 정책</h6>
-                        <small>모든 AI 모델의 작동 원리와 예측 성능을 100% 공개합니다</small>
+                        <strong>중요 고지:</strong> 본 서비스는 오락 목적이며, 로또 당첨을 보장하지 않습니다. 
+                        로또는 순수한 확률게임으로 AI 예측 역시 참고용일 뿐입니다.
+                        <br><strong>만 19세 이상만 이용 가능하며, 책임감 있는 구매를 권장합니다.</strong>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4 text-md-end">
-                <a href="/ai_models" class="btn btn-light btn-sm me-2">
-                    <i class="fas fa-robot me-1"></i>AI 모델 보기
-                </a>
-                <a href="/prediction_history" class="btn btn-outline-light btn-sm">
-                    <i class="fas fa-chart-line me-1"></i>성능 히스토리
-                </a>
+            
+            <!-- Status Indicators -->
+            <div class="row text-center mb-4">
+                <div class="col-md-3">
+                    <div class="feature-card">
+                        <span class="status-indicator"></span>
+                        <strong>시스템 상태</strong><br>
+                        <small class="text-success">정상 운영</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="feature-card">
+                        <i class="fas fa-database text-primary me-2"></i>
+                        <strong>분석 회차</strong><br>
+                        <small>{{ analysis_round or '1186' }}회차</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="feature-card">
+                        <i class="fas fa-calendar text-warning me-2"></i>
+                        <strong>업데이트</strong><br>
+                        <small>{{ update_date or '2025.08.28' }}</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="feature-card">
+                        <i class="fas fa-chart-line text-success me-2"></i>
+                        <strong>AI 모델</strong><br>
+                        <small>5개 모델 운영</small>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-</section>
 
-<!-- Quick Actions Section -->
-<section class="py-4 bg-light">
-    <div class="container">
-        <div class="row g-3">
-            <div class="col-md-3">
-                <div class="quick-action-card" onclick="scrollToSection('prediction')">
-                    <i class="fas fa-robot text-primary"></i>
-                    <span>AI 예측</span>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="quick-action-card" onclick="scrollToSection('qr-scan')">
-                    <i class="fas fa-qrcode text-success"></i>
-                    <span>QR 스캔</span>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="quick-action-card" onclick="scrollToSection('my-numbers')">
-                    <i class="fas fa-heart text-danger"></i>
-                    <span>내 번호</span>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="quick-action-card" onclick="scrollToSection('tools')">
-                    <i class="fas fa-tools text-warning"></i>
-                    <span>편의기능</span>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- QR Scan Section -->
-<section id="qr-scan" class="py-5">
-    <div class="container">
-        <div class="text-center mb-5">
-            <h2 class="display-5 fw-bold">📱 QR코드 당첨확인</h2>
-            <p class="lead text-muted">로또 용지의 QR코드를 스캔하여 즉시 당첨결과를 확인하세요</p>
-        </div>
-        
-        <div class="row justify-content-center">
-            <div class="col-lg-8">
-                <div class="card shadow-lg border-0">
-                    <div class="card-header bg-gradient-success text-white">
-                        <h5 class="mb-0">
-                            <i class="fas fa-camera me-2"></i>QR코드 스캔 당첨확인
-                        </h5>
-                    </div>
-                    <div class="card-body text-center">
-                        <div id="qr-scanner-area" style="display: none;">
-                            <video id="qr-video" width="100%" height="300" style="border-radius: 10px;"></video>
-                            <canvas id="qr-canvas" style="display: none;"></canvas>
-                            <div class="mt-3">
-                                <button onclick="stopQRScan()" class="btn btn-outline-danger">
-                                    <i class="fas fa-stop me-2"></i>스캔 중지
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div id="qr-start-area">
-                            <div class="qr-placeholder mb-4">
-                                <i class="fas fa-qrcode fa-5x text-muted mb-3"></i>
-                                <p class="text-muted">카메라를 사용하여 로또 용지의 QR코드를 스캔합니다</p>
-                            </div>
-                            <button id="start-qr-scan" class="btn btn-success btn-lg">
-                                <i class="fas fa-camera me-2"></i>QR 스캔 시작
-                            </button>
-                        </div>
-                        
-                        <div id="qr-result" class="d-none">
-                            <!-- QR 스캔 결과가 표시될 영역 -->
-                        </div>
-                        
-                        <div class="mt-4">
-                            <h6 class="text-muted">또는 번호를 직접 입력</h6>
-                            <div class="row g-2 mb-3">
-                                <div class="col-2">
-                                    <input type="number" class="form-control text-center" placeholder="1" min="1" max="45" id="check-num1">
-                                </div>
-                                <div class="col-2">
-                                    <input type="number" class="form-control text-center" placeholder="2" min="1" max="45" id="check-num2">
-                                </div>
-                                <div class="col-2">
-                                    <input type="number" class="form-control text-center" placeholder="3" min="1" max="45" id="check-num3">
-                                </div>
-                                <div class="col-2">
-                                    <input type="number" class="form-control text-center" placeholder="4" min="1" max="45" id="check-num4">
-                                </div>
-                                <div class="col-2">
-                                    <input type="number" class="form-control text-center" placeholder="5" min="1" max="45" id="check-num5">
-                                </div>
-                                <div class="col-2">
-                                    <input type="number" class="form-control text-center" placeholder="6" min="1" max="45" id="check-num6">
-                                </div>
-                            </div>
-                            <button onclick="checkWinningManual()" class="btn btn-primary">
-                                <i class="fas fa-check me-2"></i>당첨 확인
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- My Numbers Section - 개선된 버전 -->
-<section id="my-numbers" class="py-5 bg-light">
-    <div class="container">
-        <div class="text-center mb-5">
-            <h2 class="display-5 fw-bold">💖 내 번호 관리</h2>
-            <p class="lead text-muted">소중한 번호들을 저장하고 관리하세요</p>
-        </div>
-        
-        <div class="row">
-            <!-- 새 번호 저장 카드 (개선됨) -->
-            <div class="col-lg-6">
-                <div class="card shadow border-0 h-100">
-                    <div class="card-header bg-gradient-primary text-white">
-                        <h6 class="mb-0">
-                            <i class="fas fa-plus me-2"></i>새 번호 저장
-                        </h6>
-                    </div>
-                    <div class="card-body">
-                        <!-- 빠른 저장 버튼 (새로 추가) -->
-                        <button type="button" class="btn btn-outline-primary w-100 mb-3" onclick="openQuickSaveModal()">
-                            <i class="fas fa-lightning-bolt me-2"></i>빠른 저장
-                            <small class="d-block text-muted">번호를 한 번에 입력하고 저장</small>
-                        </button>
-                        
-                        <div class="text-center mb-3">
-                            <small class="text-muted">또는 아래에서 개별 입력</small>
-                        </div>
-                        
-                        <!-- 기존 개별 입력 방식 -->
-                        <div class="mb-3">
-                            <label class="form-label">라벨</label>
-                            <input type="text" class="form-control" id="save-label" placeholder="예: 생일 번호, 행운 번호">
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">번호 (1-45)</label>
-                            
-                            <!-- 진행률 표시 -->
-                            <div class="mb-2">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <small class="text-muted">입력 진행률</small>
-                                    <small class="text-muted" id="save-progress-text">0/6</small>
-                                </div>
-                                <div class="progress mb-2" style="height: 6px;">
-                                    <div class="progress-bar bg-gradient-primary" id="save-progress-bar" style="width: 0%"></div>
-                                </div>
-                            </div>
-                            
-                            <div class="row g-2">
-                                <div class="col-2">
-                                    <input type="number" class="form-control text-center number-input-enhanced" 
-                                           min="1" max="45" id="save-num1" placeholder="1" 
-                                           oninput="updateSaveProgress()" onchange="validateNumberInput(this)">
-                                </div>
-                                <div class="col-2">
-                                    <input type="number" class="form-control text-center number-input-enhanced" 
-                                           min="1" max="45" id="save-num2" placeholder="2" 
-                                           oninput="updateSaveProgress()" onchange="validateNumberInput(this)">
-                                </div>
-                                <div class="col-2">
-                                    <input type="number" class="form-control text-center number-input-enhanced" 
-                                           min="1" max="45" id="save-num3" placeholder="3" 
-                                           oninput="updateSaveProgress()" onchange="validateNumberInput(this)">
-                                </div>
-                                <div class="col-2">
-                                    <input type="number" class="form-control text-center number-input-enhanced" 
-                                           min="1" max="45" id="save-num4" placeholder="4" 
-                                           oninput="updateSaveProgress()" onchange="validateNumberInput(this)">
-                                </div>
-                                <div class="col-2">
-                                    <input type="number" class="form-control text-center number-input-enhanced" 
-                                           min="1" max="45" id="save-num5" placeholder="5" 
-                                           oninput="updateSaveProgress()" onchange="validateNumberInput(this)">
-                                </div>
-                                <div class="col-2">
-                                    <input type="number" class="form-control text-center number-input-enhanced" 
-                                           min="1" max="45" id="save-num6" placeholder="6" 
-                                           oninput="updateSaveProgress()" onchange="validateNumberInput(this)">
-                                </div>
-                            </div>
-                            
-                            <!-- 입력 도움말 -->
-                            <div class="mt-2">
-                                <small class="text-muted">
-                                    💡 <strong>팁:</strong> Tab키로 다음 입력으로 이동, Enter키로 저장
-                                </small>
-                            </div>
-                        </div>
-                        
-                        <!-- 미리보기 -->
-                        <div class="mb-3">
-                            <label class="form-label">미리보기</label>
-                            <div id="save-preview" class="number-display justify-content-start">
-                                <div class="text-muted small">번호를 입력하면 미리보기가 표시됩니다</div>
-                            </div>
-                        </div>
-                        
-                        <!-- 저장 버튼 그룹 -->
-                        <div class="d-grid gap-2">
-                            <button onclick="saveNumbers()" class="btn btn-primary" id="save-submit-btn" disabled>
-                                <i class="fas fa-save me-2"></i>번호 저장
-                            </button>
-                            <div class="row g-2">
-                                <div class="col-6">
-                                    <button type="button" class="btn btn-outline-secondary w-100" onclick="generateRandomForSave()">
-                                        <i class="fas fa-dice me-2"></i>랜덤 생성
-                                    </button>
-                                </div>
-                                <div class="col-6">
-                                    <button type="button" class="btn btn-outline-warning w-100" onclick="clearSaveInputs()">
-                                        <i class="fas fa-eraser me-2"></i>초기화
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- 키보드 단축키 안내 -->
-                        <div class="mt-3 p-2 bg-light rounded">
-                            <div class="text-center">
-                                <small class="text-muted">
-                                    <i class="fas fa-keyboard me-1"></i>
-                                    <kbd>Ctrl+S</kbd> 빠른저장 | 
-                                    <kbd>Enter</kbd> 저장 | 
-                                    <kbd>Tab</kbd> 다음 입력
-                                </small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <!-- AI 예측 섹션 -->
+        <div class="hero-section">
+            <h2 class="text-center mb-4">
+                <i class="fas fa-magic me-2"></i>
+                AI 예상번호 생성
+            </h2>
             
-            <!-- 저장된 번호 목록 카드 (개선됨) -->
-            <div class="col-lg-6">
-                <div class="card shadow border-0 h-100">
-                    <div class="card-header bg-gradient-secondary text-white d-flex justify-content-between align-items-center">
-                        <h6 class="mb-0">
-                            <i class="fas fa-list me-2"></i>저장된 번호
-                            <span class="badge bg-light text-dark ms-2" id="saved-count-badge">0</span>
-                        </h6>
-                        <div class="btn-group btn-group-sm">
-                            <button onclick="loadSavedNumbers()" class="btn btn-outline-light" title="새로고침">
-                                <i class="fas fa-sync"></i>
-                            </button>
-                            <button onclick="exportSavedNumbers()" class="btn btn-outline-light" title="내보내기">
-                                <i class="fas fa-download"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="card-body p-0">
-                        <!-- 검색/필터 -->
-                        <div class="p-3 border-bottom">
-                            <div class="input-group input-group-sm">
-                                <span class="input-group-text">
-                                    <i class="fas fa-search"></i>
-                                </span>
-                                <input type="text" class="form-control" id="saved-search" 
-                                       placeholder="저장된 번호 검색..." onkeyup="filterSavedNumbers()">
-                                <button class="btn btn-outline-secondary" type="button" onclick="clearSavedSearch()">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div id="saved-numbers-list" class="saved-numbers-container p-3">
-                            <div class="text-center text-muted py-4" id="empty-saved-message">
-                                <i class="fas fa-inbox fa-2x mb-2"></i>
-                                <p>저장된 번호가 없습니다</p>
-                                <small>소중한 번호들을 저장해보세요!</small>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- 저장된 번호 통계 -->
-                    <div class="card-footer bg-light">
-                        <div class="row text-center">
-                            <div class="col-4">
-                                <div class="small">
-                                    <i class="fas fa-heart text-danger me-1"></i>
-                                    <strong id="total-saved">0</strong>
-                                    <div class="text-muted">총 저장</div>
-                                </div>
-                            </div>
-                            <div class="col-4">
-                                <div class="small">
-                                    <i class="fas fa-clock text-primary me-1"></i>
-                                    <strong id="recent-saved">0</strong>
-                                    <div class="text-muted">최근 일주일</div>
-                                </div>
-                            </div>
-                            <div class="col-4">
-                                <div class="small">
-                                    <i class="fas fa-trophy text-warning me-1"></i>
-                                    <strong id="checked-saved">0</strong>
-                                    <div class="text-muted">당첨 확인</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- 추가 정보 카드 -->
-        <div class="row mt-4">
-            <div class="col-12">
-                <div class="card border-0 bg-gradient-info text-white">
-                    <div class="card-body text-center">
-                        <h6 class="fw-bold">
-                            <i class="fas fa-lightbulb me-2"></i>번호 저장 팁
-                        </h6>
-                        <div class="row">
-                            <div class="col-md-3">
-                                <div class="mb-2">
-                                    <i class="fas fa-birthday-cake fa-2x mb-2"></i>
-                                    <div class="small">
-                                        <strong>생일 번호</strong><br>
-                                        특별한 날짜를 활용
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="mb-2">
-                                    <i class="fas fa-chart-line fa-2x mb-2"></i>
-                                    <div class="small">
-                                        <strong>AI 추천</strong><br>
-                                        예측 결과를 저장
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="mb-2">
-                                    <i class="fas fa-history fa-2x mb-2"></i>
-                                    <div class="small">
-                                        <strong>정기 번호</strong><br>
-                                        매주 구매하는 번호
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="mb-2">
-                                    <i class="fas fa-flask fa-2x mb-2"></i>
-                                    <div class="small">
-                                        <strong>실험 번호</strong><br>
-                                        새로운 조합 테스트
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Features Section - 투명성 강화 -->
-<section id="features" class="py-5">
-    <div class="container">
-        <div class="text-center mb-5">
-            <h2 class="display-5 fw-bold">🤖 5가지 AI 예측 모델</h2>
-            <p class="lead text-muted">각기 다른 방식으로 분석하여 최적의 예측을 제공합니다</p>
-            <!-- 투명성 링크 추가 -->
-            <div class="mt-3">
-                <a href="/ai_models" class="btn btn-outline-primary me-2">
-                    <i class="fas fa-eye me-1"></i>모델 상세보기
-                </a>
-                <a href="/prediction_history" class="btn btn-outline-info">
-                    <i class="fas fa-chart-line me-1"></i>성능 히스토리
-                </a>
-            </div>
-        </div>
-        
-        <div class="row g-4">
-            <div class="col-md-6 col-lg-4">
-                <div class="feature-card h-100">
-                    <div class="feature-icon">
-                        <i class="fas fa-chart-bar"></i>
-                    </div>
-                    <h5>빈도분석 모델</h5>
-                    <p class="text-muted">과거 당첨번호 출현 빈도를 분석하여 가중 확률로 예측</p>
-                    <div class="feature-accuracy">
-                        <small class="text-success">✅ 검증완료: 19.2% 정확도</small>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-md-6 col-lg-4">
-                <div class="feature-card h-100">
-                    <div class="feature-icon">
-                        <i class="fas fa-trending-up"></i>
-                    </div>
-                    <h5>트렌드분석 모델</h5>
-                    <p class="text-muted">최근 당첨 패턴과 트렌드를 분석하여 시기별 변화 반영</p>
-                    <div class="feature-accuracy">
-                        <small class="text-success">✅ 검증완료: 17.8% 정확도</small>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-md-6 col-lg-4">
-                <div class="feature-card h-100">
-                    <div class="feature-icon">
-                        <i class="fas fa-project-diagram"></i>
-                    </div>
-                    <h5>패턴분석 모델</h5>
-                    <p class="text-muted">번호 조합 패턴과 수학적 관계를 분석하여 복합 예측</p>
-                    <div class="feature-accuracy">
-                        <small class="text-success">✅ 검증완료: 16.4% 정확도</small>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-md-6 col-lg-4">
-                <div class="feature-card h-100">
-                    <div class="feature-icon">
-                        <i class="fas fa-calculator"></i>
-                    </div>
-                    <h5>통계분석 모델</h5>
-                    <p class="text-muted">고급 통계 기법과 확률 이론을 적용한 수학적 예측</p>
-                    <div class="feature-accuracy">
-                        <small class="text-success">✅ 검증완료: 20.1% 정확도</small>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-md-6 col-lg-4">
-                <div class="feature-card h-100">
-                    <div class="feature-icon">
-                        <i class="fas fa-brain"></i>
-                    </div>
-                    <h5>머신러닝 모델</h5>
-                    <p class="text-muted">딥러닝 신경망과 AI 알고리즘 기반 고도화된 예측</p>
-                    <div class="feature-accuracy">
-                        <small class="text-success">✅ 검증완료: 18.9% 정확도</small>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-md-6 col-lg-4">
-                <div class="feature-card h-100">
-                    <div class="feature-icon">
-                        <i class="fas fa-crown"></i>
-                    </div>
-                    <h5>종합추천 시스템</h5>
-                    <p class="text-muted">5가지 모델 결과를 종합하여 최고의 추천번호 선별</p>
-                    <div class="feature-accuracy">
-                        <small class="text-primary">🏆 최고성능: 평균 18.4% 정확도</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- 투명성 면책조항 -->
-        <div class="row mt-4">
-            <div class="col-12">
-                <div class="alert alert-warning">
-                    <div class="text-center">
-                        <h6 class="fw-bold mb-2">
-                            <i class="fas fa-info-circle me-2"></i>통계적 투명성 공개
-                        </h6>
-                        <p class="mb-2">
-                            <strong>이론적 무작위 정확도:</strong> 13.33% (6/45 × 100) |
-                            <strong>현재 AI 평균 정확도:</strong> 18.4%
-                        </p>
-                        <small class="text-muted">
-                            ⚠️ AI 성능이 무작위보다 약간 높으나, 통계적 유의성은 검증되지 않았습니다. 
-                            로또는 완전한 확률게임으로 어떤 예측 방법도 일관된 성능을 보장할 수 없습니다.
-                        </small>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Prediction Section -->
-<section id="prediction" class="py-5 bg-light">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-lg-10">
-                <div class="prediction-wrapper">
-                    <div class="text-center mb-5">
-                        <h2 class="display-5 fw-bold">🎲 AI 예상번호 생성</h2>
-                        <p class="lead text-muted">원하는 번호가 있다면 입력하세요. AI가 나머지를 추천해드립니다!</p>
-                        <!-- 투명성 고지 추가 -->
-                        <div class="alert alert-info">
-                            <small>
-                                <i class="fas fa-info-circle me-1"></i>
-                                예측 결과는 참고용이며, 당첨을 보장하지 않습니다. 
-                                <a href="/ai_models" class="alert-link">AI 모델 상세보기</a>에서 작동 원리를 확인하세요.
-                            </small>
-                        </div>
-                    </div>
-                    
-                    <!-- User Input Section -->
-                    <div class="card shadow-lg border-0 mb-4">
-                        <div class="card-header bg-gradient-primary text-white">
+            <!-- 사용자 입력 -->
+            <div class="row justify-content-center mb-4">
+                <div class="col-lg-8">
+                    <div class="card border-0 shadow">
+                        <div class="card-header bg-primary text-white">
                             <h5 class="mb-0">
                                 <i class="fas fa-heart me-2"></i>선호하는 번호 입력 (선택사항)
                             </h5>
                         </div>
                         <div class="card-body">
-                            <form id="predictionForm">
-                                <div class="mb-4">
-                                    <label class="form-label fw-bold">
-                                        생일, 기념일 등 원하는 번호를 입력하세요 (1~45)
-                                    </label>
-                                    <div class="number-input-grid">
-                                        <input type="number" class="form-control number-input" 
-                                               placeholder="번호1" min="1" max="45" id="num1">
-                                        <input type="number" class="form-control number-input" 
-                                               placeholder="번호2" min="1" max="45" id="num2">
-                                        <input type="number" class="form-control number-input" 
-                                               placeholder="번호3" min="1" max="45" id="num3">
-                                        <input type="number" class="form-control number-input" 
-                                               placeholder="번호4" min="1" max="45" id="num4">
-                                        <input type="number" class="form-control number-input" 
-                                               placeholder="번호5" min="1" max="45" id="num5">
-                                        <input type="number" class="form-control number-input" 
-                                               placeholder="번호6" min="1" max="45" id="num6">
-                                    </div>
-                                    <small class="text-muted">
-                                        💡 비워두면 AI가 모든 번호를 자동으로 선택합니다
-                                    </small>
+                            <p class="text-muted mb-3">
+                                생일, 기념일 등 원하는 번호가 있다면 입력하세요. AI가 나머지를 추천해드립니다.
+                            </p>
+                            <div class="row g-2 mb-3">
+                                <div class="col-2">
+                                    <input type="number" class="form-control text-center" placeholder="1" min="1" max="45" id="num1">
                                 </div>
-                                
-                                <div class="text-center">
-                                    <button type="submit" class="btn btn-gradient-primary btn-lg px-5 py-3 rounded-pill">
-                                        <i class="fas fa-magic me-2"></i>
-                                        <span class="btn-text">AI 예상번호 생성하기</span>
-                                        <div class="spinner-border spinner-border-sm ms-2 d-none" role="status"></div>
-                                    </button>
+                                <div class="col-2">
+                                    <input type="number" class="form-control text-center" placeholder="2" min="1" max="45" id="num2">
                                 </div>
-                            </form>
-                        </div>
-                    </div>
-                    
-                    <!-- Loading Indicator -->
-                    <div id="loadingSection" class="text-center py-5 d-none">
-                        <div class="loading-animation">
-                            <div class="spinner-grow text-primary" role="status"></div>
-                            <div class="spinner-grow text-success" role="status"></div>
-                            <div class="spinner-grow text-warning" role="status"></div>
-                        </div>
-                        <h4 class="mt-3">AI 모델이 데이터를 분석하고 있습니다...</h4>
-                        <p class="text-muted">잠시만 기다려주세요. 최적의 번호를 찾고 있어요! 🤖</p>
-                    </div>
-                    
-                    <!-- Results Section -->
-                    <div id="resultsSection" class="d-none">
-                        <!-- Top Recommendations -->
-                        <div class="card shadow-lg border-0 mb-4">
-                            <div class="card-header bg-gradient-success text-white">
-                                <h5 class="mb-0">
-                                    <i class="fas fa-crown me-2"></i>AI 최고 추천 번호 TOP 5
-                                </h5>
-                            </div>
-                            <div class="card-body">
-                                <div id="topRecommendations" class="row g-3">
-                                    <!-- Dynamic content -->
+                                <div class="col-2">
+                                    <input type="number" class="form-control text-center" placeholder="3" min="1" max="45" id="num3">
+                                </div>
+                                <div class="col-2">
+                                    <input type="number" class="form-control text-center" placeholder="4" min="1" max="45" id="num4">
+                                </div>
+                                <div class="col-2">
+                                    <input type="number" class="form-control text-center" placeholder="5" min="1" max="45" id="num5">
+                                </div>
+                                <div class="col-2">
+                                    <input type="number" class="form-control text-center" placeholder="6" min="1" max="45" id="num6">
                                 </div>
                             </div>
-                        </div>
-                        
-                        <!-- Model Results -->
-                        <div class="card shadow-lg border-0">
-                            <div class="card-header bg-gradient-info text-white">
-                                <h5 class="mb-0">
-                                    <i class="fas fa-robot me-2"></i>모델별 상세 분석 결과
-                                </h5>
-                            </div>
-                            <div class="card-body">
-                                <div id="modelResults">
-                                    <!-- Dynamic content -->
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Enhanced Stats Section -->
-<section id="stats" class="py-5">
-    <div class="container">
-        <div class="text-center mb-5">
-            <h2 class="display-5 fw-bold">📊 고급 통계 분석</h2>
-            <p class="lead text-muted">과거 당첨 데이터를 기반으로 한 실시간 분석 결과</p>
-            <!-- 투명성 링크 추가 -->
-            <div class="mt-3">
-                <small class="text-muted">
-                    모든 통계는 투명하게 공개됩니다. 
-                    <a href="/prediction_history" class="text-decoration-none">
-                        <i class="fas fa-external-link-alt me-1"></i>상세 분석 보기
-                    </a>
-                </small>
-            </div>
-        </div>
-        
-        <!-- Basic Stats -->
-        <div class="row g-4 mb-5">
-            <div class="col-lg-6">
-                <div class="card shadow border-0 h-100">
-                    <div class="card-header bg-danger text-white">
-                        <h6 class="mb-0">
-                            <i class="fas fa-fire me-2"></i>핫 넘버 (자주 나오는 번호)
-                            <i class="fas fa-question-circle info-icon ms-2 text-light opacity-75" 
-                               onclick="openInfoModal('terms')" style="cursor: pointer;" title="자세한 설명 보기"></i>
-                        </h6>
-                    </div>
-                    <div class="card-body">
-                        <div id="hotNumbers" class="number-display">
-                            <!-- Dynamic content -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-lg-6">
-                <div class="card shadow border-0 h-100">
-                    <div class="card-header bg-primary text-white">
-                        <h6 class="mb-0">
-                            <i class="fas fa-snowflake me-2"></i>콜드 넘버 (잘 안 나오는 번호)
-                            <i class="fas fa-question-circle info-icon ms-2 text-light opacity-75" 
-                               onclick="openInfoModal('terms')" style="cursor: pointer;" title="자세한 설명 보기"></i>
-                        </h6>
-                    </div>
-                    <div class="card-body">
-                        <div id="coldNumbers" class="number-display">
-                            <!-- Dynamic content -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Advanced Analysis -->
-        <div class="row g-4">
-            <div class="col-lg-4">
-                <div class="card shadow border-0 h-100">
-                    <div class="card-header bg-warning text-dark">
-                        <h6 class="mb-0">
-                            <i class="fas fa-repeat me-2"></i>이월수 분석
-                            <i class="fas fa-question-circle info-icon ms-2 opacity-75" 
-                               onclick="openInfoModal('terms')" style="cursor: pointer;" title="이월수란?"></i>
-                        </h6>
-                    </div>
-                    <div class="card-body">
-                        <div id="carryOverAnalysis">
-                            <div class="text-center text-muted py-3">
-                                <div class="spinner-border spinner-border-sm"></div>
-                                <p class="mt-2 mb-0">분석 중...</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-lg-4">
-                <div class="card shadow border-0 h-100">
-                    <div class="card-header bg-success text-white">
-                        <h6 class="mb-0">
-                            <i class="fas fa-handshake me-2"></i>궁합수 분석
-                            <i class="fas fa-question-circle info-icon ms-2 text-light opacity-75" 
-                               onclick="openInfoModal('terms')" style="cursor: pointer;" title="궁합수란?"></i>
-                        </h6>
-                    </div>
-                    <div class="card-body">
-                        <div id="companionAnalysis">
-                            <div class="text-center text-muted py-3">
-                                <div class="spinner-border spinner-border-sm"></div>
-                                <p class="mt-2 mb-0">분석 중...</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-lg-4">
-                <div class="card shadow border-0 h-100">
-                    <div class="card-header bg-info text-white">
-                        <h6 class="mb-0">
-                            <i class="fas fa-chart-line me-2"></i>패턴 분석
-                            <i class="fas fa-question-circle info-icon ms-2 text-light opacity-75" 
-                               onclick="openInfoModal('terms')" style="cursor: pointer;" title="패턴 분석이란?"></i>
-                        </h6>
-                    </div>
-                    <div class="card-body">
-                        <div id="patternAnalysis">
-                            <div class="text-center text-muted py-3">
-                                <div class="spinner-border spinner-border-sm"></div>
-                                <p class="mt-2 mb-0">분석 중...</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- 통계적 면책조항 추가 -->
-        <div class="row mt-4">
-            <div class="col-12">
-                <div class="alert alert-light border">
-                    <div class="text-center">
-                        <h6 class="fw-bold text-primary mb-2">
-                            <i class="fas fa-chart-bar me-2"></i>통계적 중요 고지
-                        </h6>
-                        <p class="mb-2 small">
-                            위 통계는 과거 데이터 분석 결과이며, 미래 결과를 예측하거나 보장하지 않습니다.
-                            로또는 매 회차가 독립적인 완전한 확률게임입니다.
-                        </p>
-                        <div class="d-flex justify-content-center gap-3 small text-muted">
-                            <span><strong>표본크기:</strong> 1185회차</span>
-                            <span><strong>분석주기:</strong> 실시간</span>
-                            <span><strong>신뢰도:</strong> 참고용</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Tools Section -->
-<section id="tools" class="py-5 bg-light">
-    <div class="container">
-        <div class="text-center mb-5">
-            <h2 class="display-5 fw-bold">🛠️ 편의기능</h2>
-            <p class="lead text-muted">로또를 더 스마트하게 즐기는 도구들</p>
-        </div>
-        
-        <div class="row g-4">
-            <!-- Tax Calculator -->
-            <div class="col-lg-4">
-                <div class="card shadow border-0 h-100">
-                    <div class="card-header bg-gradient-warning text-dark">
-                        <h6 class="mb-0">
-                            <i class="fas fa-calculator me-2"></i>세금 계산기
-                        </h6>
-                    </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label class="form-label">당첨금액</label>
-                            <input type="number" class="form-control" id="tax-amount" placeholder="당첨금액 입력">
-                        </div>
-                        <button onclick="calculateTax()" class="btn btn-warning w-100 mb-3">
-                            <i class="fas fa-calculator me-2"></i>세금 계산
-                        </button>
-                        <div id="tax-result" class="tax-result d-none">
-                            <!-- 세금 계산 결과 -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Simulation -->
-            <div class="col-lg-4">
-                <div class="card shadow border-0 h-100">
-                    <div class="card-header bg-gradient-info text-white">
-                        <h6 class="mb-0">
-                            <i class="fas fa-chart-bar me-2"></i>당첨 시뮬레이션
-                            <i class="fas fa-question-circle info-icon ms-2 text-light opacity-75" 
-                               onclick="openInfoModal('terms')" style="cursor: pointer;" title="시뮬레이션이란?"></i>
-                        </h6>
-                    </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label class="form-label">시뮬레이션 횟수</label>
-                            <select class="form-select" id="sim-rounds">
-                                <option value="1000">1,000회</option>
-                                <option value="5000">5,000회</option>
-                                <option value="10000">10,000회</option>
-                            </select>
-                        </div>
-                        <button onclick="openSimulationModal()" class="btn btn-info w-100 mb-3">
-                            <i class="fas fa-play me-2"></i>시뮬레이션 실행
-                        </button>
-                        <small class="text-muted">특정 번호로 몇 번이나 당첨될지 시뮬레이션해보세요</small>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Store Locator -->
-            <div class="col-lg-4">
-                <div class="card shadow border-0 h-100">
-                    <div class="card-header bg-gradient-success text-white">
-                        <h6 class="mb-0">
-                            <i class="fas fa-map-marker-alt me-2"></i>판매점 찾기
-                        </h6>
-                    </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label class="form-label">지역</label>
-                            <input type="text" class="form-control" id="store-location" placeholder="예: 평택, 서울, 부산">
-                        </div>
-                        <button onclick="findLotteryStoresEnhanced()" class="btn btn-success w-100 mb-3">
-                            <i class="fas fa-search me-2"></i>판매점 검색
-                        </button>
-                        <div id="store-results" class="store-results">
-                            <!-- 판매점 검색 결과 -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- About Section - 투명성 강화 -->
-<section id="about" class="py-5">
-    <div class="container">
-        <div class="row align-items-center">
-            <div class="col-lg-6">
-                <h2 class="display-5 fw-bold mb-4">🎯 왜 LottoPro AI v2.0인가요?</h2>
-                <div class="about-features">
-                    <div class="about-feature-item">
-                        <i class="fas fa-eye text-primary me-3"></i>
-                        <div>
-                            <h6>100% 투명성 보장</h6>
-                            <p class="text-muted mb-0">모든 AI 모델과 예측 과정을 완전히 공개합니다</p>
-                        </div>
-                    </div>
-                    <div class="about-feature-item">
-                        <i class="fas fa-check-circle text-success me-3"></i>
-                        <div>
-                            <h6>100% 무료 서비스</h6>
-                            <p class="text-muted mb-0">고품질 AI 예측을 완전 무료로 제공합니다</p>
-                        </div>
-                    </div>
-                    <div class="about-feature-item">
-                        <i class="fas fa-chart-line text-info me-3"></i>
-                        <div>
-                            <h6>성능 데이터 공개</h6>
-                            <p class="text-muted mb-0">과거 모든 예측 결과와 정확도를 투명하게 공개</p>
-                        </div>
-                    </div>
-                    <div class="about-feature-item">
-                        <i class="fas fa-robot text-warning me-3"></i>
-                        <div>
-                            <h6>5가지 독창적 AI 모델</h6>
-                            <p class="text-muted mb-0">다양한 분석 방식으로 정확도를 높였습니다</p>
-                        </div>
-                    </div>
-                    <div class="about-feature-item">
-                        <i class="fas fa-user-check text-primary me-3"></i>
-                        <div>
-                            <h6>개인화 추천 시스템</h6>
-                            <p class="text-muted mb-0">사용자의 선호번호를 반영한 맞춤 추천</p>
-                        </div>
-                    </div>
-                    <div class="about-feature-item">
-                        <i class="fas fa-sync-alt text-success me-3"></i>
-                        <div>
-                            <h6>실시간 데이터 분석</h6>
-                            <p class="text-muted mb-0">최신 당첨 패턴을 실시간으로 반영합니다</p>
-                        </div>
-                    </div>
-                    <div class="about-feature-item">
-                        <i class="fas fa-shield-alt text-danger me-3"></i>
-                        <div>
-                            <h6>윤리적 서비스 운영</h6>
-                            <p class="text-muted mb-0">법적 기준 준수 및 책임감 있는 서비스 제공</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- 투명성 링크 버튼 추가 -->
-                <div class="mt-4">
-                    <a href="/ai_models" class="btn btn-outline-primary me-2">
-                        <i class="fas fa-robot me-1"></i>AI 모델 상세보기
-                    </a>
-                    <a href="/prediction_history" class="btn btn-outline-success">
-                        <i class="fas fa-chart-line me-1"></i>성능 히스토리
-                    </a>
-                </div>
-            </div>
-            <div class="col-lg-6">
-                <div class="about-image text-center">
-                    <div class="ai-brain-animation">
-                        <i class="fas fa-brain fa-8x text-primary opacity-75"></i>
-                        <div class="brain-pulse"></div>
-                    </div>
-                    <p class="mt-3 text-muted">AI가 24시간 데이터를 분석합니다</p>
-                    
-                    <!-- 투명성 점수 표시 추가 -->
-                    <div class="mt-4">
-                        <div class="card border-primary">
-                            <div class="card-body text-center">
-                                <h5 class="card-title text-primary mb-2">투명성 점수</h5>
-                                <div class="display-6 fw-bold text-success mb-2">95%</div>
-                                <small class="text-muted">
-                                    모든 데이터와 알고리즘이 공개됩니다
-                                </small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Footer Section - 년도 수정 및 투명성 강화 -->
-<footer class="bg-dark text-white py-5">
-    <div class="container">
-        <!-- 면책조항 강화 -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="alert alert-warning bg-warning bg-opacity-25 border-warning text-warning-emphasis">
-                    <div class="text-center">
-                        <h6 class="fw-bold mb-2">
-                            <i class="fas fa-exclamation-triangle me-2"></i>면책 조항
-                        </h6>
-                        <p class="mb-2">
-                            본 서비스는 예측 정보 제공 목적이며, 당첨을 보장하지 않습니다. 
-                            책임감 있는 구매를 권장하며, 모든 투자 결정에 대한 최종 책임은 사용자에게 있습니다.
-                        </p>
-                        <p class="mb-0 small">
-                            <strong>만 19세 이상만 이용 가능</strong> | 
-                            <strong>중독 예방을 위해 적정 금액 내에서 이용</strong> | 
-                            <strong>AI 예측은 참고용</strong>
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- 푸터 정보 -->
-        <div class="row">
-            <div class="col-md-6">
-                <div class="footer-info">
-                    <h5 class="mb-3">LottoPro AI v2.0</h5>
-                    <p class="text-light">투명성을 보장하는 AI 기반 로또 번호 추천 서비스</p>
-                    <div class="footer-stats">
-                        <div class="row">
-                            <div class="col-6">
-                                <small class="text-muted">업데이트: 2025.08.19</small><br>
-                                <small class="text-muted">분석 회차: 1185회차</small>
-                            </div>
-                            <div class="col-6">
-                                <small class="text-muted">투명성 점수: 95%</small><br>
-                                <small class="text-muted">검증 완료: 5개 모델</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-md-6">
-                <div class="footer-links">
-                    <h6 class="mb-3">투명성 정보</h6>
-                    <div class="row">
-                        <div class="col-6">
-                            <ul class="list-unstyled">
-                                <li><a href="/ai_models" class="text-light text-decoration-none">AI 모델 상세</a></li>
-                                <li><a href="/prediction_history" class="text-light text-decoration-none">성능 히스토리</a></li>
-                                <li><a href="#" class="text-light text-decoration-none">통계적 검증</a></li>
-                            </ul>
-                        </div>
-                        <div class="col-6">
-                            <ul class="list-unstyled">
-                                <li><a href="#" class="text-light text-decoration-none">투명성 정책</a></li>
-                                <li><a href="#" class="text-light text-decoration-none">감사 보고서</a></li>
-                                <li><a href="#" class="text-light text-decoration-none">법적 고지</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- 저작권 정보 (년도 수정) -->
-        <div class="row mt-4 pt-4 border-top">
-            <div class="col-12 text-center">
-                <p class="mb-0 text-muted">
-                    © 2025 LottoPro AI. All rights reserved. | 
-                    <small>Made with ❤️ for lottery enthusiasts</small>
-                </p>
-            </div>
-        </div>
-    </div>
-</footer>
-
-<!-- Simulation Modal -->
-<div class="modal fade" id="simulationModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-gradient-info text-white">
-                <h5 class="modal-title">
-                    <i class="fas fa-chart-bar me-2"></i>당첨 시뮬레이션
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-4">
-                    <h6>시뮬레이션할 번호 선택</h6>
-                    <div class="row g-2">
-                        <div class="col-2">
-                            <input type="number" class="form-control text-center" min="1" max="45" id="sim-num1">
-                        </div>
-                        <div class="col-2">
-                            <input type="number" class="form-control text-center" min="1" max="45" id="sim-num2">
-                        </div>
-                        <div class="col-2">
-                            <input type="number" class="form-control text-center" min="1" max="45" id="sim-num3">
-                        </div>
-                        <div class="col-2">
-                            <input type="number" class="form-control text-center" min="1" max="45" id="sim-num4">
-                        </div>
-                        <div class="col-2">
-                            <input type="number" class="form-control text-center" min="1" max="45" id="sim-num5">
-                        </div>
-                        <div class="col-2">
-                            <input type="number" class="form-control text-center" min="1" max="45" id="sim-num6">
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="text-center mb-4">
-                    <button onclick="runSimulation()" class="btn btn-info btn-lg">
-                        <i class="fas fa-play me-2"></i>시뮬레이션 시작
-                    </button>
-                </div>
-                
-                <div id="simulation-results" class="d-none">
-                    <!-- 시뮬레이션 결과가 표시될 영역 -->
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- 정보 모달 -->
-<div class="modal fade" id="infoModal" tabindex="-1" aria-labelledby="infoModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header bg-gradient-primary text-white">
-                <h5 class="modal-title" id="infoModalLabel">
-                    <i class="fas fa-info-circle me-2"></i>LottoPro AI v2.0 이용 안내
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <!-- 탭 네비게이션 -->
-                <ul class="nav nav-tabs" id="infoTabs" role="tablist">
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="terms-tab" data-bs-toggle="tab" data-bs-target="#terms" type="button" role="tab">
-                            <i class="fas fa-book me-2"></i>용어 설명
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="models-tab" data-bs-toggle="tab" data-bs-target="#models" type="button" role="tab">
-                            <i class="fas fa-robot me-2"></i>AI 모델
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="guide-tab" data-bs-toggle="tab" data-bs-target="#guide" type="button" role="tab">
-                            <i class="fas fa-question-circle me-2"></i>사용법
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="about-tab" data-bs-toggle="tab" data-bs-target="#about-info" type="button" role="tab">
-                            <i class="fas fa-heart me-2"></i>서비스 정보
-                        </button>
-                    </li>
-                </ul>
-
-                <!-- 탭 콘텐츠 -->
-                <div class="tab-content" id="infoTabContent">
-                    <!-- 용어 설명 탭 -->
-                    <div class="tab-pane fade show active" id="terms" role="tabpanel">
-                        <div class="p-3">
-                            <div class="mb-4">
-                                <h6 class="fw-bold text-primary">
-                                    <i class="fas fa-repeat me-2"></i>이월수란?
-                                </h6>
-                                <p class="mb-3">이월수는 <strong>연속된 회차에서 반복 출현하는 번호</strong>를 의미합니다.</p>
-                                <div class="alert alert-info">
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <strong>예시:</strong><br>
-                                            1185회차: 6, 17, 22, 28, 29, 32<br>
-                                            1186회차: 2, 8, 13, <span class="text-danger">28</span>, 23, 45
-                                        </div>
-                                        <div class="col-md-6">
-                                            <strong>결과:</strong><br>
-                                            <span class="badge bg-warning text-dark">28</span>이 이월수<br>
-                                            <small class="text-muted">연속 2회차에서 출현</small>
-                                        </div>
-                                    </div>
-                                </div>
-                                <p><strong>활용법:</strong> 이월수 패턴을 분석하여 다음 회차 예측에 참고할 수 있습니다.</p>
-                            </div>
-
-                            <div class="mb-4">
-                                <h6 class="fw-bold text-success">
-                                    <i class="fas fa-handshake me-2"></i>궁합수란?
-                                </h6>
-                                <p class="mb-3">궁합수는 <strong>동시에 자주 출현하는 번호 조합</strong>을 의미합니다.</p>
-                                <div class="alert alert-success">
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <strong>예시:</strong><br>
-                                            7번과 13번이 총 15회 함께 출현
-                                        </div>
-                                        <div class="col-md-6">
-                                            <strong>궁합도:</strong><br>
-                                            <span class="badge bg-success">7</span> + <span class="badge bg-success">13</span> = 높은 궁합
-                                        </div>
-                                    </div>
-                                </div>
-                                <p><strong>활용법:</strong> 한 번호를 선택했을 때, 궁합이 좋은 번호를 함께 선택할 수 있습니다.</p>
-                            </div>
-
-                            <div class="mb-4">
-                                <h6 class="fw-bold text-info">
-                                    <i class="fas fa-chart-bar me-2"></i>당첨 시뮬레이션이란?
-                                </h6>
-                                <p class="mb-3">시뮬레이션은 <strong>특정 번호로 수천 번 가상 추첨하여 당첨 확률을 테스트</strong>하는 기능입니다.</p>
-                                <div class="alert alert-warning">
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <strong>시뮬레이션 과정:</strong><br>
-                                            1. 선택한 번호 입력<br>
-                                            2. 시행 횟수 설정 (1천~1만회)<br>
-                                            3. 가상 추첨 실행<br>
-                                            4. 등수별 당첨 횟수 분석
-                                        </div>
-                                        <div class="col-md-6">
-                                            <strong>활용 목적:</strong><br>
-                                            • 번호의 통계적 성능 확인<br>
-                                            • 장기적 수익률 예측<br>
-                                            • 번호 조합 비교 분석<br>
-                                            • 현실적 기대치 설정
-                                        </div>
-                                    </div>
-                                </div>
-                                <p><strong>⚠️ 주의:</strong> 시뮬레이션 결과는 통계적 참고자료이며, 실제 당첨을 보장하지 않습니다.</p>
-                            </div>
-
-                            <div class="mb-4">
-                                <h6 class="fw-bold text-danger">
-                                    <i class="fas fa-fire me-2"></i>핫/콜드 넘버란?
-                                </h6>
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="alert alert-danger">
-                                            <strong>핫 넘버 (Hot Number)</strong><br>
-                                            최근 자주 출현하는 번호<br>
-                                            <small class="text-muted">출현 빈도가 평균 이상</small>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="alert alert-primary">
-                                            <strong>콜드 넘버 (Cold Number)</strong><br>
-                                            최근 잘 나오지 않는 번호<br>
-                                            <small class="text-muted">출현 빈도가 평균 이하</small>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="alert alert-warning">
-                                    <strong>⚠️ 중요:</strong> 핫/콜드 분석은 과거 패턴이며, 미래 결과에 영향을 주지 않습니다. 
-                                    로또는 매 회차가 독립적인 확률게임입니다.
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- AI 모델 설명 탭 -->
-                    <div class="tab-pane fade" id="models" role="tabpanel">
-                        <div class="p-3">
-                            <div class="alert alert-info">
-                                <h6 class="fw-bold">
-                                    <i class="fas fa-info-circle me-2"></i>투명성 원칙
-                                </h6>
-                                <p class="mb-0">
-                                    모든 AI 모델의 작동 원리와 성능을 완전히 공개하여 사용자의 알 권리를 보장합니다.
-                                    <a href="/ai_models" class="alert-link">상세 분석 보기</a>
-                                </p>
-                            </div>
-                            
-                            <div class="mb-4">
-                                <h6 class="fw-bold text-primary">
-                                    <i class="fas fa-chart-bar me-2"></i>빈도분석 모델
-                                </h6>
-                                <p>과거 당첨번호의 <strong>출현 빈도를 통계적으로 분석</strong>하여 가중 확률을 적용합니다.</p>
-                                <div class="d-flex align-items-center mb-2">
-                                    <span class="badge bg-primary me-2">검증된 정확도</span>
-                                    <div class="progress flex-grow-1 me-2" style="height: 20px;">
-                                        <div class="progress-bar" style="width: 82%;">19.2%</div>
-                                    </div>
-                                </div>
-                                <small class="text-muted">🎯 장점: 안정적이고 검증된 방식 | ⚠️ 한계: 최신 트렌드 반영 부족</small>
-                            </div>
-
-                            <div class="mb-4">
-                                <h6 class="fw-bold text-success">
-                                    <i class="fas fa-trending-up me-2"></i>트렌드분석 모델
-                                </h6>
-                                <p>최근 패턴과 트렌드를 중시하여 <strong>시기별 변화를 실시간 반영</strong>합니다.</p>
-                                <div class="d-flex align-items-center mb-2">
-                                    <span class="badge bg-success me-2">검증된 정확도</span>
-                                    <div class="progress flex-grow-1 me-2" style="height: 20px;">
-                                        <div class="progress-bar bg-success" style="width: 86%;">17.8%</div>
-                                    </div>
-                                </div>
-                                <small class="text-muted">🎯 장점: 최신 패턴 민감 반응 | ⚠️ 한계: 단기 변동에 민감</small>
-                            </div>
-
-                            <div class="mb-4">
-                                <h6 class="fw-bold text-warning">
-                                    <i class="fas fa-project-diagram me-2"></i>패턴분석 모델
-                                </h6>
-                                <p>번호 조합의 <strong>수학적 관계와 패턴을 복합 분석</strong>합니다.</p>
-                                <div class="d-flex align-items-center mb-2">
-                                    <span class="badge bg-warning me-2">검증된 정확도</span>
-                                    <div class="progress flex-grow-1 me-2" style="height: 20px;">
-                                        <div class="progress-bar bg-warning" style="width: 84%;">16.4%</div>
-                                    </div>
-                                </div>
-                                <small class="text-muted">🎯 장점: 복합적 분석 능력 | ⚠️ 한계: 복잡한 연산 필요</small>
-                            </div>
-
-                            <div class="mb-4">
-                                <h6 class="fw-bold text-info">
-                                    <i class="fas fa-calculator me-2"></i>통계분석 모델
-                                </h6>
-                                <p>고급 통계 기법과 <strong>확률 이론을 적용한 수학적 예측</strong>입니다.</p>
-                                <div class="d-flex align-items-center mb-2">
-                                    <span class="badge bg-info me-2">검증된 정확도</span>
-                                    <div class="progress flex-grow-1 me-2" style="height: 20px;">
-                                        <div class="progress-bar bg-info" style="width: 80%;">20.1%</div>
-                                    </div>
-                                </div>
-                                <small class="text-muted">🎯 장점: 수학적 근거 확실 | ⚠️ 한계: 실제 패턴과 차이 존재</small>
-                            </div>
-
-                            <div class="mb-4">
-                                <h6 class="fw-bold text-dark">
-                                    <i class="fas fa-brain me-2"></i>머신러닝 모델
-                                </h6>
-                                <p>딥러닝 신경망과 <strong>AI 알고리즘을 활용한 고도화된 예측</strong>입니다.</p>
-                                <div class="d-flex align-items-center mb-2">
-                                    <span class="badge bg-dark me-2">검증된 정확도</span>
-                                    <div class="progress flex-grow-1 me-2" style="height: 20px;">
-                                        <div class="progress-bar bg-dark" style="width: 89%;">18.9%</div>
-                                    </div>
-                                </div>
-                                <small class="text-muted">🎯 장점: 다양한 패턴 학습 | ⚠️ 한계: 블랙박스 특성</small>
-                            </div>
-
-                            <div class="alert alert-light border">
-                                <h6 class="fw-bold text-primary">
-                                    <i class="fas fa-crown me-2"></i>종합추천 시스템
-                                </h6>
-                                <p class="mb-2">5가지 모델의 결과를 <strong>지능적으로 조합하여 최적의 추천</strong>을 제공합니다.</p>
-                                <div class="d-flex align-items-center mb-2">
-                                    <span class="badge bg-warning me-2">종합 성능</span>
-                                    <div class="progress flex-grow-1 me-2" style="height: 20px;">
-                                        <div class="progress-bar bg-gradient-primary" style="width: 92%;">18.4%</div>
-                                    </div>
-                                </div>
-                                <small class="text-muted">
-                                    <strong>⚠️ 중요:</strong> 모든 정확도는 이론적 무작위 확률(13.33%) 대비 측정되었으며, 
-                                    실제 당첨을 보장하지 않습니다.
-                                </small>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 사용법 안내 탭 -->
-                    <div class="tab-pane fade" id="guide" role="tabpanel">
-                        <div class="p-3">
-                            <div class="mb-4">
-                                <h6 class="fw-bold text-primary">
-                                    <i class="fas fa-magic me-2"></i>AI 예측 사용법
-                                </h6>
-                                <ol class="list-group list-group-numbered">
-                                    <li class="list-group-item">
-                                        <strong>선호 번호 입력</strong> (선택사항)<br>
-                                        <small class="text-muted">생일, 기념일 등 원하는 번호가 있다면 입력하세요</small>
-                                    </li>
-                                    <li class="list-group-item">
-                                        <strong>"AI 예상번호 생성하기" 클릭</strong><br>
-                                        <small class="text-muted">5가지 AI 모델이 동시에 분석을 시작합니다</small>
-                                    </li>
-                                    <li class="list-group-item">
-                                        <strong>결과 확인</strong><br>
-                                        <small class="text-muted">TOP 5 추천과 모델별 상세 결과를 확인하세요</small>
-                                    </li>
-                                    <li class="list-group-item">
-                                        <strong>번호 저장</strong><br>
-                                        <small class="text-muted">마음에 드는 번호는 하트 버튼으로 저장하세요</small>
-                                    </li>
-                                </ol>
-                            </div>
-
-                            <div class="mb-4">
-                                <h6 class="fw-bold text-success">
-                                    <i class="fas fa-qrcode me-2"></i>QR 스캔 사용법
-                                </h6>
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="card border-success">
-                                            <div class="card-body text-center">
-                                                <i class="fas fa-camera fa-2x text-success mb-2"></i>
-                                                <p class="mb-0"><strong>자동 카메라</strong><br>
-                                                <small>후면 카메라 자동 활성화</small></p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="card border-info">
-                                            <div class="card-body text-center">
-                                                <i class="fas fa-keyboard fa-2x text-info mb-2"></i>
-                                                <p class="mb-0"><strong>수동 입력</strong><br>
-                                                <small>번호 직접 입력 가능</small></p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="mb-4">
-                                <h6 class="fw-bold text-warning">
-                                    <i class="fas fa-keyboard me-2"></i>키보드 단축키
-                                </h6>
-                                <div class="row">
-                                    <div class="col-md-4">
-                                        <div class="text-center p-2 border rounded">
-                                            <kbd>Ctrl + P</kbd><br>
-                                            <small>AI 예측</small>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="text-center p-2 border rounded">
-                                            <kbd>Ctrl + S</kbd><br>
-                                            <small>빠른 저장</small>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="text-center p-2 border rounded">
-                                            <kbd>Tab</kbd><br>
-                                            <small>다음 입력</small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="alert alert-info">
-                                <h6 class="fw-bold">
-                                    <i class="fas fa-lightbulb me-2"></i>Pro Tips
-                                </h6>
-                                <ul class="mb-0">
-                                    <li><strong>다양한 모델 활용:</strong> 여러 모델의 결과를 비교해보세요</li>
-                                    <li><strong>통계 분석 참고:</strong> 핫/콜드 넘버와 궁합수를 활용하세요</li>
-                                    <li><strong>시뮬레이션 활용:</strong> 번호 선택 전 시뮬레이션으로 검증하세요</li>
-                                    <li><strong>투명성 확인:</strong> AI 모델 상세보기에서 원리를 확인하세요</li>
-                                    <li><strong>정기적 업데이트:</strong> 매주 새로운 데이터로 예측이 갱신됩니다</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 서비스 정보 탭 -->
-                    <div class="tab-pane fade" id="about-info" role="tabpanel">
-                        <div class="p-3">
-                            <div class="text-center mb-4">
-                                <div class="mb-3">
-                                    <i class="fas fa-heart fa-3x text-danger"></i>
-                                </div>
-                                <h5 class="fw-bold text-primary">LottoPro AI v2.0</h5>
-                                <p class="text-muted">투명성을 보장하는 인공지능 기반 로또 번호 추천 서비스</p>
-                            </div>
-
-                            <div class="row mb-4">
-                                <div class="col-md-6">
-                                    <div class="card border-success h-100">
-                                        <div class="card-body text-center">
-                                            <i class="fas fa-eye fa-2x text-primary mb-2"></i>
-                                            <h6 class="fw-bold">100% 투명성</h6>
-                                            <p class="small text-muted mb-0">모든 AI 모델과 성능 데이터 공개</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="card border-primary h-100">
-                                        <div class="card-body text-center">
-                                            <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
-                                            <h6 class="fw-bold">100% 무료</h6>
-                                            <p class="small text-muted mb-0">모든 기능을 완전 무료로 제공</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="mb-4">
-                                <h6 class="fw-bold text-primary">
-                                    <i class="fas fa-star me-2"></i>투명성 특징
-                                </h6>
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <ul class="list-unstyled">
-                                            <li><i class="fas fa-check text-success me-2"></i>AI 모델 알고리즘 공개</li>
-                                            <li><i class="fas fa-check text-success me-2"></i>예측 성능 데이터 공개</li>
-                                            <li><i class="fas fa-check text-success me-2"></i>통계적 검증 결과 공개</li>
-                                            <li><i class="fas fa-check text-success me-2"></i>실시간 성능 모니터링</li>
-                                            <li><i class="fas fa-check text-success me-2"></i>과거 예측 결과 전체 공개</li>
-                                        </ul>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <ul class="list-unstyled">
-                                            <li><i class="fas fa-check text-success me-2"></i>데이터 무결성 검증</li>
-                                            <li><i class="fas fa-check text-success me-2"></i>감사 추적 시스템</li>
-                                            <li><i class="fas fa-check text-success me-2"></i>오픈소스 기반 개발</li>
-                                            <li><i class="fas fa-check text-success me-2"></i>개인정보 수집 안함</li>
-                                            <li><i class="fas fa-check text-success me-2"></i>윤리적 AI 원칙 준수</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="mb-4">
-                                <h6 class="fw-bold text-warning">
-                                    <i class="fas fa-exclamation-triangle me-2"></i>이용 시 중요사항
-                                </h6>
-                                <div class="alert alert-warning">
-                                    <ul class="mb-0">
-                                        <li>본 서비스는 <strong>오락 및 통계 분석 목적</strong>의 참고용 도구입니다</li>
-                                        <li>AI 예측이 무작위보다 우수하다는 <strong>통계적 증거는 없습니다</strong></li>
-                                        <li>당첨을 100% 보장하지 않으며, 확률게임의 특성상 손실이 발생할 수 있습니다</li>
-                                        <li><strong>만 19세 이상만 이용 가능</strong>하며, 책임감 있는 구매를 권장합니다</li>
-                                        <li>중독 예방을 위해 <strong>적정 금액 내에서만 이용</strong>하시기 바랍니다</li>
-                                    </ul>
-                                </div>
-                            </div>
-
                             <div class="text-center">
-                                <div class="row">
-                                    <div class="col-md-4">
-                                        <div class="mb-3">
-                                            <i class="fas fa-shield-alt fa-2x text-success mb-2"></i>
-                                            <h6 class="fw-bold">안전한 서비스</h6>
-                                            <small class="text-muted">개인정보 수집하지 않음</small>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="mb-3">
-                                            <i class="fas fa-heart fa-2x text-danger mb-2"></i>
-                                            <h6 class="fw-bold">완전 무료</h6>
-                                            <small class="text-muted">모든 기능 무료 제공</small>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="mb-3">
-                                            <i class="fas fa-handshake fa-2x text-primary mb-2"></i>
-                                            <h6 class="fw-bold">투명한 운영</h6>
-                                            <small class="text-muted">모든 정보 공개</small>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="mt-4">
-                                    <p class="text-muted">
-                                        <i class="fas fa-heart text-danger me-1"></i>
-                                        로또를 사랑하는 모든 분들을 위해 만들어진 서비스입니다
-                                    </p>
-                                    <p class="small text-muted">
-                                        문의사항이 있으시면 언제든 연락해주세요 📧
-                                    </p>
-                                </div>
+                                <button class="btn btn-primary btn-lg" onclick="generatePrediction()">
+                                    <i class="fas fa-magic me-2"></i>
+                                    AI 예상번호 생성하기
+                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+            
+            <!-- 로딩 -->
+            <div id="loading" class="loading">
+                <div class="spinner-border mb-3" role="status"></div>
+                <h4>AI 모델이 데이터를 분석하고 있습니다...</h4>
+                <p class="text-muted">잠시만 기다려주세요. 최적의 번호를 찾고 있어요!</p>
+            </div>
+            
+            <!-- 결과 -->
+            <div id="results" style="display: none;">
+                <!-- TOP 추천 -->
+                <div class="card border-0 shadow mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-crown me-2"></i>AI 최고 추천 번호 TOP 5
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="top-recommendations">
+                            <!-- 동적으로 생성될 내용 -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 모델별 결과 -->
+                <div class="card border-0 shadow">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-robot me-2"></i>모델별 상세 분석 결과
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="model-results">
+                            <!-- 동적으로 생성될 내용 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 시스템 상태 확인 -->
+        <div class="text-center mb-4">
+            <button class="btn btn-outline-secondary" onclick="checkHealth()">
+                <i class="fas fa-heartbeat me-2"></i>
+                시스템 상태 확인
+            </button>
+        </div>
+        
+        <!-- 상태 결과 -->
+        <div id="health-results" style="display: none;" class="hero-section">
+            <!-- 상태 정보가 여기에 표시됩니다 -->
         </div>
     </div>
-</div>
 
-<!-- Quick Save Modal -->
-<div class="modal fade" id="quickSaveModal" tabindex="-1" aria-labelledby="quickSaveModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-gradient-primary text-white">
-                <h5 class="modal-title" id="quickSaveModalLabel">
-                    <i class="fas fa-lightning-bolt me-2"></i>빠른 저장
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <label for="quick-save-label" class="form-label">라벨</label>
-                    <input type="text" class="form-control" id="quick-save-label" placeholder="예: AI 추천 번호">
-                </div>
-                <div class="mb-3">
-                    <label for="quick-save-numbers" class="form-label">번호 (쉼표로 구분)</label>
-                    <input type="text" class="form-control" id="quick-save-numbers" 
-                           placeholder="예: 1, 7, 13, 25, 31, 42" 
-                           pattern="^(\s*\d+\s*,)*\s*\d+\s*$">
-                    <div class="form-text">번호를 쉼표(,)로 구분하여 입력하세요 (예: 1, 7, 13, 25, 31, 42)</div>
-                </div>
-                <div class="text-center">
-                    <button type="button" class="btn btn-primary" onclick="quickSaveNumbers()">
-                        <i class="fas fa-save me-2"></i>빠른 저장
-                    </button>
-                </div>
-            </div>
+    <!-- Footer -->
+    <footer class="text-center py-4 mt-5" style="background: rgba(0,0,0,0.1); color: white;">
+        <div class="container">
+            <p class="mb-2">
+                <strong>LottoPro AI {{ version or 'v2.0' }}</strong> - AI 기반 로또 예측 서비스
+            </p>
+            <p class="mb-0 small">
+                <i class="fas fa-exclamation-triangle me-1"></i>
+                과도한 도박은 중독을 유발할 수 있습니다. 19세 미만 이용 금지.
+            </p>
+            <p class="mb-0 small">
+                © {{ copyright_year or '2025' }} LottoPro AI. 모든 예측은 통계적 분석이며 당첨을 보장하지 않습니다.
+            </p>
         </div>
-    </div>
-</div>
+    </footer>
 
-<!-- JavaScript References -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
-<script src="{{ url_for('static', filename='js/main.js') }}"></script>
-<script src="{{ url_for('static', filename='js/qr-scanner.js') }}"></script>
-<script src="{{ url_for('static', filename='js/prediction.js') }}"></script>
-<script src="{{ url_for('static', filename='js/stats.js') }}"></script>
-<script src="{{ url_for('static', filename='js/tools.js') }}"></script>
-<script src="{{ url_for('static', filename='js/my-numbers.js') }}"></script>
-<script src="{{ url_for('static', filename='js/animations.js') }}"></script>
-
-<!-- Initialize App -->
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // 페이지 로드 시 초기화
-    console.log('🎯 LottoPro AI v2.0 초기화 중...');
+    <!-- Bootstrap JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     
-    // 통계 데이터 로드
-    if (typeof loadStats === 'function') {
-        loadStats();
-    }
-    
-    // 저장된 번호 로드
-    if (typeof loadSavedNumbers === 'function') {
-        loadSavedNumbers();
-    }
-    
-    // Hero 섹션 애니메이션 시작
-    if (typeof startHeroAnimation === 'function') {
-        startHeroAnimation();
-    }
-    
-    // 키보드 단축키 설정
-    document.addEventListener('keydown', function(e) {
-        // Ctrl+P: AI 예측
-        if (e.ctrlKey && e.key === 'p') {
-            e.preventDefault();
-            scrollToSection('prediction');
+    <script>
+        // AI 예측 생성 함수
+        async function generatePrediction() {
+            const loading = document.getElementById('loading');
+            const results = document.getElementById('results');
+            
+            // 사용자 입력 수집
+            const userNumbers = [];
+            for (let i = 1; i <= 6; i++) {
+                const input = document.getElementById(`num${i}`);
+                const value = parseInt(input.value);
+                if (value && value >= 1 && value <= 45) {
+                    userNumbers.push(value);
+                }
+            }
+            
+            // 중복 검사
+            const uniqueNumbers = [...new Set(userNumbers)];
+            if (uniqueNumbers.length !== userNumbers.length) {
+                alert('중복된 번호가 있습니다. 서로 다른 번호를 입력해주세요.');
+                return;
+            }
+            
+            // 로딩 표시
+            loading.style.display = 'block';
+            results.style.display = 'none';
+            
+            try {
+                const response = await fetch('/api/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        user_numbers: uniqueNumbers
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayResults(data);
+                } else {
+                    throw new Error(data.error || '예측 생성에 실패했습니다.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('예측 생성 중 오류가 발생했습니다: ' + error.message);
+            } finally {
+                loading.style.display = 'none';
+            }
         }
         
-        // Ctrl+S: 빠른 저장 모달 열기
-        if (e.ctrlKey && e.key === 's') {
-            e.preventDefault();
-            if (typeof openQuickSaveModal === 'function') {
-                openQuickSaveModal();
+        // 결과 표시 함수
+        function displayResults(data) {
+            const results = document.getElementById('results');
+            const topRecommendations = document.getElementById('top-recommendations');
+            const modelResults = document.getElementById('model-results');
+            
+            // TOP 추천 표시
+            let topHtml = '';
+            if (data.top_recommendations && data.top_recommendations.length > 0) {
+                data.top_recommendations.slice(0, 5).forEach((numbers, index) => {
+                    topHtml += `
+                        <div class="prediction-result">
+                            <h6 class="fw-bold">추천 ${index + 1}</h6>
+                            <div class="mb-2">
+                                ${numbers.map(num => `<span class="number-ball">${num}</span>`).join('')}
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            topRecommendations.innerHTML = topHtml || '<p class="text-muted">추천 번호를 생성하지 못했습니다.</p>';
+            
+            // 모델별 결과 표시
+            let modelHtml = '';
+            if (data.models) {
+                Object.entries(data.models).forEach(([modelName, modelData]) => {
+                    modelHtml += `
+                        <div class="prediction-result">
+                            <h6 class="fw-bold text-primary">
+                                <i class="fas fa-robot me-2"></i>${modelName}
+                                <span class="badge bg-secondary ms-2">${modelData.accuracy}% 정확도</span>
+                            </h6>
+                            <p class="text-muted small">${modelData.description}</p>
+                            ${modelData.predictions && modelData.predictions[0] ? 
+                                `<div class="mb-2">
+                                    ${modelData.predictions[0].map(num => `<span class="number-ball">${num}</span>`).join('')}
+                                </div>` : ''
+                            }
+                        </div>
+                    `;
+                });
+            }
+            modelResults.innerHTML = modelHtml || '<p class="text-muted">모델 결과를 표시할 수 없습니다.</p>';
+            
+            // 결과 섹션 표시
+            results.style.display = 'block';
+            
+            // 결과 섹션으로 스크롤
+            results.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // 시스템 상태 확인 함수
+        async function checkHealth() {
+            const healthResults = document.getElementById('health-results');
+            
+            try {
+                const response = await fetch('/api/health');
+                const data = await response.json();
+                
+                let statusHtml = `
+                    <h3 class="text-center mb-4">
+                        <i class="fas fa-heartbeat me-2"></i>
+                        시스템 상태
+                    </h3>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card border-0 shadow">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-server fa-2x text-primary mb-2"></i>
+                                    <h6>서비스 상태</h6>
+                                    <span class="badge ${data.status === 'healthy' ? 'bg-success' : 'bg-danger'}">${data.status}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card border-0 shadow">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-database fa-2x text-info mb-2"></i>
+                                    <h6>데이터 상태</h6>
+                                    <small>${data.sample_data_count || 0}회차 분석 준비</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                if (data.pandas_available !== undefined || data.ml_available !== undefined) {
+                    statusHtml += `
+                        <div class="row mt-3">
+                            <div class="col-md-4">
+                                <div class="card border-0 shadow">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-chart-line fa-2x ${data.pandas_available ? 'text-success' : 'text-warning'} mb-2"></i>
+                                        <h6>데이터 분석</h6>
+                                        <span class="badge ${data.pandas_available ? 'bg-success' : 'bg-warning'}">
+                                            ${data.pandas_available ? '사용 가능' : '기본 모드'}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card border-0 shadow">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-brain fa-2x ${data.ml_available ? 'text-success' : 'text-warning'} mb-2"></i>
+                                        <h6>머신러닝</h6>
+                                        <span class="badge ${data.ml_available ? 'bg-success' : 'bg-warning'}">
+                                            ${data.ml_available ? '사용 가능' : '기본 모드'}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card border-0 shadow">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-qrcode fa-2x ${data.qr_available ? 'text-success' : 'text-warning'} mb-2"></i>
+                                        <h6>QR 스캔</h6>
+                                        <span class="badge ${data.qr_available ? 'bg-success' : 'bg-warning'}">
+                                            ${data.qr_available ? '사용 가능' : '준비 중'}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                healthResults.innerHTML = statusHtml;
+                healthResults.style.display = 'block';
+                
+                // 상태 섹션으로 스크롤
+                healthResults.scrollIntoView({ behavior: 'smooth' });
+                
+            } catch (error) {
+                console.error('Health check failed:', error);
+                healthResults.innerHTML = `
+                    <h3 class="text-center mb-4 text-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        연결 오류
+                    </h3>
+                    <p class="text-center text-muted">서버 상태를 확인할 수 없습니다.</p>
+                `;
+                healthResults.style.display = 'block';
             }
         }
-    });
-    
-    // 툴팁 초기화 (Bootstrap 5)
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
-    
-    console.log('✅ LottoPro AI v2.0 초기화 완료!');
-});
-
-// 페이지 스크롤 함수
-function scrollToSection(sectionId) {
-    const element = document.getElementById(sectionId);
-    if (element) {
-        element.scrollIntoView({ 
-            behavior: 'smooth',
-            block: 'start' 
+        
+        // 페이지 로드 시 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('LottoPro AI v2.0 초기화 완료');
+            
+            // Enter 키 지원
+            const inputs = document.querySelectorAll('input[type="number"]');
+            inputs.forEach((input, index) => {
+                input.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (index < inputs.length - 1) {
+                            inputs[index + 1].focus();
+                        } else {
+                            generatePrediction();
+                        }
+                    }
+                });
+                
+                // 입력 검증
+                input.addEventListener('input', function(e) {
+                    const value = parseInt(e.target.value);
+                    if (value < 1 || value > 45) {
+                        e.target.setCustomValidity('1-45 사이의 번호를 입력해주세요.');
+                    } else {
+                        e.target.setCustomValidity('');
+                    }
+                });
+            });
         });
-    }
-}
-
-// 정보 모달 열기 함수
-function openInfoModal(tab = 'terms') {
-    const modal = new bootstrap.Modal(document.getElementById('infoModal'));
-    
-    // 탭 활성화
-    const tabButton = document.getElementById(tab + '-tab');
-    if (tabButton) {
-        const tabTrigger = new bootstrap.Tab(tabButton);
-        tabTrigger.show();
-    }
-    
-    modal.show();
-}
-
-// Quick Save Modal 열기
-function openQuickSaveModal() {
-    const modal = new bootstrap.Modal(document.getElementById('quickSaveModal'));
-    modal.show();
-}
-
-// Quick Save 기능
-function quickSaveNumbers() {
-    const label = document.getElementById('quick-save-label').value.trim();
-    const numbersInput = document.getElementById('quick-save-numbers').value.trim();
-    
-    if (!label) {
-        alert('라벨을 입력해주세요.');
-        return;
-    }
-    
-    if (!numbersInput) {
-        alert('번호를 입력해주세요.');
-        return;
-    }
-    
-    // 번호 파싱
-    const numbers = numbersInput.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n) && n >= 1 && n <= 45);
-    
-    if (numbers.length !== 6) {
-        alert('1-45 범위의 번호 6개를 입력해주세요.');
-        return;
-    }
-    
-    if (new Set(numbers).size !== 6) {
-        alert('중복된 번호가 있습니다. 서로 다른 6개 번호를 입력해주세요.');
-        return;
-    }
-    
-    // 번호 저장 (my-numbers.js의 함수 사용)
-    if (typeof saveNumbersToStorage === 'function') {
-        const saved = saveNumbersToStorage(label, numbers.sort((a, b) => a - b));
-        if (saved) {
-            // 모달 닫기
-            bootstrap.Modal.getInstance(document.getElementById('quickSaveModal')).hide();
-            
-            // 성공 메시지
-            showToast('success', '번호가 성공적으로 저장되었습니다!');
-            
-            // 저장된 번호 목록 새로고침
-            if (typeof loadSavedNumbers === 'function') {
-                loadSavedNumbers();
-            }
-            
-            // 입력 필드 초기화
-            document.getElementById('quick-save-label').value = '';
-            document.getElementById('quick-save-numbers').value = '';
-        } else {
-            alert('번호 저장에 실패했습니다.');
-        }
-    }
-}
-
-// 토스트 메시지 표시 함수
-function showToast(type, message) {
-    // 간단한 토스트 메시지 구현
-    const toast = document.createElement('div');
-    toast.className = `alert alert-${type} position-fixed top-0 end-0 m-3`;
-    toast.style.zIndex = '9999';
-    toast.innerHTML = `
-        ${message}
-        <button type="button" class="btn-close ms-2" onclick="this.parentElement.remove()"></button>
-    `;
-    
-    document.body.appendChild(toast);
-    
-    // 3초 후 자동 제거
-    setTimeout(() => {
-        if (toast.parentElement) {
-            toast.remove();
-        }
-    }, 3000);
-}
-</script>
-
-{% endblock %}
+    </script>
+</body>
+</html>
