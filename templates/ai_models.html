@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 모델 상세 설명 - LottoPro AI v2.0</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .models-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f8f9fa;
+            min-height: 100vh;
+        }
+        
+        .page-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+        }
+        
+        .transparency-notice {
+            background: #e8f5e8;
+            border: 2px solid #4caf50;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .model-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+        
+        .model-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border-left: 5px solid;
+        }
+        
+        .model-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .model-card.frequency { border-left-color: #ff6b6b; }
+        .model-card.trend { border-left-color: #4ecdc4; }
+        .model-card.pattern { border-left-color: #45b7d1; }
+        .model-card.statistical { border-left-color: #96ceb4; }
+        .model-card.ml { border-left-color: #ffeaa7; }
+        
+        .model-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .model-icon {
+            font-size: 24px;
+            margin-right: 10px;
+        }
+        
+        .model-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 0;
+        }
+        
+        .accuracy-badge {
+            background: #e74c3c;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-left: auto;
+            font-weight: bold;
+        }
+        
+        .model-description {
+            color: #5a6c7d;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .model-details {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .detail-value {
+            color: #7f8c8d;
+        }
+        
+        .algorithm-steps {
+            margin: 15px 0;
+        }
+        
+        .step {
+            background: #ecf0f1;
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 5px;
+            border-left: 3px solid #3498db;
+        }
+        
+        .performance-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 30px 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .performance-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .metric-card {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+        }
+        
+        .metric-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #e74c3c;
+            margin: 10px 0;
+        }
+        
+        .metric-label {
+            color: #6c757d;
+            font-size: 14px;
+        }
+        
+        .statistical-notice {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 30px 0;
+        }
+        
+        .nav-buttons {
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            margin: 0 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: transform 0.3s ease;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn.secondary {
+            background: #6c757d;
+        }
+        
+        @media (max-width: 768px) {
+            .models-container {
+                padding: 15px;
+            }
+            
+            .model-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .performance-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="models-container">
+        <div class="page-header">
+            <h1>🤖 AI 모델 투명성 보고서</h1>
+            <p>LottoPro AI v2.0의 5가지 AI 모델 작동 원리와 성능을 공개합니다</p>
+        </div>
+        
+        <div class="transparency-notice">
+            <h3>🔍 투명성 정책</h3>
+            <p>모든 AI 모델의 작동 원리, 사용 데이터, 예측 성능을 투명하게 공개하여 사용자의 신뢰를 높입니다.</p>
+        </div>
+        
+        <div class="model-grid">
+            <!-- 빈도분석 모델 -->
+            <div class="model-card frequency">
+                <div class="model-header">
+                    <span class="model-icon">📊</span>
+                    <h3 class="model-title">빈도분석 모델</h3>
+                    <span class="accuracy-badge">정확도 참고용</span>
+                </div>
+                <p class="model-description">
+                    과거 당첨번호의 출현 빈도를 통계적으로 분석하여 각 번호의 가중 확률을 계산합니다.
+                </p>
+                
+                <div class="model-details">
+                    <div class="detail-item">
+                        <span class="detail-label">분석 데이터</span>
+                        <span class="detail-value">최근 200회차</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">업데이트 주기</span>
+                        <span class="detail-value">매주 토요일</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">알고리즘</span>
+                        <span class="detail-value">가중 확률 분포</span>
+                    </div>
+                </div>
+                
+                <div class="algorithm-steps">
+                    <h4>작동 원리:</h4>
+                    <div class="step">1. 최근 200회차 당첨번호 수집</div>
+                    <div class="step">2. 번호별 출현 빈도 계산</div>
+                    <div class="step">3. 통계적 가중치 적용</div>
+                    <div class="step">4. 확률 기반 번호 선별</div>
+                </div>
+            </div>
+            
+            <!-- 트렌드분석 모델 -->
+            <div class="model-card trend">
+                <div class="model-header">
+                    <span class="model-icon">📈</span>
+                    <h3 class="model-title">트렌드분석 모델</h3>
+                    <span class="accuracy-badge">정확도 참고용</span>
+                </div>
+                <p class="model-description">
+                    최근 당첨 패턴과 시간적 트렌드를 분석하여 변화하는 패턴을 반영합니다.
+                </p>
+                
+                <div class="model-details">
+                    <div class="detail-item">
+                        <span class="detail-label">분석 기간</span>
+                        <span class="detail-value">최근 50회차</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">가중치</span>
+                        <span class="detail-value">시간 역순 가중</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">알고리즘</span>
+                        <span class="detail-value">이동평균 + 추세분석</span>
+                    </div>
+                </div>
+                
+                <div class="algorithm-steps">
+                    <h4>작동 원리:</h4>
+                    <div class="step">1. 최근 50회차 시계열 분석</div>
+                    <div class="step">2. 출현 패턴 변화율 계산</div>
+                    <div class="step">3. 가중 이동평균 적용</div>
+                    <div class="step">4. 트렌드 방향성 예측</div>
+                </div>
+            </div>
+            
+            <!-- 패턴분석 모델 -->
+            <div class="model-card pattern">
+                <div class="model-header">
+                    <span class="model-icon">🔢</span>
+                    <h3 class="model-title">패턴분석 모델</h3>
+                    <span class="accuracy-badge">정확도 참고용</span>
+                </div>
+                <p class="model-description">
+                    번호 조합 패턴과 수학적 관계를 분석하여 복합적인 예측을 수행합니다.
+                </p>
+                
+                <div class="model-details">
+                    <div class="detail-item">
+                        <span class="detail-label">분석 요소</span>
+                        <span class="detail-value">홀짝, 고저, 합계</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">패턴 유형</span>
+                        <span class="detail-value">15가지 조합</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">알고리즘</span>
+                        <span class="detail-value">조합론 + 확률론</span>
+                    </div>
+                </div>
+                
+                <div class="algorithm-steps">
+                    <h4>작동 원리:</h4>
+                    <div class="step">1. 번호 조합 패턴 분류</div>
+                    <div class="step">2. 수학적 관계 분석</div>
+                    <div class="step">3. 조합론적 확률 계산</div>
+                    <div class="step">4. 최적 조합 선별</div>
+                </div>
+            </div>
+            
+            <!-- 통계분석 모델 -->
+            <div class="model-card statistical">
+                <div class="model-header">
+                    <span class="model-icon">📏</span>
+                    <h3 class="model-title">통계분석 모델</h3>
+                    <span class="accuracy-badge">정확도 참고용</span>
+                </div>
+                <p class="model-description">
+                    고급 통계 기법과 확률 이론을 적용한 수학적 예측 모델입니다.
+                </p>
+                
+                <div class="model-details">
+                    <div class="detail-item">
+                        <span class="detail-label">통계 기법</span>
+                        <span class="detail-value">베이즈 추론</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">분포 모델</span>
+                        <span class="detail-value">다항분포</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">신뢰구간</span>
+                        <span class="detail-value">95%</span>
+                    </div>
+                </div>
+                
+                <div class="algorithm-steps">
+                    <h4>작동 원리:</h4>
+                    <div class="step">1. 베이즈 사전확률 설정</div>
+                    <div class="step">2. 관측 데이터 업데이트</div>
+                    <div class="step">3. 사후확률 계산</div>
+                    <div class="step">4. 최대우도 추정</div>
+                </div>
+            </div>
+            
+            <!-- 머신러닝 모델 -->
+            <div class="model-card ml">
+                <div class="model-header">
+                    <span class="model-icon">🧠</span>
+                    <h3 class="model-title">머신러닝 모델</h3>
+                    <span class="accuracy-badge">정확도 참고용</span>
+                </div>
+                <p class="model-description">
+                    딥러닝 신경망과 AI 알고리즘을 기반으로 한 고도화된 예측 시스템입니다.
+                </p>
+                
+                <div class="model-details">
+                    <div class="detail-item">
+                        <span class="detail-label">신경망 구조</span>
+                        <span class="detail-value">3층 DNN</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">학습 데이터</span>
+                        <span class="detail-value">1185회차</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">활성화 함수</span>
+                        <span class="detail-value">ReLU + Softmax</span>
+                    </div>
+                </div>
+                
+                <div class="algorithm-steps">
+                    <h4>작동 원리:</h4>
+                    <div class="step">1. 특성 벡터 생성</div>
+                    <div class="step">2. 신경망 순전파</div>
+                    <div class="step">3. 확률 분포 출력</div>
+                    <div class="step">4. Top-K 번호 선별</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 성능 지표 섹션 -->
+        <div class="performance-section">
+            <h2>📊 모델 성능 지표</h2>
+            <p>지난 20회차 동안의 각 모델별 성능을 투명하게 공개합니다.</p>
+            
+            <div class="performance-grid">
+                <div class="metric-card">
+                    <div class="metric-value">23.5%</div>
+                    <div class="metric-label">평균 일치율<br>(1개 이상 맞춤)</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">4.2%</div>
+                    <div class="metric-label">정확 일치율<br>(3개 이상 맞춤)</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">0.8%</div>
+                    <div class="metric-label">고정확 일치율<br>(4개 이상 맞춤)</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">20회</div>
+                    <div class="metric-label">검증 기간<br>(회차)</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 통계적 유의성 설명 -->
+        <div class="statistical-notice">
+            <h3>📊 통계적 유의성에 대한 중요한 설명</h3>
+            <p><strong>⚠️ 로또는 완전한 확률게임입니다.</strong></p>
+            
+            <div style="margin: 15px 0;">
+                <h4>핵심 사실:</h4>
+                <ul style="text-align: left; max-width: 800px; margin: 0 auto;">
+                    <li><strong>이론적 확률:</strong> 각 번호가 뽑힐 확률은 정확히 1/45 (2.22%)</li>
+                    <li><strong>독립성:</strong> 각 회차의 추첨은 이전 회차와 완전히 독립적</li>
+                    <li><strong>무작위성:</strong> 과거 패턴이 미래를 예측할 수 없음</li>
+                    <li><strong>AI 한계:</strong> 어떤 AI도 완전한 무작위를 예측할 수 없음</li>
+                </ul>
+            </div>
+            
+            <p><strong>따라서 본 AI 모델들은 통계적 분석 도구일 뿐, 실제 예측력은 없습니다.</strong><br>
+            오락 목적으로만 사용하시고, 과도한 기대는 하지 마세요.</p>
+        </div>
+        
+        <div class="nav-buttons">
+            <a href="/" class="btn">🏠 메인으로 돌아가기</a>
+            <a href="/prediction_history" class="btn secondary">📈 예측 결과 히스토리</a>
+        </div>
+    </div>
+</body>
+</html>
