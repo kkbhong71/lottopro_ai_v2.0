@@ -1,0 +1,101 @@
+version: '3.8'
+
+services:
+  # 메인 웹 애플리케이션
+  lottopro-web:
+    build: .
+    container_name: lottopro-web
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - DATABASE_URL=sqlite:///data/lottopro.db
+      - TRANSPARENCY_MODE=enabled
+      - SECRET_KEY=${SECRET_KEY:-your-secret-key-here}
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    networks:
+      - lottopro-network
+    depends_on:
+      - redis
+    labels:
+      - "com.lottopro.service=web"
+      - "com.lottopro.version=v2.0"
+
+  # 모니터링 서비스
+  lottopro-monitor:
+    build: .
+    container_name: lottopro-monitor
+    restart: unless-stopped
+    ports:
+      - "5001:5001"
+    command: ["python", "monitoring/real_time_monitor.py"]
+    environment:
+      - MONITOR_TARGET=http://lottopro-web:5000
+      - DATABASE_URL=sqlite:///data/monitoring.db
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    networks:
+      - lottopro-network
+    depends_on:
+      - lottopro-web
+    labels:
+      - "com.lottopro.service=monitor"
+
+  # Redis 캐시 (성능 향상)
+  redis:
+    image: redis:7-alpine
+    container_name: lottopro-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - lottopro-network
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+
+  # Nginx 리버스 프록시
+  nginx:
+    image: nginx:alpine
+    container_name: lottopro-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./logs/nginx:/var/log/nginx
+    networks:
+      - lottopro-network
+    depends_on:
+      - lottopro-web
+    labels:
+      - "com.lottopro.service=proxy"
+
+  # 로그 수집 (Fluentd)
+  fluentd:
+    image: fluentd:v1.16-1
+    container_name: lottopro-logs
+    restart: unless-stopped
+    volumes:
+      - ./logs:/fluentd/log
+      - ./fluentd/fluent.conf:/fluentd/etc/fluent.conf:ro
+    networks:
+      - lottopro-network
+    labels:
+      - "com.lottopro.service=logging"
+
+volumes:
+  redis-data:
+    driver: local
+
+networks:
+  lottopro-network:
+    driver: bridge
+    labels:
+      - "com.lottopro.network=main"
