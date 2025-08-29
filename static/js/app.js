@@ -1,10 +1,14 @@
+/**
+ * LottoPro AI v2.0 - Main JavaScript Application
  * 15가지 기능을 지원하는 완전한 클라이언트 사이드 애플리케이션
+ * 모든 글로벌 함수와 이벤트 핸들러 포함
+ */
 
 // ===== Global Application Object =====
 window.lottoPro = {
     // Configuration
     config: {
-        apiBaseUrl: '',
+        apiBaseUrl: '/api',
         version: '2.0.0',
         maxSavedNumbers: 50,
         maxSimulationRounds: 10000,
@@ -111,9 +115,9 @@ window.lottoPro.utils = {
         const toast = document.createElement('div');
         toast.className = `alert alert-${type} toast`;
         toast.innerHTML = `
-            <div class=\"d-flex justify-content-between align-items-center\">
+            <div class="d-flex justify-content-between align-items-center">
                 <span>${message}</span>
-                <button type=\"button\" class=\"btn-close btn-close-${type === 'warning' ? 'dark' : 'white'}\" onclick=\"this.parentElement.parentElement.remove()\"></button>
+                <button type="button" class="btn-close btn-close-${type === 'warning' ? 'dark' : 'white'}" onclick="this.parentElement.parentElement.remove()"></button>
             </div>
         `;
         
@@ -136,8 +140,8 @@ window.lottoPro.utils = {
         const spinner = document.createElement('div');
         spinner.className = 'loading';
         spinner.innerHTML = `
-            <div class=\"spinner-border mb-3\" role=\"status\"></div>
-            <p class=\"text-muted\">${text}</p>
+            <div class="spinner-border mb-3" role="status"></div>
+            <p class="text-muted">${text}</p>
         `;
         
         element.innerHTML = '';
@@ -439,19 +443,19 @@ window.lottoPro.modules.prediction = {
             let topHtml = '';
             data.top_recommendations.slice(0, 5).forEach((numbers, index) => {
                 topHtml += `
-                    <div class=\"col-md-6 mb-3\">
-                        <div class=\"prediction-result ${index === 0 ? 'prediction-result-top' : ''}\">
-                            <h6 class=\"fw-bold d-flex justify-content-between align-items-center\">
-                                <span><i class=\"fas fa-star text-warning me-2\"></i>추천 ${index + 1}</span>
-                                <button class=\"btn btn-sm btn-outline-primary\" onclick=\"window.lottoPro.modules.savedNumbers.quickSave([${numbers.join(',')}], 'AI 추천 ${index + 1}')\">
-                                    <i class=\"fas fa-heart me-1\"></i>저장
+                    <div class="col-md-6 mb-3">
+                        <div class="prediction-result ${index === 0 ? 'prediction-result-top' : ''}">
+                            <h6 class="fw-bold d-flex justify-content-between align-items-center">
+                                <span><i class="fas fa-star text-warning me-2"></i>추천 ${index + 1}</span>
+                                <button class="btn btn-sm btn-outline-primary" onclick="window.lottoPro.modules.savedNumbers.quickSave([${numbers.join(',')}], 'AI 추천 ${index + 1}')">
+                                    <i class="fas fa-heart me-1"></i>저장
                                 </button>
                             </h6>
-                            <div class=\"number-display\">
-                                ${numbers.map(num => `<span class=\"number-ball\">${num}</span>`).join('')}
+                            <div class="number-display">
+                                ${numbers.map(num => `<span class="number-ball">${num}</span>`).join('')}
                             </div>
-                            <div class=\"mt-2\">
-                                <small class=\"text-muted\">
+                            <div class="mt-2">
+                                <small class="text-muted">
                                     합계: ${numbers.reduce((a, b) => a + b, 0)} | 
                                     홀짝: ${numbers.filter(n => n % 2 === 1).length}:${numbers.filter(n => n % 2 === 0).length}
                                 </small>
@@ -468,36 +472,36 @@ window.lottoPro.modules.prediction = {
             let modelHtml = '';
             Object.entries(data.models).forEach(([modelName, modelData]) => {
                 modelHtml += `
-                    <div class=\"col-lg-6 mb-4\">
-                        <div class=\"card h-100\">
-                            <div class=\"card-header bg-primary text-white\">
-                                <h6 class=\"mb-0 d-flex justify-content-between align-items-center\">
-                                    <span><i class=\"fas fa-robot me-2\"></i>${modelName}</span>
-                                    <span class=\"badge bg-light text-dark\">${modelData.accuracy}% 정확도</span>
+                    <div class="col-lg-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header bg-primary text-white">
+                                <h6 class="mb-0 d-flex justify-content-between align-items-center">
+                                    <span><i class="fas fa-robot me-2"></i>${modelName}</span>
+                                    <span class="badge bg-light text-dark">${modelData.accuracy}% 정확도</span>
                                 </h6>
                             </div>
-                            <div class=\"card-body\">
-                                <p class=\"text-muted small\">${modelData.description}</p>
+                            <div class="card-body">
+                                <p class="text-muted small">${modelData.description}</p>
                                 
                                 <!-- 정확도 바 -->
-                                <div class=\"model-accuracy-bar\">
-                                    <div class=\"model-accuracy-fill\" style=\"width: ${modelData.accuracy}%\"></div>
+                                <div class="model-accuracy-bar">
+                                    <div class="model-accuracy-fill" style="width: ${modelData.accuracy}%"></div>
                                 </div>
-                                <small class=\"text-muted\">정확도: ${modelData.accuracy}%</small>
+                                <small class="text-muted">정확도: ${modelData.accuracy}%</small>
                                 
                                 <!-- 예측 번호들 -->
-                                <div class=\"mt-3\">
+                                <div class="mt-3">
                                     <h6>예측 번호 (상위 3개)</h6>
                                     ${modelData.predictions.slice(0, 3).map((numbers, idx) => `
-                                        <div class=\"prediction-result mb-2\">
-                                            <div class=\"d-flex justify-content-between align-items-center mb-2\">
-                                                <span class=\"small fw-bold\">예측 ${idx + 1}</span>
-                                                <button class=\"btn btn-sm btn-outline-success\" onclick=\"window.lottoPro.modules.savedNumbers.quickSave([${numbers.join(',')}], '${modelName} 예측')\">
-                                                    <i class=\"fas fa-heart me-1\"></i>저장
+                                        <div class="prediction-result mb-2">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <span class="small fw-bold">예측 ${idx + 1}</span>
+                                                <button class="btn btn-sm btn-outline-success" onclick="window.lottoPro.modules.savedNumbers.quickSave([${numbers.join(',')}], '${modelName} 예측')">
+                                                    <i class="fas fa-heart me-1"></i>저장
                                                 </button>
                                             </div>
-                                            <div class=\"number-display justify-content-start\">
-                                                ${numbers.map(num => `<span class=\"number-ball\">${num}</span>`).join('')}
+                                            <div class="number-display justify-content-start">
+                                                ${numbers.map(num => `<span class="number-ball">${num}</span>`).join('')}
                                             </div>
                                         </div>
                                     `).join('')}
@@ -624,8 +628,8 @@ window.lottoPro.modules.savedNumbers = {
         
         if (numbers.length === 0) {
             container.innerHTML = `
-                <div class=\"text-center text-muted py-4\">
-                    <i class=\"fas fa-inbox fa-2x mb-2\"></i>
+                <div class="text-center text-muted py-4">
+                    <i class="fas fa-inbox fa-2x mb-2"></i>
                     <p>저장된 번호가 없습니다</p>
                     <small>소중한 번호들을 저장해보세요!</small>
                 </div>
@@ -636,40 +640,40 @@ window.lottoPro.modules.savedNumbers = {
         let html = '';
         numbers.forEach(item => {
             html += `
-                <div class=\"saved-number-item\" data-id=\"${item.id}\">
-                    <div class=\"saved-number-actions\">
-                        <button class=\"btn btn-sm btn-outline-primary me-1\" onclick=\"window.lottoPro.modules.tools.checkWinning([${item.numbers.join(',')}])\">
-                            <i class=\"fas fa-search\"></i>
+                <div class="saved-number-item" data-id="${item.id}">
+                    <div class="saved-number-actions">
+                        <button class="btn btn-sm btn-outline-primary me-1" onclick="window.lottoPro.modules.tools.checkWinning([${item.numbers.join(',')}])">
+                            <i class="fas fa-search"></i>
                         </button>
-                        <button class=\"btn btn-sm btn-outline-danger\" onclick=\"window.lottoPro.modules.savedNumbers.delete('${item.id}')\">
-                            <i class=\"fas fa-trash\"></i>
+                        <button class="btn btn-sm btn-outline-danger" onclick="window.lottoPro.modules.savedNumbers.delete('${item.id}')">
+                            <i class="fas fa-trash"></i>
                         </button>
                     </div>
                     
-                    <div class=\"saved-number-label\">${item.label}</div>
+                    <div class="saved-number-label">${item.label}</div>
                     
-                    <div class=\"number-display justify-content-start mb-2\">
-                        ${item.numbers.map(num => `<span class=\"number-ball\">${num}</span>`).join('')}
+                    <div class="number-display justify-content-start mb-2">
+                        ${item.numbers.map(num => `<span class="number-ball">${num}</span>`).join('')}
                     </div>
                     
-                    <div class=\"saved-number-date\">${window.lottoPro.utils.formatDate(item.saved_at)}</div>
+                    <div class="saved-number-date">${window.lottoPro.utils.formatDate(item.saved_at)}</div>
                     
                     ${item.analysis ? `
-                        <div class=\"saved-number-analysis\">
-                            <div class=\"analysis-item\">
-                                <div class=\"analysis-value\">${item.analysis.sum}</div>
+                        <div class="saved-number-analysis">
+                            <div class="analysis-item">
+                                <div class="analysis-value">${item.analysis.sum}</div>
                                 <div>합계</div>
                             </div>
-                            <div class=\"analysis-item\">
-                                <div class=\"analysis-value\">${item.analysis.odd_count}:${item.analysis.even_count}</div>
+                            <div class="analysis-item">
+                                <div class="analysis-value">${item.analysis.odd_count}:${item.analysis.even_count}</div>
                                 <div>홀짝</div>
                             </div>
-                            <div class=\"analysis-item\">
-                                <div class=\"analysis-value\">${item.analysis.range}</div>
+                            <div class="analysis-item">
+                                <div class="analysis-value">${item.analysis.range}</div>
                                 <div>범위</div>
                             </div>
-                            <div class=\"analysis-item\">
-                                <div class=\"analysis-value\">${item.analysis.consecutive}</div>
+                            <div class="analysis-item">
+                                <div class="analysis-value">${item.analysis.consecutive}</div>
                                 <div>연속</div>
                             </div>
                         </div>
@@ -740,7 +744,7 @@ window.lottoPro.modules.stats = {
         const hotNumbersElement = document.getElementById('hotNumbers');
         if (hotNumbersElement && data.hot_numbers) {
             const hotHtml = data.hot_numbers.map(([num, freq]) => 
-                `<span class=\"number-ball number-ball-hot\" title=\"출현 ${freq}회\">${num}</span>`
+                `<span class="number-ball number-ball-hot" title="출현 ${freq}회">${num}</span>`
             ).join('');
             hotNumbersElement.innerHTML = hotHtml;
         }
@@ -749,7 +753,7 @@ window.lottoPro.modules.stats = {
         const coldNumbersElement = document.getElementById('coldNumbers');
         if (coldNumbersElement && data.cold_numbers) {
             const coldHtml = data.cold_numbers.map(([num, freq]) => 
-                `<span class=\"number-ball number-ball-cold\" title=\"출현 ${freq}회\">${num}</span>`
+                `<span class="number-ball number-ball-cold" title="출현 ${freq}회">${num}</span>`
             ).join('');
             coldNumbersElement.innerHTML = coldHtml;
         }
@@ -768,23 +772,23 @@ window.lottoPro.modules.stats = {
         const element = document.getElementById('carryOverAnalysis');
         if (!element || !data) return;
         
-        let html = '<div class=\"small mb-3\">최근 20회차 이월수 현황</div>';
+        let html = '<div class="small mb-3">최근 20회차 이월수 현황</div>';
         
         if (data.length > 0) {
             html += data.slice(0, 10).map(item => `
-                <div class=\"d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded\">
-                    <span class=\"fw-bold\">${item.round}회차</span>
+                <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
+                    <span class="fw-bold">${item.round}회차</span>
                     <div>
                         ${item.carry_over_numbers.length > 0 ? 
-                            item.carry_over_numbers.map(num => `<span class=\"badge bg-warning text-dark me-1\">${num}</span>`).join('') :
-                            '<span class=\"text-muted\">없음</span>'
+                            item.carry_over_numbers.map(num => `<span class="badge bg-warning text-dark me-1">${num}</span>`).join('') :
+                            '<span class="text-muted">없음</span>'
                         }
                     </div>
-                    <span class=\"badge bg-primary\">${item.count}개</span>
+                    <span class="badge bg-primary">${item.count}개</span>
                 </div>
             `).join('');
         } else {
-            html += '<p class=\"text-muted\">데이터를 불러오는 중...</p>';
+            html += '<p class="text-muted">데이터를 불러오는 중...</p>';
         }
         
         element.innerHTML = html;
@@ -794,20 +798,20 @@ window.lottoPro.modules.stats = {
         const element = document.getElementById('companionAnalysis');
         if (!element || !data) return;
         
-        let html = '<div class=\"small mb-3\">자주 함께 나오는 번호 조합</div>';
+        let html = '<div class="small mb-3">자주 함께 나오는 번호 조합</div>';
         
         if (data.length > 0) {
             html += data.slice(0, 5).map(([[num1, num2], freq]) => `
-                <div class=\"d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded\">
+                <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
                     <div>
-                        <span class=\"number-ball me-1\" style=\"width: 30px; height: 30px; line-height: 30px; font-size: 0.8rem;\">${num1}</span>
-                        <span class=\"number-ball\" style=\"width: 30px; height: 30px; line-height: 30px; font-size: 0.8rem;\">${num2}</span>
+                        <span class="number-ball me-1" style="width: 30px; height: 30px; line-height: 30px; font-size: 0.8rem;">${num1}</span>
+                        <span class="number-ball" style="width: 30px; height: 30px; line-height: 30px; font-size: 0.8rem;">${num2}</span>
                     </div>
-                    <span class=\"badge bg-success\">${freq}회</span>
+                    <span class="badge bg-success">${freq}회</span>
                 </div>
             `).join('');
         } else {
-            html += '<p class=\"text-muted\">데이터를 분석하는 중...</p>';
+            html += '<p class="text-muted">데이터를 분석하는 중...</p>';
         }
         
         element.innerHTML = html;
@@ -817,7 +821,7 @@ window.lottoPro.modules.stats = {
         const element = document.getElementById('patternAnalysis');
         if (!element || !data) return;
         
-        let html = '<div class=\"small mb-3\">최근 패턴 분석</div>';
+        let html = '<div class="small mb-3">최근 패턴 분석</div>';
         
         if (data.consecutive_count && data.odd_even_ratio) {
             const avgConsecutive = data.consecutive_count.reduce((a, b) => a + b, 0) / data.consecutive_count.length;
@@ -830,23 +834,23 @@ window.lottoPro.modules.stats = {
             );
             
             html += `
-                <div class=\"row\">
-                    <div class=\"col-6\">
-                        <div class=\"text-center p-2 bg-light rounded mb-2\">
-                            <div class=\"fw-bold text-primary\">${avgConsecutive.toFixed(1)}</div>
+                <div class="row">
+                    <div class="col-6">
+                        <div class="text-center p-2 bg-light rounded mb-2">
+                            <div class="fw-bold text-primary">${avgConsecutive.toFixed(1)}</div>
                             <small>평균 연속번호</small>
                         </div>
                     </div>
-                    <div class=\"col-6\">
-                        <div class=\"text-center p-2 bg-light rounded mb-2\">
-                            <div class=\"fw-bold text-success\">${mostCommonRatio}</div>
+                    <div class="col-6">
+                        <div class="text-center p-2 bg-light rounded mb-2">
+                            <div class="fw-bold text-success">${mostCommonRatio}</div>
                             <small>가장 흔한 홀짝비</small>
                         </div>
                     </div>
                 </div>
             `;
         } else {
-            html += '<p class=\"text-muted\">패턴을 분석하는 중...</p>';
+            html += '<p class="text-muted">패턴을 분석하는 중...</p>';
         }
         
         element.innerHTML = html;
@@ -891,31 +895,31 @@ window.lottoPro.modules.tools = {
         if (!resultElement) return;
         
         const html = `
-            <div class=\"calculator-result\">
-                <h6 class=\"fw-bold mb-3\">세금 계산 결과</h6>
+            <div class="calculator-result">
+                <h6 class="fw-bold mb-3">세금 계산 결과</h6>
                 
-                <div class=\"row\">
-                    <div class=\"col-sm-6\">
-                        <div class=\"text-center p-2 bg-primary text-white rounded mb-2\">
-                            <div class=\"fw-bold\">${window.lottoPro.utils.formatCurrency(data.prize_amount)}</div>
+                <div class="row">
+                    <div class="col-sm-6">
+                        <div class="text-center p-2 bg-primary text-white rounded mb-2">
+                            <div class="fw-bold">${window.lottoPro.utils.formatCurrency(data.prize_amount)}</div>
                             <small>당첨금액</small>
                         </div>
                     </div>
-                    <div class=\"col-sm-6\">
-                        <div class=\"text-center p-2 bg-danger text-white rounded mb-2\">
-                            <div class=\"fw-bold\">${window.lottoPro.utils.formatCurrency(data.tax_amount)}</div>
+                    <div class="col-sm-6">
+                        <div class="text-center p-2 bg-danger text-white rounded mb-2">
+                            <div class="fw-bold">${window.lottoPro.utils.formatCurrency(data.tax_amount)}</div>
                             <small>세금 (${data.effective_tax_rate}%)</small>
                         </div>
                     </div>
                 </div>
                 
-                <div class=\"text-center p-3 bg-success text-white rounded\">
-                    <div class=\"h5 fw-bold mb-1\">${window.lottoPro.utils.formatCurrency(data.net_amount)}</div>
+                <div class="text-center p-3 bg-success text-white rounded">
+                    <div class="h5 fw-bold mb-1">${window.lottoPro.utils.formatCurrency(data.net_amount)}</div>
                     <small>실수령액</small>
                 </div>
                 
-                <div class=\"mt-3\">
-                    <small class=\"text-muted\">
+                <div class="mt-3">
+                    <small class="text-muted">
                         <strong>과세 구간:</strong> ${data.tax_brackets}<br>
                         <strong>비과세 금액:</strong> ${window.lottoPro.utils.formatCurrency(data.tax_free_amount)}
                     </small>
@@ -953,59 +957,59 @@ window.lottoPro.modules.tools = {
                           ['1등', '2등'].includes(data.prize) ? 'success' : 'warning';
         
         const modalHtml = `
-            <div class=\"modal fade\" id=\"winningModal\" tabindex=\"-1\">
-                <div class=\"modal-dialog\">
-                    <div class=\"modal-content\">
-                        <div class=\"modal-header bg-${prizeClass} text-white\">
-                            <h5 class=\"modal-title\">
-                                <i class=\"fas fa-trophy me-2\"></i>${data.round}회차 당첨 결과
+            <div class="modal fade" id="winningModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header bg-${prizeClass} text-white">
+                            <h5 class="modal-title">
+                                <i class="fas fa-trophy me-2"></i>${data.round}회차 당첨 결과
                             </h5>
-                            <button type=\"button\" class=\"btn-close btn-close-white\" data-bs-dismiss=\"modal\"></button>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                         </div>
-                        <div class=\"modal-body\">
-                            <div class=\"text-center mb-4\">
-                                <div class=\"h2 text-${prizeClass} fw-bold\">${data.prize}</div>
-                                <div class=\"h4\">${data.prize_money}</div>
+                        <div class="modal-body">
+                            <div class="text-center mb-4">
+                                <div class="h2 text-${prizeClass} fw-bold">${data.prize}</div>
+                                <div class="h4">${data.prize_money}</div>
                             </div>
                             
-                            <div class=\"row mb-3\">
-                                <div class=\"col-6\">
-                                    <div class=\"text-center\">
-                                        <div class=\"small text-muted mb-2\">내 번호</div>
-                                        <div class=\"number-display justify-content-center\">
-                                            ${data.user_numbers.map(num => `<span class=\"number-ball\">${num}</span>`).join('')}
+                            <div class="row mb-3">
+                                <div class="col-6">
+                                    <div class="text-center">
+                                        <div class="small text-muted mb-2">내 번호</div>
+                                        <div class="number-display justify-content-center">
+                                            ${data.user_numbers.map(num => `<span class="number-ball">${num}</span>`).join('')}
                                         </div>
                                     </div>
                                 </div>
-                                <div class=\"col-6\">
-                                    <div class=\"text-center\">
-                                        <div class=\"small text-muted mb-2\">당첨 번호</div>
-                                        <div class=\"number-display justify-content-center\">
-                                            ${data.winning_numbers.map(num => `<span class=\"number-ball ${data.user_numbers.includes(num) ? 'number-ball-hot' : ''}\">${num}</span>`).join('')}
+                                <div class="col-6">
+                                    <div class="text-center">
+                                        <div class="small text-muted mb-2">당첨 번호</div>
+                                        <div class="number-display justify-content-center">
+                                            ${data.winning_numbers.map(num => `<span class="number-ball ${data.user_numbers.includes(num) ? 'number-ball-hot' : ''}">${num}</span>`).join('')}
                                         </div>
-                                        <div class=\"mt-2\">
-                                            <span class=\"small\">보너스: </span>
-                                            <span class=\"number-ball ${data.bonus_match ? 'number-ball-hot' : ''}\" style=\"width: 30px; height: 30px; line-height: 30px;\">${data.bonus_number}</span>
+                                        <div class="mt-2">
+                                            <span class="small">보너스: </span>
+                                            <span class="number-ball ${data.bonus_match ? 'number-ball-hot' : ''}" style="width: 30px; height: 30px; line-height: 30px;">${data.bonus_number}</span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             
-                            <div class=\"alert alert-info\">
-                                <div class=\"row text-center\">
-                                    <div class=\"col-6\">
-                                        <div class=\"fw-bold\">${data.matches}개</div>
+                            <div class="alert alert-info">
+                                <div class="row text-center">
+                                    <div class="col-6">
+                                        <div class="fw-bold">${data.matches}개</div>
                                         <small>번호 일치</small>
                                     </div>
-                                    <div class=\"col-6\">
-                                        <div class=\"fw-bold\">${data.bonus_match ? 'O' : 'X'}</div>
+                                    <div class="col-6">
+                                        <div class="fw-bold">${data.bonus_match ? 'O' : 'X'}</div>
                                         <small>보너스 일치</small>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class=\"modal-footer\">
-                            <button type=\"button\" class=\"btn btn-secondary\" data-bs-dismiss=\"modal\">닫기</button>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
                         </div>
                     </div>
                 </div>
@@ -1040,6 +1044,9 @@ window.lottoPro.events = {
         // 초기 데이터 로드
         this.loadInitialData();
         
+        // 상태 표시기 업데이트
+        this.updateStatusIndicator();
+        
         console.log('LottoPro AI v2.0 초기화 완료!');
     },
     
@@ -1063,6 +1070,17 @@ window.lottoPro.events = {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             });
         }
+        
+        // 탭 전환 이벤트
+        document.addEventListener('shown.bs.tab', function (event) {
+            const target = event.target.getAttribute('href');
+            
+            if (target === '#statistics') {
+                window.lottoPro.modules.stats.load();
+            } else if (target === '#numbers') {
+                window.lottoPro.modules.savedNumbers.load();
+            }
+        });
     },
     
     /**
@@ -1078,6 +1096,19 @@ window.lottoPro.events = {
             
         } catch (error) {
             console.error('Initial data load failed:', error);
+        }
+    },
+    
+    /**
+     * 상태 표시기 업데이트
+     */
+    updateStatusIndicator: function() {
+        const statusIndicator = document.getElementById('status-indicator');
+        const statusText = document.getElementById('status-text');
+        
+        if (statusIndicator && statusText) {
+            statusIndicator.className = 'status-indicator status-online';
+            statusText.textContent = '정상 운영';
         }
     },
     
@@ -1162,30 +1193,30 @@ window.lottoPro.events = {
         let modal = document.getElementById('quickSaveModal');
         if (!modal) {
             const modalHtml = `
-                <div class=\"modal fade\" id=\"quickSaveModal\" tabindex=\"-1\">
-                    <div class=\"modal-dialog\">
-                        <div class=\"modal-content\">
-                            <div class=\"modal-header bg-primary text-white\">
-                                <h5 class=\"modal-title\">
-                                    <i class=\"fas fa-lightning-bolt me-2\"></i>빠른 저장
+                <div class="modal fade" id="quickSaveModal" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header bg-primary text-white">
+                                <h5 class="modal-title">
+                                    <i class="fas fa-lightning-bolt me-2"></i>빠른 저장
                                 </h5>
-                                <button type=\"button\" class=\"btn-close btn-close-white\" data-bs-dismiss=\"modal\"></button>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                             </div>
-                            <div class=\"modal-body\">
-                                <div class=\"mb-3\">
-                                    <label class=\"form-label\">라벨</label>
-                                    <input type=\"text\" class=\"form-control\" id=\"quick-save-label\" placeholder=\"예: AI 추천 번호\">
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label class="form-label">라벨</label>
+                                    <input type="text" class="form-control" id="quick-save-label" placeholder="예: AI 추천 번호">
                                 </div>
-                                <div class=\"mb-3\">
-                                    <label class=\"form-label\">번호 (쉼표로 구분)</label>
-                                    <input type=\"text\" class=\"form-control\" id=\"quick-save-numbers\" 
-                                           placeholder=\"예: 1, 7, 13, 25, 31, 42\">
-                                    <div class=\"form-text\">번호를 쉼표(,)로 구분하여 입력하세요</div>
+                                <div class="mb-3">
+                                    <label class="form-label">번호 (쉼표로 구분)</label>
+                                    <input type="text" class="form-control" id="quick-save-numbers" 
+                                           placeholder="예: 1, 7, 13, 25, 31, 42">
+                                    <div class="form-text">번호를 쉼표(,)로 구분하여 입력하세요</div>
                                 </div>
                             </div>
-                            <div class=\"modal-footer\">
-                                <button type=\"button\" class=\"btn btn-secondary\" data-bs-dismiss=\"modal\">취소</button>
-                                <button type=\"button\" class=\"btn btn-primary\" onclick=\"window.lottoPro.events.quickSave()\">저장</button>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                                <button type="button" class="btn btn-primary" onclick="window.lottoPro.events.quickSave()">저장</button>
                             </div>
                         </div>
                     </div>
@@ -1239,7 +1270,328 @@ window.lottoPro.events = {
     }
 };
 
-// ===== Global Functions (for backward compatibility) =====
+// ===== Global Functions (for HTML onclick handlers) =====
+
+/**
+ * 랜덤 번호 생성 후 예측
+ */
+window.generateRandomAndPredict = async function() {
+    try {
+        const response = await window.lottoPro.api.generateRandom(1);
+        if (response.success && response.random_sets.length > 0) {
+            const randomNumbers = response.random_sets[0].numbers;
+            
+            // 입력 필드에 랜덤 번호 설정
+            for (let i = 1; i <= 6; i++) {
+                const input = document.getElementById(`num${i}`);
+                if (input) input.value = randomNumbers[i-1];
+            }
+            
+            // 예측 실행
+            await window.lottoPro.modules.prediction.generate();
+        }
+    } catch (error) {
+        console.error('Random generation failed:', error);
+        window.lottoPro.utils.showToast('랜덤 생성 실패: ' + error.message, 'danger');
+    }
+};
+
+/**
+ * 시뮬레이션 실행
+ */
+window.runSimulation = async function() {
+    const numbers = [];
+    for (let i = 1; i <= 6; i++) {
+        const input = document.getElementById(`num${i}`);
+        if (input && input.value) numbers.push(parseInt(input.value));
+    }
+    
+    if (numbers.length !== 6) {
+        window.lottoPro.utils.showToast('6개 번호를 모두 입력해주세요.', 'warning');
+        return;
+    }
+    
+    const rounds = parseInt(document.getElementById('sim-rounds')?.value) || 1000;
+    
+    try {
+        const response = await window.lottoPro.api.runSimulation(numbers, rounds);
+        if (response.success) {
+            displaySimulationResult(response);
+        }
+    } catch (error) {
+        window.lottoPro.utils.showToast('시뮬레이션 실패: ' + error.message, 'danger');
+    }
+};
+
+/**
+ * QR 코드 생성
+ */
+window.generateQRCode = async function() {
+    const numbers = [];
+    for (let i = 1; i <= 6; i++) {
+        const input = document.getElementById(`num${i}`);
+        if (input && input.value) numbers.push(parseInt(input.value));
+    }
+    
+    if (numbers.length !== 6) {
+        window.lottoPro.utils.showToast('6개 번호를 모두 입력해주세요.', 'warning');
+        return;
+    }
+    
+    try {
+        const response = await window.lottoPro.api.generateQR(numbers);
+        if (response.success) {
+            const resultElement = document.getElementById('qr-result');
+            if (resultElement) {
+                resultElement.innerHTML = `
+                    <img src="${response.qr_code}" class="img-fluid" alt="QR Code">
+                    <div class="mt-2 small">번호: ${numbers.join(', ')}</div>
+                `;
+            }
+        }
+    } catch (error) {
+        window.lottoPro.utils.showToast('QR 생성 실패: ' + error.message, 'danger');
+    }
+};
+
+/**
+ * 판매점 검색
+ */
+window.searchStores = async function() {
+    const query = document.getElementById('store-search')?.value;
+    if (!query || !query.trim()) {
+        window.lottoPro.utils.showToast('검색어를 입력해주세요.', 'warning');
+        return;
+    }
+    
+    try {
+        const response = await window.lottoPro.api.searchStores(query);
+        if (response.success) {
+            displayStoreResults(response.stores);
+        }
+    } catch (error) {
+        window.lottoPro.utils.showToast('검색 실패: ' + error.message, 'danger');
+    }
+};
+
+/**
+ * 현재 위치로 판매점 검색
+ */
+window.getCurrentLocation = async function() {
+    try {
+        const position = await window.lottoPro.utils.getUserLocation();
+        const response = await window.lottoPro.api.searchStores('', position.lat, position.lng);
+        if (response.success) {
+            displayStoreResults(response.stores);
+        }
+    } catch (error) {
+        window.lottoPro.utils.showToast('위치 검색 실패: ' + error.message, 'danger');
+    }
+};
+
+/**
+ * 당첨 확인
+ */
+window.checkWinning = async function() {
+    const numbers = [];
+    for (let i = 1; i <= 6; i++) {
+        const input = document.getElementById(`check${i}`);
+        if (input && input.value) numbers.push(parseInt(input.value));
+    }
+    
+    if (numbers.length !== 6) {
+        window.lottoPro.utils.showToast('6개 번호를 모두 입력해주세요.', 'warning');
+        return;
+    }
+    
+    await window.lottoPro.modules.tools.checkWinning(numbers);
+};
+
+/**
+ * 랜덤 번호 생성
+ */
+window.generateRandomNumbers = async function() {
+    const count = parseInt(document.getElementById('random-count')?.value) || 1;
+    
+    try {
+        const response = await window.lottoPro.api.generateRandom(count);
+        if (response.success) {
+            let html = '';
+            response.random_sets.forEach((set, index) => {
+                html += `
+                    <div class="prediction-result mb-2">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <small class="fw-bold">랜덤 ${index + 1}</small>
+                            <button class="btn btn-sm btn-outline-success" onclick="window.lottoPro.modules.savedNumbers.quickSave([${set.numbers.join(',')}], '랜덤 ${index + 1}')">
+                                <i class="fas fa-heart me-1"></i>저장
+                            </button>
+                        </div>
+                        <div class="number-display justify-content-start">
+                            ${set.numbers.map(num => `<span class="number-ball">${num}</span>`).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+            const resultElement = document.getElementById('random-results');
+            if (resultElement) resultElement.innerHTML = html;
+        }
+    } catch (error) {
+        window.lottoPro.utils.showToast('랜덤 생성 실패: ' + error.message, 'danger');
+    }
+};
+
+/**
+ * 시스템 상태 확인
+ */
+window.checkHealth = async function() {
+    try {
+        const response = await window.lottoPro.api.checkHealth();
+        
+        let statusHtml = `
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <div class="card border-0 shadow">
+                        <div class="card-body text-center">
+                            <i class="fas fa-server fa-2x text-primary mb-2"></i>
+                            <h6>서비스 상태</h6>
+                            <span class="badge ${response.status === 'healthy' ? 'bg-success' : 'bg-danger'}">${response.status}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="card border-0 shadow">
+                        <div class="card-body text-center">
+                            <i class="fas fa-database fa-2x text-info mb-2"></i>
+                            <h6>데이터 상태</h6>
+                            <small>${response.sample_data_count || 0}회차 분석 준비</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <div class="card border-0 shadow">
+                        <div class="card-body text-center">
+                            <i class="fas fa-chart-line fa-2x ${response.pandas_available ? 'text-success' : 'text-warning'} mb-2"></i>
+                            <h6>데이터 분석</h6>
+                            <span class="badge ${response.pandas_available ? 'bg-success' : 'bg-warning'}">
+                                ${response.pandas_available ? '사용 가능' : '기본 모드'}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card border-0 shadow">
+                        <div class="card-body text-center">
+                            <i class="fas fa-brain fa-2x ${response.ml_available ? 'text-success' : 'text-warning'} mb-2"></i>
+                            <h6>머신러닝</h6>
+                            <span class="badge ${response.ml_available ? 'bg-success' : 'bg-warning'}">
+                                ${response.ml_available ? '사용 가능' : '기본 모드'}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card border-0 shadow">
+                        <div class="card-body text-center">
+                            <i class="fas fa-qrcode fa-2x ${response.qr_available ? 'text-success' : 'text-warning'} mb-2"></i>
+                            <h6>QR 스캔</h6>
+                            <span class="badge ${response.qr_available ? 'bg-success' : 'bg-warning'}">
+                                ${response.qr_available ? '사용 가능' : '준비 중'}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-3">
+                <h6>지원 기능</h6>
+                <div class="d-flex flex-wrap gap-2">
+                    ${response.features ? response.features.map(feature => 
+                        `<span class="badge bg-primary">${feature}</span>`
+                    ).join('') : ''}
+                </div>
+            </div>
+        `;
+        
+        const healthResults = document.getElementById('health-results');
+        if (healthResults) {
+            healthResults.innerHTML = statusHtml;
+        }
+        
+        const modal = new bootstrap.Modal(document.getElementById('healthModal'));
+        modal.show();
+        
+    } catch (error) {
+        console.error('Health check failed:', error);
+        window.lottoPro.utils.showToast('시스템 상태 확인 실패: ' + error.message, 'danger');
+    }
+};
+
+// ===== Helper Functions =====
+
+/**
+ * 시뮬레이션 결과 표시
+ */
+function displaySimulationResult(data) {
+    const resultElement = document.getElementById('simulation-result');
+    if (!resultElement) return;
+    
+    const html = `
+        <h6 class="fw-bold">시뮬레이션 결과</h6>
+        <div class="row text-center mb-2">
+            <div class="col">
+                <div class="badge bg-success">${data.results['1등']}회</div>
+                <div class="small">1등</div>
+            </div>
+            <div class="col">
+                <div class="badge bg-info">${data.results['2등']}회</div>
+                <div class="small">2등</div>
+            </div>
+            <div class="col">
+                <div class="badge bg-warning">${data.results['3등']}회</div>
+                <div class="small">3등</div>
+            </div>
+        </div>
+        <div class="text-center">
+            <div class="fw-bold ${data.net_profit >= 0 ? 'text-success' : 'text-danger'}">
+                ${window.lottoPro.utils.formatCurrency(data.net_profit)}
+            </div>
+            <small>순손익 (수익률: ${data.profit_rate}%)</small>
+        </div>
+    `;
+    resultElement.innerHTML = html;
+    resultElement.classList.remove('d-none');
+}
+
+/**
+ * 판매점 검색 결과 표시
+ */
+function displayStoreResults(stores) {
+    const container = document.getElementById('store-results');
+    if (!container) return;
+    
+    if (stores.length === 0) {
+        container.innerHTML = '<p class="text-muted">검색 결과가 없습니다.</p>';
+        return;
+    }
+    
+    let html = '';
+    stores.slice(0, 5).forEach(store => {
+        html += `
+            <div class="store-item">
+                <div class="store-name">${store.name}</div>
+                <div class="store-address">${store.address}</div>
+                <div class="store-info">
+                    <span class="store-wins">${store.first_wins}회 1등</span>
+                    <span class="store-distance">${store.distance ? store.distance + 'km' : store.business_hours}</span>
+                </div>
+            </div>
+        `;
+    });
+    container.innerHTML = html;
+}
+
+// ===== Legacy Global Functions (for backward compatibility) =====
 window.generatePrediction = () => window.lottoPro.modules.prediction.generate();
 window.loadSavedNumbers = () => window.lottoPro.modules.savedNumbers.load();
 window.loadStats = () => window.lottoPro.modules.stats.load();
@@ -1261,5 +1613,4 @@ window.addEventListener('unhandledrejection', (event) => {
     event.preventDefault();
 });
 
-console.log('LottoPro AI v2.0 JavaScript 로드 완료!');`
-}
+console.log('LottoPro AI v2.0 JavaScript 완전 로드 완료!');
