@@ -1,4 +1,6 @@
-from flask import Flask, render_template, request, jsonify, session, send_file
+{
+  `path`: `C:\\Users\\USER\\Documents\\kakaotalkdown\\lotto_analysis\\app.py`,
+  `content`: `from flask import Flask, render_template, request, jsonify, session, send_file
 import os
 import random
 import numpy as np
@@ -130,31 +132,31 @@ PREDICTION_HISTORY = [
 
 # 로또 판매점 데이터 (확장됨)
 LOTTERY_STORES = [
-    {"name": "동대문 복권방", "address": "서울시 동대문구 장한로 195", "region": "서울", "district": "동대문구", "lat": 37.5745, "lng": 127.0098, "phone": "02-1234-5678", "first_wins": 15, "business_hours": "06:00-24:00"},
-    {"name": "강남 로또타운", "address": "서울시 강남구 테헤란로 152", "region": "서울", "district": "강남구", "lat": 37.4979, "lng": 127.0276, "phone": "02-2345-6789", "first_wins": 23, "business_hours": "07:00-23:00"},
-    {"name": "평택역 로또센터", "address": "경기도 평택시 평택동 856-1", "region": "평택", "district": "평택시", "lat": 36.9922, "lng": 127.0890, "phone": "031-1234-5678", "first_wins": 5, "business_hours": "06:00-22:00"},
-    {"name": "안정리 행운복권", "address": "경기도 평택시 안정동 123-45", "region": "평택", "district": "평택시", "lat": 36.9856, "lng": 127.0825, "phone": "031-2345-6789", "first_wins": 3, "business_hours": "07:00-21:00"},
-    {"name": "송탄 중앙점", "address": "경기도 평택시 송탄동 789-12", "region": "평택", "district": "평택시", "lat": 36.9675, "lng": 127.0734, "phone": "031-3456-7890", "first_wins": 8, "business_hours": "08:00-20:00"}
+    {\"name\": \"동대문 복권방\", \"address\": \"서울시 동대문구 장한로 195\", \"region\": \"서울\", \"district\": \"동대문구\", \"lat\": 37.5745, \"lng\": 127.0098, \"phone\": \"02-1234-5678\", \"first_wins\": 15, \"business_hours\": \"06:00-24:00\"},
+    {\"name\": \"강남 로또타운\", \"address\": \"서울시 강남구 테헤란로 152\", \"region\": \"서울\", \"district\": \"강남구\", \"lat\": 37.4979, \"lng\": 127.0276, \"phone\": \"02-2345-6789\", \"first_wins\": 23, \"business_hours\": \"07:00-23:00\"},
+    {\"name\": \"평택역 로또센터\", \"address\": \"경기도 평택시 평택동 856-1\", \"region\": \"평택\", \"district\": \"평택시\", \"lat\": 36.9922, \"lng\": 127.0890, \"phone\": \"031-1234-5678\", \"first_wins\": 5, \"business_hours\": \"06:00-22:00\"},
+    {\"name\": \"안정리 행운복권\", \"address\": \"경기도 평택시 안정동 123-45\", \"region\": \"평택\", \"district\": \"평택시\", \"lat\": 36.9856, \"lng\": 127.0825, \"phone\": \"031-2345-6789\", \"first_wins\": 3, \"business_hours\": \"07:00-21:00\"},
+    {\"name\": \"송탄 중앙점\", \"address\": \"경기도 평택시 송탄동 789-12\", \"region\": \"평택\", \"district\": \"평택시\", \"lat\": 36.9675, \"lng\": 127.0734, \"phone\": \"031-3456-7890\", \"first_wins\": 8, \"business_hours\": \"08:00-20:00\"}
 ]
 
 def safe_log(message):
-    """안전한 로깅"""
+    \"\"\"안전한 로깅\"\"\"
     try:
-        app.logger.info(f"[LottoPro-AI] {message}")
-        print(f"[LottoPro-AI] {message}")
+        app.logger.info(f\"[LottoPro-AI] {message}\")
+        print(f\"[LottoPro-AI] {message}\")
     except Exception as e:
-        print(f"[LottoPro-AI] Logging error: {str(e)}")
+        print(f\"[LottoPro-AI] Logging error: {str(e)}\")
 
 @app.after_request
 def add_security_headers(response):
-    """보안 헤더 추가"""
+    \"\"\"보안 헤더 추가\"\"\"
     response.headers['X-Content-Type-Options'] = 'nosniff'
     response.headers['X-Frame-Options'] = 'DENY'
     response.headers['X-XSS-Protection'] = '1; mode=block'
     return response
 
 def generate_sample_data():
-    """샘플 데이터 생성"""
+    \"\"\"샘플 데이터 생성\"\"\"
     try:
         np.random.seed(42)
         data = []
@@ -180,11 +182,11 @@ def generate_sample_data():
         
         return data
     except Exception as e:
-        safe_log(f"샘플 데이터 생성 실패: {str(e)}")
+        safe_log(f\"샘플 데이터 생성 실패: {str(e)}\")
         return []
 
 def calculate_frequency_analysis():
-    """빈도 분석"""
+    \"\"\"빈도 분석\"\"\"
     if not sample_data:
         return {}
     
@@ -197,11 +199,11 @@ def calculate_frequency_analysis():
                     frequency[number] += 1
         return dict(frequency)
     except Exception as e:
-        safe_log(f"빈도 분석 실패: {str(e)}")
+        safe_log(f\"빈도 분석 실패: {str(e)}\")
         return {}
 
 def calculate_carry_over_analysis():
-    """이월수 분석"""
+    \"\"\"이월수 분석\"\"\"
     if not sample_data or len(sample_data) < 2:
         return []
     
@@ -226,11 +228,11 @@ def calculate_carry_over_analysis():
         
         return carry_overs
     except Exception as e:
-        safe_log(f"이월수 분석 실패: {str(e)}")
+        safe_log(f\"이월수 분석 실패: {str(e)}\")
         return []
 
 def calculate_companion_analysis():
-    """궁합수 분석"""
+    \"\"\"궁합수 분석\"\"\"
     if not sample_data:
         return {}
     
@@ -249,11 +251,11 @@ def calculate_companion_analysis():
         
         return dict(companion_pairs.most_common(10))
     except Exception as e:
-        safe_log(f"궁합수 분석 실패: {str(e)}")
+        safe_log(f\"궁합수 분석 실패: {str(e)}\")
         return {}
 
 def calculate_pattern_analysis():
-    """패턴 분석"""
+    \"\"\"패턴 분석\"\"\"
     if not sample_data:
         return {}
     
@@ -280,17 +282,17 @@ def calculate_pattern_analysis():
                 number_range = max(numbers) - min(numbers)
                 
                 patterns['consecutive_count'].append(consecutive)
-                patterns['odd_even_ratio'].append(f"{odd_count}:{6-odd_count}")
+                patterns['odd_even_ratio'].append(f\"{odd_count}:{6-odd_count}\")
                 patterns['sum_distribution'].append(total_sum)
                 patterns['range_distribution'].append(number_range)
         
         return patterns
     except Exception as e:
-        safe_log(f"패턴 분석 실패: {str(e)}")
+        safe_log(f\"패턴 분석 실패: {str(e)}\")
         return {}
 
-def generate_ai_prediction(user_numbers=None, model_type="frequency"):
-    """AI 예측 생성"""
+def generate_ai_prediction(user_numbers=None, model_type=\"frequency\"):
+    \"\"\"AI 예측 생성\"\"\"
     try:
         if user_numbers is None:
             user_numbers = []
@@ -305,13 +307,13 @@ def generate_ai_prediction(user_numbers=None, model_type="frequency"):
                 except:
                     continue
         
-        if model_type == "frequency":
+        if model_type == \"frequency\":
             frequency = calculate_frequency_analysis()
             weights = np.ones(45)
             for num, freq in frequency.items():
                 if 1 <= num <= 45:
                     weights[num-1] = freq + 1
-        elif model_type == "trend":
+        elif model_type == \"trend\":
             weights = np.ones(45)
             for i, data in enumerate(sample_data[:10]):
                 weight_factor = (10 - i) / 10
@@ -349,10 +351,10 @@ def generate_ai_prediction(user_numbers=None, model_type="frequency"):
         return sorted(numbers[:6])
         
     except Exception as e:
-        safe_log(f"AI 예측 생성 실패: {str(e)}")
+        safe_log(f\"AI 예측 생성 실패: {str(e)}\")
         return sorted(random.sample(range(1, 46), 6))
 
-# ===== 1. 메인 페이지 =====
+# ===== API 엔드포인트들 =====
 @app.route('/')
 def index():
     try:
@@ -364,17 +366,15 @@ def index():
         }
         return render_template('index.html', **context)
     except Exception as e:
-        safe_log(f"메인 페이지 오류: {str(e)}")
-        return "서비스 준비 중입니다.", 503
+        safe_log(f\"메인 페이지 오류: {str(e)}\")
+        return \"서비스 준비 중입니다.\", 503
 
-# ===== 2. AI 예측 API =====
 @app.route('/api/predict', methods=['POST'])
 def predict():
     try:
         data = request.get_json() or {}
         user_numbers = data.get('user_numbers', [])
         
-        # 5가지 AI 모델로 예측
         models = {}
         model_configs = [
             ('빈도분석 모델', 'frequency'),
@@ -386,7 +386,7 @@ def predict():
         
         for model_name, model_type in model_configs:
             predictions = []
-            for i in range(10):
+            for i in range(5):
                 pred = generate_ai_prediction(user_numbers, model_type)
                 predictions.append(pred)
             
@@ -398,10 +398,9 @@ def predict():
                 'confidence': random.randint(85, 95)
             }
         
-        # TOP 추천 생성
         top_recommendations = []
         for i in range(5):
-            rec = generate_ai_prediction(user_numbers, "frequency")
+            rec = generate_ai_prediction(user_numbers, \"frequency\")
             if rec not in top_recommendations:
                 top_recommendations.append(rec)
         
@@ -411,7 +410,7 @@ def predict():
             'models': models,
             'top_recommendations': top_recommendations,
             'total_combinations': sum(len(model.get('predictions', [])) for model in models.values()),
-            'data_source': f"{len(sample_data)}회차 데이터",
+            'data_source': f\"{len(sample_data)}회차 데이터\",
             'analysis_timestamp': datetime.now().isoformat(),
             'version': '2.0'
         }
@@ -419,13 +418,9 @@ def predict():
         return jsonify(response)
         
     except Exception as e:
-        safe_log(f"예측 API 실패: {str(e)}")
-        return jsonify({
-            'success': False,
-            'error': '예측 생성 중 오류가 발생했습니다.'
-        }), 500
+        safe_log(f\"예측 API 실패: {str(e)}\")
+        return jsonify({'success': False, 'error': '예측 생성 중 오류가 발생했습니다.'}), 500
 
-# ===== 3. 통계 분석 API =====
 @app.route('/api/stats')
 def get_stats():
     try:
@@ -439,56 +434,32 @@ def get_stats():
             hot_numbers = [[7, 15], [13, 14], [22, 13], [31, 12], [42, 11], [1, 10], [25, 9], [33, 8]]
             cold_numbers = [[45, 5], [44, 6], [43, 7], [2, 8], [3, 9], [4, 10], [5, 11], [6, 12]]
         
-        carry_over_analysis = calculate_carry_over_analysis()
-        companion_analysis = calculate_companion_analysis()
-        pattern_analysis = calculate_pattern_analysis()
-        
         return jsonify({
             'success': True,
             'frequency': frequency,
             'hot_numbers': hot_numbers,
             'cold_numbers': cold_numbers,
-            'carry_over_analysis': carry_over_analysis,
-            'companion_analysis': list(companion_analysis.items()),
-            'pattern_analysis': pattern_analysis,
+            'carry_over_analysis': calculate_carry_over_analysis(),
+            'companion_analysis': list(calculate_companion_analysis().items()),
+            'pattern_analysis': calculate_pattern_analysis(),
             'total_draws': len(sample_data) if sample_data else 200,
-            'data_source': f"{len(sample_data)}회차 데이터" if sample_data else "샘플 데이터",
+            'data_source': f\"{len(sample_data)}회차 데이터\" if sample_data else \"샘플 데이터\",
             'last_updated': datetime.now().isoformat()
         })
         
     except Exception as e:
-        safe_log(f"통계 API 실패: {str(e)}")
-        return jsonify({
-            'success': False,
-            'error': '통계 데이터를 불러올 수 없습니다.'
-        }), 500
+        safe_log(f\"통계 API 실패: {str(e)}\")
+        return jsonify({'success': False, 'error': '통계 데이터를 불러올 수 없습니다.'}), 500
 
-# ===== 4. 번호 저장 API =====
 @app.route('/api/save-numbers', methods=['POST'])
 def save_numbers():
     try:
         data = request.get_json()
         numbers = data.get('numbers', [])
-        label = data.get('label', f"저장된 번호 {datetime.now().strftime('%m-%d %H:%M')}")
+        label = data.get('label', f\"저장된 번호 {datetime.now().strftime('%m-%d %H:%M')}\")
         
         if not numbers or len(numbers) != 6:
-            return jsonify({
-                'success': False,
-                'error': '올바른 6개 번호를 입력해주세요.'
-            }), 400
-        
-        for num in numbers:
-            if not isinstance(num, int) or num < 1 or num > 45:
-                return jsonify({
-                    'success': False,
-                    'error': '번호는 1~45 사이의 숫자여야 합니다.'
-                }), 400
-        
-        if len(set(numbers)) != 6:
-            return jsonify({
-                'success': False,
-                'error': '중복된 번호가 있습니다.'
-            }), 400
+            return jsonify({'success': False, 'error': '올바른 6개 번호를 입력해주세요.'}), 400
         
         if 'user_id' not in session:
             session['user_id'] = str(uuid.uuid4())
@@ -528,21 +499,14 @@ def save_numbers():
         })
         
     except Exception as e:
-        safe_log(f"번호 저장 실패: {str(e)}")
-        return jsonify({
-            'success': False,
-            'error': '번호 저장에 실패했습니다.'
-        }), 500
+        safe_log(f\"번호 저장 실패: {str(e)}\")
+        return jsonify({'success': False, 'error': '번호 저장에 실패했습니다.'}), 500
 
-# ===== 5. 저장된 번호 조회 API =====
 @app.route('/api/saved-numbers')
 def get_saved_numbers():
     try:
         if 'user_id' not in session:
-            return jsonify({
-                'success': True,
-                'saved_numbers': []
-            })
+            return jsonify({'success': True, 'saved_numbers': []})
         
         user_id = session['user_id']
         saved_numbers = user_saved_numbers.get(user_id, [])
@@ -554,13 +518,9 @@ def get_saved_numbers():
         })
         
     except Exception as e:
-        safe_log(f"저장된 번호 조회 실패: {str(e)}")
-        return jsonify({
-            'success': False,
-            'error': '저장된 번호를 불러올 수 없습니다.'
-        }), 500
+        safe_log(f\"저장된 번호 조회 실패: {str(e)}\")
+        return jsonify({'success': False, 'error': '저장된 번호를 불러올 수 없습니다.'}), 500
 
-# ===== 6. 번호 삭제 API =====
 @app.route('/api/delete-saved-number', methods=['POST'])
 def delete_saved_number():
     try:
@@ -584,25 +544,13 @@ def delete_saved_number():
                     'message': '번호가 삭제되었습니다.',
                     'remaining_count': len(user_saved_numbers[user_id])
                 })
-            else:
-                return jsonify({
-                    'success': False,
-                    'error': '삭제할 번호를 찾을 수 없습니다.'
-                }), 404
         
-        return jsonify({
-            'success': False,
-            'error': '저장된 번호가 없습니다.'
-        }), 404
+        return jsonify({'success': False, 'error': '삭제할 번호를 찾을 수 없습니다.'}), 404
         
     except Exception as e:
-        safe_log(f"번호 삭제 실패: {str(e)}")
-        return jsonify({
-            'success': False,
-            'error': '번호 삭제에 실패했습니다.'
-        }), 500
+        safe_log(f\"번호 삭제 실패: {str(e)}\")
+        return jsonify({'success': False, 'error': '번호 삭제에 실패했습니다.'}), 500
 
-# ===== 7. 당첨 확인 API =====
 @app.route('/api/check-winning', methods=['POST'])
 def check_winning():
     try:
@@ -610,12 +558,8 @@ def check_winning():
         numbers = data.get('numbers', [])
         
         if not numbers or len(numbers) != 6:
-            return jsonify({
-                'success': False,
-                'error': '올바른 6개 번호를 입력해주세요.'
-            }), 400
+            return jsonify({'success': False, 'error': '올바른 6개 번호를 입력해주세요.'}), 400
         
-        # 최신 당첨번호와 비교 (샘플 데이터 사용)
         if sample_data:
             latest_draw = sample_data[0]
             winning_numbers = [latest_draw.get(f'당첨번호{i}') for i in range(1, 7)]
@@ -624,25 +568,24 @@ def check_winning():
             matches = len(set(numbers) & set(winning_numbers))
             bonus_match = bonus_number in numbers
             
-            # 등수 계산
             if matches == 6:
-                prize = "1등"
-                prize_money = "20억원 (추정)"
+                prize = \"1등\"
+                prize_money = \"20억원 (추정)\"
             elif matches == 5 and bonus_match:
-                prize = "2등"
-                prize_money = "6천만원 (추정)"
+                prize = \"2등\"
+                prize_money = \"6천만원 (추정)\"
             elif matches == 5:
-                prize = "3등"
-                prize_money = "150만원 (추정)"
+                prize = \"3등\"
+                prize_money = \"150만원 (추정)\"
             elif matches == 4:
-                prize = "4등"
-                prize_money = "5만원"
+                prize = \"4등\"
+                prize_money = \"5만원\"
             elif matches == 3:
-                prize = "5등"
-                prize_money = "5천원"
+                prize = \"5등\"
+                prize_money = \"5천원\"
             else:
-                prize = "낙첨"
-                prize_money = "0원"
+                prize = \"낙첨\"
+                prize_money = \"0원\"
             
             return jsonify({
                 'success': True,
@@ -656,75 +599,49 @@ def check_winning():
                 'user_numbers': numbers
             })
         else:
-            return jsonify({
-                'success': False,
-                'error': '당첨 데이터를 불러올 수 없습니다.'
-            }), 500
+            return jsonify({'success': False, 'error': '당첨 데이터를 불러올 수 없습니다.'}), 500
         
     except Exception as e:
-        safe_log(f"당첨 확인 실패: {str(e)}")
-        return jsonify({
-            'success': False,
-            'error': '당첨 확인에 실패했습니다.'
-        }), 500
+        safe_log(f\"당첨 확인 실패: {str(e)}\")
+        return jsonify({'success': False, 'error': '당첨 확인에 실패했습니다.'}), 500
 
-# ===== 8. QR 코드 생성 API =====
 @app.route('/api/generate-qr', methods=['POST'])
 def generate_qr():
     try:
         if not QR_AVAILABLE:
-            return jsonify({
-                'success': False,
-                'error': 'QR 코드 기능이 비활성화되어 있습니다.'
-            }), 501
+            return jsonify({'success': False, 'error': 'QR 코드 기능이 비활성화되어 있습니다.'}), 501
         
         data = request.get_json()
         numbers = data.get('numbers', [])
         
         if not numbers or len(numbers) != 6:
-            return jsonify({
-                'success': False,
-                'error': '올바른 6개 번호를 입력해주세요.'
-            }), 400
+            return jsonify({'success': False, 'error': '올바른 6개 번호를 입력해주세요.'}), 400
         
-        # QR 코드 데이터 생성
-        qr_data = f"LOTTO:{':'.join(map(str, sorted(numbers)))}"
+        qr_data = f\"LOTTO:{':'.join(map(str, sorted(numbers)))}\"
         
-        qr = qrcode.QRCode(
-            version=1,
-            error_correction=qrcode.constants.ERROR_CORRECT_L,
-            box_size=10,
-            border=4,
-        )
+        qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=4)
         qr.add_data(qr_data)
         qr.make(fit=True)
         
-        # 이미지 생성
-        img = qr.make_image(fill_color="black", back_color="white")
+        img = qr.make_image(fill_color=\"black\", back_color=\"white\")
         
-        # Base64로 인코딩
         buffer = BytesIO()
         img.save(buffer, format='PNG')
         buffer.seek(0)
         
-        import base64
         qr_base64 = base64.b64encode(buffer.getvalue()).decode()
         
         return jsonify({
             'success': True,
-            'qr_code': f"data:image/png;base64,{qr_base64}",
+            'qr_code': f\"data:image/png;base64,{qr_base64}\",
             'numbers': sorted(numbers),
             'qr_data': qr_data
         })
         
     except Exception as e:
-        safe_log(f"QR 코드 생성 실패: {str(e)}")
-        return jsonify({
-            'success': False,
-            'error': 'QR 코드 생성에 실패했습니다.'
-        }), 500
+        safe_log(f\"QR 코드 생성 실패: {str(e)}\")
+        return jsonify({'success': False, 'error': 'QR 코드 생성에 실패했습니다.'}), 500
 
-# ===== 9. 세금 계산기 API =====
 @app.route('/api/tax-calculator', methods=['POST'])
 def calculate_tax():
     try:
@@ -732,28 +649,24 @@ def calculate_tax():
         prize_amount = data.get('prize_amount', 0)
         
         if not isinstance(prize_amount, (int, float)) or prize_amount <= 0:
-            return jsonify({
-                'success': False,
-                'error': '올바른 당첨금액을 입력해주세요.'
-            }), 400
+            return jsonify({'success': False, 'error': '올바른 당첨금액을 입력해주세요.'}), 400
         
-        # 한국 복권 세금 계산 (2024년 기준)
-        tax_free_amount = 50000  # 비과세 금액
+        tax_free_amount = 50000
         
         if prize_amount <= tax_free_amount:
             tax = 0
             net_amount = prize_amount
             effective_tax_rate = 0
-            tax_brackets = "비과세"
+            tax_brackets = \"비과세\"
         else:
             taxable_amount = prize_amount - tax_free_amount
             
-            if prize_amount <= 300000000:  # 3억원 이하
+            if prize_amount <= 300000000:
                 tax_rate = 0.22
                 tax = taxable_amount * tax_rate
                 effective_tax_rate = 22.0
-                tax_brackets = "3억원 이하 (22%)"
-            else:  # 3억원 초과
+                tax_brackets = \"3억원 이하 (22%)\"
+            else:
                 amount_up_to_300m = 300000000 - tax_free_amount
                 tax_up_to_300m = amount_up_to_300m * 0.22
                 
@@ -762,7 +675,7 @@ def calculate_tax():
                 
                 tax = tax_up_to_300m + tax_over_300m
                 effective_tax_rate = (tax / taxable_amount) * 100
-                tax_brackets = "3억원 초과 (22% + 33%)"
+                tax_brackets = \"3억원 초과 (22% + 33%)\"
             
             net_amount = prize_amount - tax
         
@@ -777,13 +690,9 @@ def calculate_tax():
         })
         
     except Exception as e:
-        safe_log(f"세금 계산 실패: {str(e)}")
-        return jsonify({
-            'success': False,
-            'error': '세금 계산에 실패했습니다.'
-        }), 500
+        safe_log(f\"세금 계산 실패: {str(e)}\")
+        return jsonify({'success': False, 'error': '세금 계산에 실패했습니다.'}), 500
 
-# ===== 10. 시뮬레이션 API =====
 @app.route('/api/simulation', methods=['POST'])
 def run_simulation():
     try:
@@ -792,47 +701,38 @@ def run_simulation():
         rounds = data.get('rounds', 1000)
         
         if not user_numbers or len(user_numbers) != 6:
-            return jsonify({
-                'success': False,
-                'error': '올바른 6개 번호를 입력해주세요.'
-            }), 400
+            return jsonify({'success': False, 'error': '올바른 6개 번호를 입력해주세요.'}), 400
         
         if rounds > 10000:
-            rounds = 10000  # 최대 제한
+            rounds = 10000
         
-        # 시뮬레이션 실행
-        results = {
-            '1등': 0, '2등': 0, '3등': 0, '4등': 0, '5등': 0, '낙첨': 0
-        }
+        results = {'1등': 0, '2등': 0, '3등': 0, '4등': 0, '5등': 0, '낙첨': 0}
         
-        total_cost = rounds * 1000  # 1게임당 1000원
+        total_cost = rounds * 1000
         total_prize = 0
         
         for _ in range(rounds):
-            # 가상의 당첨번호 생성
             winning_numbers = sorted(random.sample(range(1, 46), 6))
             bonus_number = random.choice([n for n in range(1, 46) if n not in winning_numbers])
             
-            # 매칭 확인
             matches = len(set(user_numbers) & set(winning_numbers))
             bonus_match = bonus_number in user_numbers
             
-            # 등수 및 상금 계산
             if matches == 6:
                 results['1등'] += 1
-                total_prize += 2000000000  # 20억
+                total_prize += 2000000000
             elif matches == 5 and bonus_match:
                 results['2등'] += 1
-                total_prize += 60000000  # 6천만
+                total_prize += 60000000
             elif matches == 5:
                 results['3등'] += 1
-                total_prize += 1500000  # 150만
+                total_prize += 1500000
             elif matches == 4:
                 results['4등'] += 1
-                total_prize += 50000  # 5만
+                total_prize += 50000
             elif matches == 3:
                 results['5등'] += 1
-                total_prize += 5000  # 5천
+                total_prize += 5000
             else:
                 results['낙첨'] += 1
         
@@ -851,13 +751,9 @@ def run_simulation():
         })
         
     except Exception as e:
-        safe_log(f"시뮬레이션 실패: {str(e)}")
-        return jsonify({
-            'success': False,
-            'error': '시뮬레이션에 실패했습니다.'
-        }), 500
+        safe_log(f\"시뮬레이션 실패: {str(e)}\")
+        return jsonify({'success': False, 'error': '시뮬레이션에 실패했습니다.'}), 500
 
-# ===== 11. 판매점 검색 API =====
 @app.route('/api/lottery-stores')
 def get_lottery_stores():
     try:
@@ -867,38 +763,22 @@ def get_lottery_stores():
         
         stores = LOTTERY_STORES.copy()
         
-        # 검색어가 있는 경우 필터링
         if search_query:
             search_query_lower = search_query.lower()
-            
-            region_aliases = {
-                '평택': ['평택시', '평택', 'pyeongtaek', 'pt', '팽성', '송탄', '안정'],
-                '서울': ['서울시', '서울특별시', 'seoul', '강남', '홍대', '명동', '잠실', '동대문'],
-                '부산': ['부산시', '부산광역시', 'busan', '해운대', '서면', '광안리', '남포동'],
-            }
-            
-            normalized_query = search_query_lower
-            for main_region, aliases in region_aliases.items():
-                if any(alias.lower() in search_query_lower for alias in aliases):
-                    normalized_query = main_region
-                    break
-            
             filtered_stores = []
             for store in stores:
-                if (normalized_query in store['region'].lower() or
-                    normalized_query in store['district'].lower() or
-                    normalized_query in store['name'].lower() or
-                    normalized_query in store['address'].lower()):
+                if (search_query_lower in store['region'].lower() or
+                    search_query_lower in store['district'].lower() or
+                    search_query_lower in store['name'].lower() or
+                    search_query_lower in store['address'].lower()):
                     filtered_stores.append(store)
-            
             stores = filtered_stores
         
-        # 위치 기반 거리 계산 및 정렬
         if lat and lng:
             for store in stores:
                 try:
                     distance = math.sqrt((store['lat'] - lat) ** 2 + (store['lng'] - lng) ** 2)
-                    store['distance'] = round(distance * 100, 1)  # km 변환
+                    store['distance'] = round(distance * 100, 1)
                 except:
                     store['distance'] = 999
             
@@ -914,14 +794,9 @@ def get_lottery_stores():
         })
         
     except Exception as e:
-        safe_log(f"판매점 검색 실패: {str(e)}")
-        return jsonify({
-            'success': False,
-            'error': '판매점 검색에 실패했습니다.',
-            'stores': []
-        }), 500
+        safe_log(f\"판매점 검색 실패: {str(e)}\")
+        return jsonify({'success': False, 'error': '판매점 검색에 실패했습니다.', 'stores': []}), 500
 
-# ===== 12. 랜덤 번호 생성 API =====
 @app.route('/api/generate-random', methods=['POST'])
 def generate_random_numbers():
     try:
@@ -929,11 +804,11 @@ def generate_random_numbers():
         count = data.get('count', 1)
         
         if count > 10:
-            count = 10  # 최대 10개로 제한
+            count = 10
         
         random_sets = []
         for _ in range(count):
-            numbers = generate_ai_prediction(model_type="statistical")
+            numbers = generate_ai_prediction(model_type=\"statistical\")
             
             analysis = {
                 'sum': sum(numbers),
@@ -943,10 +818,7 @@ def generate_random_numbers():
                 'consecutive': sum(1 for i in range(len(numbers)-1) if numbers[i+1] - numbers[i] == 1)
             }
             
-            random_sets.append({
-                'numbers': numbers,
-                'analysis': analysis
-            })
+            random_sets.append({'numbers': numbers, 'analysis': analysis})
         
         return jsonify({
             'success': True,
@@ -956,13 +828,9 @@ def generate_random_numbers():
         })
         
     except Exception as e:
-        safe_log(f"랜덤 번호 생성 실패: {str(e)}")
-        return jsonify({
-            'success': False,
-            'error': '랜덤 번호 생성에 실패했습니다.'
-        }), 500
+        safe_log(f\"랜덤 번호 생성 실패: {str(e)}\")
+        return jsonify({'success': False, 'error': '랜덤 번호 생성에 실패했습니다.'}), 500
 
-# ===== 13. AI 모델 정보 API =====
 @app.route('/api/ai-models')
 def get_ai_models_info():
     try:
@@ -973,13 +841,9 @@ def get_ai_models_info():
             'last_updated': datetime.now().isoformat()
         })
     except Exception as e:
-        safe_log(f"AI 모델 정보 조회 실패: {str(e)}")
-        return jsonify({
-            'success': False,
-            'error': 'AI 모델 정보를 불러올 수 없습니다.'
-        }), 500
+        safe_log(f\"AI 모델 정보 조회 실패: {str(e)}\")
+        return jsonify({'success': False, 'error': 'AI 모델 정보를 불러올 수 없습니다.'}), 500
 
-# ===== 14. 예측 히스토리 API =====
 @app.route('/api/prediction-history')
 def get_prediction_history():
     try:
@@ -990,13 +854,9 @@ def get_prediction_history():
             'last_updated': datetime.now().isoformat()
         })
     except Exception as e:
-        safe_log(f"예측 히스토리 조회 실패: {str(e)}")
-        return jsonify({
-            'success': False,
-            'error': '예측 히스토리를 불러올 수 없습니다.'
-        }), 500
+        safe_log(f\"예측 히스토리 조회 실패: {str(e)}\")
+        return jsonify({'success': False, 'error': '예측 히스토리를 불러올 수 없습니다.'}), 500
 
-# ===== 15. 시스템 상태 API =====
 @app.route('/api/health')
 def health_check():
     try:
@@ -1021,21 +881,16 @@ def health_check():
         }
         
         if sample_data:
-            status['data_source'] = f"실제 {len(sample_data)}회차 데이터"
+            status['data_source'] = f\"실제 {len(sample_data)}회차 데이터\"
         else:
-            status['data_source'] = "샘플 데이터"
+            status['data_source'] = \"샘플 데이터\"
         
         return jsonify(status)
         
     except Exception as e:
-        safe_log(f"health check 실패: {str(e)}")
-        return jsonify({
-            'status': 'error',
-            'error': str(e),
-            'timestamp': datetime.now().isoformat()
-        }), 500
+        safe_log(f\"health check 실패: {str(e)}\")
+        return jsonify({'status': 'error', 'error': str(e), 'timestamp': datetime.now().isoformat()}), 500
 
-# ===== 에러 핸들러 =====
 @app.errorhandler(404)
 def not_found(error):
     try:
@@ -1045,55 +900,33 @@ def not_found(error):
 
 @app.errorhandler(500)
 def internal_error(error):
-    safe_log(f"500 에러 발생: {error}")
+    safe_log(f\"500 에러 발생: {error}\")
     return jsonify({'error': 'Internal server error'}), 500
 
-@app.errorhandler(Exception)
-def handle_exception(e):
-    app.logger.error(f'Unhandled exception: {str(e)}')
-    
-    if app.config['DEBUG']:
-        app.logger.error(f"Traceback: {traceback.format_exc()}")
-        return jsonify({
-            'error': str(e), 
-            'traceback': traceback.format_exc()
-        }), 500
-    else:
-        return jsonify({
-            'error': 'Internal server error'
-        }), 500
-
-# 앱 시작 시 데이터 초기화
 def initialize_app():
     global sample_data
     try:
-        safe_log("=== LottoPro-AI v2.0 초기화 시작 ===")
+        safe_log(\"=== LottoPro-AI v2.0 초기화 시작 ===\")
         sample_data = generate_sample_data()
-        safe_log(f"샘플 데이터 생성 완료: {len(sample_data)}회차")
-        safe_log(f"15가지 기능 로드 완료")
-        safe_log(f"AI 모델 {len(AI_MODELS_INFO)}개 준비 완료")
-        safe_log(f"판매점 데이터 {len(LOTTERY_STORES)}개 로드 완료")
-        safe_log("=== 초기화 완료 ===")
+        safe_log(f\"샘플 데이터 생성 완료: {len(sample_data)}회차\")
+        safe_log(f\"15가지 기능 로드 완료\")
+        safe_log(f\"AI 모델 {len(AI_MODELS_INFO)}개 준비 완료\")
+        safe_log(f\"판매점 데이터 {len(LOTTERY_STORES)}개 로드 완료\")
+        safe_log(\"=== 초기화 완료 ===\")
     except Exception as e:
-        safe_log(f"초기화 실패: {str(e)}")
+        safe_log(f\"초기화 실패: {str(e)}\")
 
-# 앱 실행
 if __name__ == '__main__':
     initialize_app()
     
     port = int(os.environ.get('PORT', 5000))
     debug_mode = os.environ.get('DEBUG', 'False').lower() == 'true'
     
-    safe_log(f"서버 시작 - 포트: {port}, 디버그 모드: {debug_mode}")
-    safe_log("=== 15가지 기능 완전 구현 완료 ===")
-    safe_log("1. AI 예측, 2. 통계 분석, 3. 번호 저장, 4. 번호 삭제")
-    safe_log("5. 당첨 확인, 6. QR 코드 생성, 7. 세금 계산기, 8. 시뮬레이션")
-    safe_log("9. 판매점 검색, 10. 랜덤 생성, 11. AI 모델 정보, 12. 예측 히스토리")
-    safe_log("13. 시스템 상태, 14. 이월수/궁합수/패턴 분석, 15. 지역별 검색")
+    safe_log(f\"서버 시작 - 포트: {port}, 디버그 모드: {debug_mode}\")
+    safe_log(\"=== 15가지 기능 완전 구현 완료 ===\")
     
-    if debug_mode:
-        app.run(debug=True, host='0.0.0.0', port=port)
-    else:
-        app.run(debug=False, host='0.0.0.0', port=port)
+    app.run(debug=debug_mode, host='0.0.0.0', port=port)
 else:
     initialize_app()
+`
+}
