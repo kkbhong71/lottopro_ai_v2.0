@@ -1,9 +1,4 @@
-{
-  `path`: `C:\\Users\\USER\\Documents\\kakaotalkdown\\lotto_analysis\\static\\js\\app.js`,
-  `content`: `/**
- * LottoPro AI v2.0 - Main JavaScript Application
  * 15가지 기능을 지원하는 완전한 클라이언트 사이드 애플리케이션
- */
 
 // ===== Global Application Object =====
 window.lottoPro = {
