@@ -1,4 +1,6 @@
-/* ===== LottoPro AI v2.0 - Complete Stylesheet ===== */
+{
+  `path`: `C:\\Users\\USER\\Documents\\kakaotalkdown\\lotto_analysis\\static\\css\\style.css`,
+  `content`: `/* ===== LottoPro AI v2.0 - Complete Stylesheet ===== */
 /* 15가지 기능을 모두 지원하는 완전한 스타일시트 */
 
 /* ===== 1. CSS Variables (색상 시스템) ===== */
@@ -541,133 +543,7 @@ a:hover {
   transition: width var(--transition-slow);
 }
 
-/* ===== 11. QR Scanner Styles ===== */
-.qr-scanner-container {
-  position: relative;
-  background: var(--dark-color);
-  border-radius: var(--border-radius-lg);
-  overflow: hidden;
-}
-
-.qr-video {
-  width: 100%;
-  height: 300px;
-  object-fit: cover;
-}
-
-.qr-overlay {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 200px;
-  height: 200px;
-  border: 2px solid var(--warning-color);
-  border-radius: var(--border-radius-md);
-  transform: translate(-50%, -50%);
-}
-
-.qr-overlay::before,
-.qr-overlay::after {
-  content: '';
-  position: absolute;
-  width: 20px;
-  height: 20px;
-  border: 3px solid var(--warning-color);
-}
-
-.qr-overlay::before {
-  top: -3px;
-  left: -3px;
-  border-right: none;
-  border-bottom: none;
-}
-
-.qr-overlay::after {
-  bottom: -3px;
-  right: -3px;
-  border-left: none;
-  border-top: none;
-}
-
-.qr-placeholder {
-  text-align: center;
-  padding: var(--spacing-xxl);
-  color: var(--text-muted);
-}
-
-.qr-result {
-  background: var(--bg-secondary);
-  border-radius: var(--border-radius-md);
-  padding: var(--spacing-md);
-  margin-top: var(--spacing-md);
-}
-
-/* ===== 12. Statistics & Charts ===== */
-.stats-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: var(--spacing-lg);
-  margin: var(--spacing-xl) 0;
-}
-
-.stat-card {
-  background: var(--bg-primary);
-  border-radius: var(--border-radius-lg);
-  padding: var(--spacing-lg);
-  box-shadow: var(--shadow-md);
-  text-align: center;
-  transition: var(--transition-normal);
-}
-
-.stat-card:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-lg);
-}
-
-.stat-value {
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: var(--secondary-color);
-  margin-bottom: var(--spacing-sm);
-}
-
-.stat-label {
-  color: var(--text-secondary);
-  font-size: 0.9rem;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.frequency-chart {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
-  gap: var(--spacing-xs);
-  margin: var(--spacing-md) 0;
-}
-
-.frequency-bar {
-  background: var(--light-color);
-  border-radius: var(--border-radius-sm);
-  position: relative;
-  min-height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.8rem;
-  font-weight: bold;
-}
-
-.frequency-bar.hot {
-  background: var(--gradient-danger);
-  color: var(--text-light);
-}
-
-.frequency-bar.cold {
-  background: var(--gradient-info);
-  color: var(--text-light);
-}
-
-/* ===== 13. Tools & Utilities ===== */
+/* ===== 11. Tools & Utilities ===== */
 .tool-card {
   background: var(--bg-primary);
   border-radius: var(--border-radius-lg);
@@ -697,67 +573,7 @@ a:hover {
   border-left: 4px solid var(--success-color);
 }
 
-.simulation-progress {
-  background: var(--light-color);
-  height: 20px;
-  border-radius: var(--border-radius-pill);
-  overflow: hidden;
-  margin: var(--spacing-md) 0;
-}
-
-.simulation-progress-bar {
-  height: 100%;
-  background: var(--gradient-success);
-  transition: width var(--transition-slow);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-light);
-  font-weight: bold;
-  font-size: 0.8rem;
-}
-
-/* ===== 14. Modals & Overlays ===== */
-.modal-content {
-  border-radius: var(--border-radius-lg);
-  border: none;
-  box-shadow: var(--shadow-xl);
-}
-
-.modal-header {
-  border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
-  border-bottom: none;
-  padding: var(--spacing-lg);
-}
-
-.modal-body {
-  padding: var(--spacing-lg);
-}
-
-.modal-footer {
-  border-top: none;
-  padding: var(--spacing-lg);
-}
-
-.overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: var(--z-modal-backdrop);
-  opacity: 0;
-  visibility: hidden;
-  transition: var(--transition-normal);
-}
-
-.overlay.active {
-  opacity: 1;
-  visibility: visible;
-}
-
-/* ===== 15. Loading States ===== */
+/* ===== 12. Loading States ===== */
 .loading {
   display: flex;
   flex-direction: column;
@@ -770,37 +586,7 @@ a:hover {
   color: var(--secondary-color);
 }
 
-.loading-dots {
-  display: inline-flex;
-  align-items: center;
-}
-
-.loading-dots::after {
-  content: '';
-  display: inline-block;
-  width: 1em;
-  text-align: left;
-  animation: loading-dots 1.5s infinite;
-}
-
-@keyframes loading-dots {
-  0%, 20% { content: '.'; }
-  40% { content: '..'; }
-  60%, 100% { content: '...'; }
-}
-
-.skeleton {
-  background: linear-gradient(90deg, var(--light-color) 25%, var(--light-dark) 50%, var(--light-color) 75%);
-  background-size: 200% 100%;
-  animation: skeleton-loading 1.5s infinite;
-}
-
-@keyframes skeleton-loading {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-
-/* ===== 16. Status Indicators ===== */
+/* ===== 13. Status Indicators ===== */
 .status-indicator {
   display: inline-block;
   width: 10px;
@@ -833,60 +619,7 @@ a:hover {
   51%, 100% { opacity: 0; }
 }
 
-/* ===== 17. Alerts & Notifications ===== */
-.alert {
-  border-radius: var(--border-radius-md);
-  padding: var(--spacing-md);
-  margin: var(--spacing-md) 0;
-  border: none;
-  position: relative;
-}
-
-.alert-success {
-  background: rgba(39, 174, 96, 0.1);
-  color: var(--success-dark);
-  border-left: 4px solid var(--success-color);
-}
-
-.alert-warning {
-  background: rgba(243, 156, 18, 0.1);
-  color: var(--warning-dark);
-  border-left: 4px solid var(--warning-color);
-}
-
-.alert-danger {
-  background: rgba(231, 76, 60, 0.1);
-  color: var(--danger-dark);
-  border-left: 4px solid var(--danger-color);
-}
-
-.alert-info {
-  background: rgba(52, 152, 219, 0.1);
-  color: var(--info-dark);
-  border-left: 4px solid var(--info-color);
-}
-
-.toast {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: var(--z-toast);
-  max-width: 350px;
-  animation: toast-slide-in var(--transition-normal);
-}
-
-@keyframes toast-slide-in {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-/* ===== 18. Saved Numbers Management ===== */
+/* ===== 14. Saved Numbers Management ===== */
 .saved-numbers-container {
   max-height: 400px;
   overflow-y: auto;
@@ -943,7 +676,7 @@ a:hover {
   color: var(--secondary-color);
 }
 
-/* ===== 19. Store Locator ===== */
+/* ===== 15. Store Locator ===== */
 .store-item {
   background: var(--bg-primary);
   border: 1px solid var(--light-color);
@@ -989,7 +722,7 @@ a:hover {
   color: var(--info-color);
 }
 
-/* ===== 20. Back to Top Button ===== */
+/* ===== 16. Back to Top Button ===== */
 .back-to-top {
   position: fixed;
   bottom: 30px;
@@ -1031,14 +764,63 @@ a:hover {
   }
 }
 
-/* ===== 21. Responsive Design ===== */
+/* ===== 17. Alerts & Notifications ===== */
+.alert {
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-md);
+  margin: var(--spacing-md) 0;
+  border: none;
+  position: relative;
+}
+
+.alert-success {
+  background: rgba(39, 174, 96, 0.1);
+  color: var(--success-dark);
+  border-left: 4px solid var(--success-color);
+}
+
+.alert-warning {
+  background: rgba(243, 156, 18, 0.1);
+  color: var(--warning-dark);
+  border-left: 4px solid var(--warning-color);
+}
+
+.alert-danger {
+  background: rgba(231, 76, 60, 0.1);
+  color: var(--danger-dark);
+  border-left: 4px solid var(--danger-color);
+}
+
+.alert-info {
+  background: rgba(52, 152, 219, 0.1);
+  color: var(--info-dark);
+  border-left: 4px solid var(--info-color);
+}
+
+.toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: var(--z-toast);
+  max-width: 350px;
+  animation: toast-slide-in var(--transition-normal);
+}
+
+@keyframes toast-slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* ===== 18. Responsive Design ===== */
 @media (max-width: 1199px) {
   .container {
     max-width: 960px;
-  }
-  
-  .stats-container {
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   }
 }
 
@@ -1054,12 +836,6 @@ a:hover {
   .number-input-grid {
     grid-template-columns: repeat(3, 1fr);
     gap: var(--spacing-md);
-  }
-  
-  .navbar-nav .btn {
-    margin: var(--spacing-xs) 0;
-    width: 100%;
-    text-align: left;
   }
 }
 
@@ -1092,10 +868,6 @@ a:hover {
     grid-template-columns: repeat(2, 1fr);
   }
   
-  .stats-container {
-    grid-template-columns: 1fr;
-  }
-  
   .back-to-top {
     bottom: 20px;
     right: 20px;
@@ -1126,77 +898,7 @@ a:hover {
   }
 }
 
-/* ===== 22. Print Styles ===== */
-@media print {
-  body {
-    background: white !important;
-    color: black !important;
-  }
-  
-  .navbar,
-  .back-to-top,
-  .toast,
-  .btn,
-  button {
-    display: none !important;
-  }
-  
-  .hero-section {
-    background: white !important;
-    box-shadow: none !important;
-  }
-  
-  .card,
-  .feature-card {
-    box-shadow: none !important;
-    border: 1px solid #ddd !important;
-  }
-  
-  .number-ball {
-    background: white !important;
-    color: black !important;
-    border: 2px solid black !important;
-  }
-}
-
-/* ===== 23. Accessibility ===== */
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-}
-
-.visually-hidden {
-  position: absolute !important;
-  width: 1px !important;
-  height: 1px !important;
-  padding: 0 !important;
-  margin: -1px !important;
-  overflow: hidden !important;
-  clip: rect(0, 0, 0, 0) !important;
-  white-space: nowrap !important;
-  border: 0 !important;
-}
-
-.skip-link {
-  position: absolute;
-  top: -40px;
-  left: 6px;
-  background: var(--dark-color);
-  color: var(--text-light);
-  padding: 8px;
-  text-decoration: none;
-  border-radius: var(--border-radius-sm);
-  z-index: var(--z-tooltip);
-}
-
-.skip-link:focus {
-  top: 6px;
-}
-
-/* ===== 24. Dark Mode Support ===== */
+/* ===== 19. Dark Mode Support ===== */
 @media (prefers-color-scheme: dark) {
   :root {
     --bg-primary: #1a1a1a;
@@ -1209,7 +911,7 @@ a:hover {
   }
 }
 
-/* ===== 25. High Contrast Support ===== */
+/* ===== 20. High Contrast Support ===== */
 @media (prefers-contrast: high) {
   :root {
     --border-radius-sm: 0;
@@ -1230,4 +932,5 @@ a:hover {
     background: transparent;
     color: var(--text-primary);
   }
+}`
 }
