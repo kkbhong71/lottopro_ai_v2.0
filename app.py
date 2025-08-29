@@ -1,6 +1,3 @@
-{
-  `path`: `C:\\Users\\USER\\Documents\\kakaotalkdown\\lotto_analysis\\app.py`,
-  `content`: `from flask import Flask, render_template, request, jsonify, session, send_file
 import os
 import random
 import numpy as np
