@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>오류 - LottoPro AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .error-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 60vh;
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .error-code {
+            font-size: 6rem;
+            font-weight: bold;
+            color: #e74c3c;
+            margin: 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .error-message {
+            font-size: 1.5rem;
+            color: #555;
+            margin: 1rem 0 2rem 0;
+            max-width: 600px;
+        }
+        
+        .error-details {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+            font-family: monospace;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .error-actions {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #545b62;
+            transform: translateY(-2px);
+        }
+        
+        .error-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+        
+        @media (max-width: 768px) {
+            .error-code {
+                font-size: 4rem;
+            }
+            
+            .error-message {
+                font-size: 1.2rem;
+            }
+            
+            .error-actions {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="error-container">
+            <!-- 에러 아이콘 -->
+            <div class="error-icon">
+                {% if error_code == 404 %}
+                    🔍
+                {% elif error_code == 500 %}
+                    ⚠️
+                {% else %}
+                    ❌
+                {% endif %}
+            </div>
+            
+            <!-- 에러 코드 -->
+            <h1 class="error-code">{{ error_code or '오류' }}</h1>
+            
+            <!-- 에러 메시지 -->
+            <p class="error-message">
+                {{ error_message or '예상치 못한 오류가 발생했습니다.' }}
+            </p>
+            
+            <!-- 에러 상세 정보 (500 에러인 경우) -->
+            {% if error_id %}
+            <div class="error-details">
+                <strong>오류 ID:</strong> {{ error_id }}<br>
+                <small>문제가 지속되면 이 ID를 포함하여 문의해주세요.</small>
+            </div>
+            {% endif %}
+            
+            <!-- 액션 버튼들 -->
+            <div class="error-actions">
+                <a href="{{ url_for('index') }}" class="btn btn-primary">
+                    🏠 홈으로 돌아가기
+                </a>
+                
+                <button onclick="history.back()" class="btn btn-secondary">
+                    ← 이전 페이지로
+                </button>
+                
+                {% if error_code == 404 %}
+                <button onclick="window.location.reload()" class="btn btn-secondary">
+                    🔄 새로고침
+                </button>
+                {% endif %}
+            </div>
+            
+            <!-- 추가 도움말 -->
+            <div style="margin-top: 3rem; color: #666; font-size: 0.9rem;">
+                {% if error_code == 404 %}
+                <p>찾으시는 페이지가 존재하지 않습니다. URL을 확인해주세요.</p>
+                {% elif error_code == 500 %}
+                <p>서버에서 문제가 발생했습니다. 잠시 후 다시 시도해주세요.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 자동 새로고침 (500 에러인 경우, 30초 후)
+        {% if error_code == 500 %}
+        setTimeout(function() {
+            const shouldRefresh = confirm('페이지를 자동으로 새로고침 하시겠습니까?');
+            if (shouldRefresh) {
+                window.location.reload();
+            }
+        }, 30000);
+        {% endif %}
+        
+        // 에러 로그 전송 (선택사항)
+        if ('{{ error_id }}') {
+            console.log('Error ID: {{ error_id }}');
+            // 필요시 에러 추적 서비스로 전송
+        }
+    </script>
+</body>
+</html>
