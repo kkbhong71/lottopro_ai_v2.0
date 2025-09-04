@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LottoPro AI v2.0 - 실시간 모니터링 대시보드</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/date-fns@2.29.3/index.min.js"></script>
+    <title>LottoPro-AI 모니터링 대시보드</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.css" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -14,940 +14,854 @@
         }
         
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #0f172a;
-            color: #e2e8f0;
-            line-height: 1.6;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
         }
         
         .dashboard {
-            display: grid;
-            grid-template-columns: 280px 1fr;
-            min-height: 100vh;
-        }
-        
-        .sidebar {
-            background: #1e293b;
+            max-width: 1400px;
+            margin: 0 auto;
             padding: 20px;
-            border-right: 1px solid #334155;
-        }
-        
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #334155;
-        }
-        
-        .logo h1 {
-            color: #3b82f6;
-            font-size: 18px;
-            font-weight: bold;
-        }
-        
-        .nav-menu {
-            list-style: none;
-        }
-        
-        .nav-item {
-            margin-bottom: 5px;
-        }
-        
-        .nav-link {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 15px;
-            color: #94a3b8;
-            text-decoration: none;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-        }
-        
-        .nav-link:hover,
-        .nav-link.active {
-            background: #334155;
-            color: #3b82f6;
-        }
-        
-        .main-content {
-            padding: 20px;
-            overflow-y: auto;
         }
         
         .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #334155;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
         }
         
-        .header h2 {
-            color: #f1f5f9;
-            font-size: 24px;
-        }
-        
-        .status-indicator {
+        .header h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
             display: flex;
             align-items: center;
-            gap: 8px;
-            padding: 8px 16px;
+            gap: 15px;
+        }
+        
+        .status-badge {
+            padding: 5px 12px;
             border-radius: 20px;
-            font-size: 14px;
-            font-weight: 500;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
         }
         
-        .status-indicator.healthy {
-            background: rgba(16, 185, 129, 0.1);
-            color: #10b981;
-            border: 1px solid rgba(16, 185, 129, 0.3);
+        .status-healthy {
+            background: #27ae60;
+            color: white;
         }
         
-        .status-indicator.warning {
-            background: rgba(245, 158, 11, 0.1);
-            color: #f59e0b;
-            border: 1px solid rgba(245, 158, 11, 0.3);
+        .status-warning {
+            background: #f39c12;
+            color: white;
         }
         
-        .status-indicator.critical {
-            background: rgba(239, 68, 68, 0.1);
-            color: #ef4444;
-            border: 1px solid rgba(239, 68, 68, 0.3);
+        .status-critical {
+            background: #e74c3c;
+            color: white;
         }
         
         .metrics-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 20px;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
         }
         
         .metric-card {
-            background: #1e293b;
-            border: 1px solid #334155;
-            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
             padding: 20px;
-            transition: transform 0.3s ease;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
         }
         
         .metric-card:hover {
-            transform: translateY(-2px);
-            border-color: #3b82f6;
+            transform: translateY(-5px);
         }
         
         .metric-header {
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            justify-content: space-between;
             margin-bottom: 15px;
         }
         
         .metric-title {
-            font-size: 14px;
-            color: #94a3b8;
-            font-weight: 500;
-        }
-        
-        .metric-icon {
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
+            font-weight: 600;
+            color: #2c3e50;
             display: flex;
             align-items: center;
-            justify-content: center;
-            font-size: 16px;
+            gap: 8px;
         }
         
         .metric-value {
-            font-size: 32px;
+            font-size: 2em;
             font-weight: bold;
-            color: #f1f5f9;
+            color: #27ae60;
             margin-bottom: 5px;
         }
         
-        .metric-change {
-            font-size: 12px;
-            padding: 2px 8px;
-            border-radius: 12px;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-        }
-        
-        .metric-change.positive {
-            background: rgba(16, 185, 129, 0.1);
-            color: #10b981;
-        }
-        
-        .metric-change.negative {
-            background: rgba(239, 68, 68, 0.1);
-            color: #ef4444;
-        }
-        
-        .metric-change.neutral {
-            background: rgba(148, 163, 184, 0.1);
-            color: #94a3b8;
-        }
-        
-        .chart-section {
-            background: #1e293b;
-            border: 1px solid #334155;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        
-        .chart-header {
-            display: flex;
-            justify-content: between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        
-        .chart-title {
-            font-size: 18px;
-            color: #f1f5f9;
-            font-weight: 600;
-        }
-        
-        .chart-controls {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .chart-control {
-            padding: 6px 12px;
-            background: #334155;
-            border: none;
-            border-radius: 6px;
-            color: #94a3b8;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .chart-control:hover,
-        .chart-control.active {
-            background: #3b82f6;
-            color: white;
+        .metric-label {
+            color: #7f8c8d;
+            font-size: 0.9em;
         }
         
         .chart-container {
-            position: relative;
-            height: 300px;
-            margin: 20px 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
         }
         
-        .alerts-section {
-            background: #1e293b;
-            border: 1px solid #334155;
-            border-radius: 12px;
+        .chart-title {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .chart-wrapper {
+            position: relative;
+            height: 300px;
+            margin-bottom: 15px;
+        }
+        
+        .system-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .info-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            backdrop-filter: blur(5px);
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            color: #34495e;
+        }
+        
+        .alert-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
             padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
         }
         
         .alert-item {
             display: flex;
             align-items: center;
-            gap: 15px;
-            padding: 12px 0;
-            border-bottom: 1px solid #334155;
+            padding: 10px 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 4px solid;
         }
         
-        .alert-item:last-child {
-            border-bottom: none;
+        .alert-warning {
+            background: rgba(243, 156, 18, 0.1);
+            border-left-color: #f39c12;
         }
         
-        .alert-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
+        .alert-critical {
+            background: rgba(231, 76, 60, 0.1);
+            border-left-color: #e74c3c;
+        }
+        
+        .refresh-controls {
             display: flex;
             align-items: center;
-            justify-content: center;
-            font-size: 18px;
-        }
-        
-        .alert-icon.warning {
-            background: rgba(245, 158, 11, 0.1);
-            color: #f59e0b;
-        }
-        
-        .alert-icon.error {
-            background: rgba(239, 68, 68, 0.1);
-            color: #ef4444;
-        }
-        
-        .alert-content {
-            flex: 1;
-        }
-        
-        .alert-message {
-            color: #f1f5f9;
-            font-weight: 500;
-            margin-bottom: 4px;
-        }
-        
-        .alert-time {
-            color: #94a3b8;
-            font-size: 12px;
-        }
-        
-        .transparency-panel {
-            background: linear-gradient(135deg, #1e40af 0%, #7c3aed 100%);
-            border-radius: 12px;
-            padding: 25px;
+            gap: 15px;
             margin-bottom: 20px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: #3498db;
             color: white;
         }
         
-        .transparency-header {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 20px;
+        .btn-primary:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
         }
         
-        .transparency-icon {
-            width: 50px;
-            height: 50px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
+        .btn-success {
+            background: #27ae60;
+            color: white;
         }
         
-        .transparency-score {
-            font-size: 36px;
-            font-weight: bold;
-            margin-bottom: 10px;
+        .btn-warning {
+            background: #f39c12;
+            color: white;
         }
         
-        .transparency-features {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
         }
         
-        .feature-item {
+        .auto-refresh {
             display: flex;
             align-items: center;
             gap: 10px;
-            padding: 10px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
         }
         
-        .feature-status {
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: #3498db;
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        
+        .loading {
+            display: inline-block;
             width: 20px;
             height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
             border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-        }
-        
-        .feature-status.active {
-            background: #10b981;
-            color: white;
-        }
-        
-        .feature-status.inactive {
-            background: #6b7280;
-            color: white;
-        }
-        
-        .refresh-indicator {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: #3b82f6;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 25px;
-            font-size: 14px;
-            display: none;
-            align-items: center;
-            gap: 8px;
-            z-index: 1000;
-        }
-        
-        .spinner {
-            width: 16px;
-            height: 16px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-top: 2px solid white;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
         }
         
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            to { transform: rotate(360deg); }
         }
         
-        @media (max-width: 1024px) {
+        .table-responsive {
+            overflow-x: auto;
+        }
+        
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        .table th,
+        .table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+        
+        .table th {
+            background: rgba(0,0,0,0.05);
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .endpoint-stats {
+            font-size: 0.9em;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(0,0,0,0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        
+        .progress-cpu { background: #e74c3c; }
+        .progress-memory { background: #f39c12; }
+        .progress-disk { background: #9b59b6; }
+        
+        @media (max-width: 768px) {
             .dashboard {
-                grid-template-columns: 1fr;
-            }
-            
-            .sidebar {
-                display: none;
+                padding: 10px;
             }
             
             .metrics-grid {
-                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                grid-template-columns: 1fr;
+            }
+            
+            .refresh-controls {
+                flex-wrap: wrap;
             }
         }
     </style>
 </head>
 <body>
     <div class="dashboard">
-        <!-- 사이드바 -->
-        <div class="sidebar">
-            <div class="logo">
-                <span>🎯</span>
-                <h1>LottoPro AI</h1>
+        <div class="header">
+            <h1>
+                <i class="fas fa-chart-line"></i>
+                LottoPro-AI 모니터링 대시보드
+                <div class="status-badge" id="systemStatus">Loading...</div>
+            </h1>
+            <div class="refresh-controls">
+                <button class="btn btn-primary" onclick="refreshData()">
+                    <i class="fas fa-sync-alt"></i>
+                    새로고침
+                </button>
+                <button class="btn btn-success" onclick="clearCache()">
+                    <i class="fas fa-broom"></i>
+                    캐시 정리
+                </button>
+                <button class="btn btn-warning" onclick="exportMetrics()">
+                    <i class="fas fa-download"></i>
+                    메트릭 내보내기
+                </button>
+                <div class="auto-refresh">
+                    <span>자동 새로고침</span>
+                    <label class="switch">
+                        <input type="checkbox" id="autoRefresh" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <span id="lastUpdate">마지막 업데이트: -</span>
             </div>
-            
-            <ul class="nav-menu">
-                <li class="nav-item">
-                    <a href="#overview" class="nav-link active" data-section="overview">
-                        <span>📊</span>
-                        시스템 개요
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#performance" class="nav-link" data-section="performance">
-                        <span>⚡</span>
-                        성능 메트릭
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#transparency" class="nav-link" data-section="transparency">
-                        <span>🔍</span>
-                        투명성 현황
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#alerts" class="nav-link" data-section="alerts">
-                        <span>🚨</span>
-                        알람 & 이벤트
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#health" class="nav-link" data-section="health">
-                        <span>❤️</span>
-                        헬스체크
-                    </a>
-                </li>
-            </ul>
         </div>
         
-        <!-- 메인 콘텐츠 -->
-        <div class="main-content">
-            <div class="header">
-                <h2>실시간 모니터링 대시보드</h2>
-                <div class="status-indicator healthy" id="systemStatus">
-                    <span>●</span>
-                    시스템 정상
-                </div>
+        <div class="metrics-grid" id="metricsGrid">
+            <!-- 동적으로 생성됩니다 -->
+        </div>
+        
+        <div class="chart-container">
+            <div class="chart-title">
+                <i class="fas fa-tachometer-alt"></i>
+                시스템 성능 추이
             </div>
-            
-            <!-- 새로고침 인디케이터 -->
-            <div class="refresh-indicator" id="refreshIndicator">
-                <div class="spinner"></div>
-                데이터 업데이트 중...
+            <div class="chart-wrapper">
+                <canvas id="performanceChart"></canvas>
             </div>
-            
-            <!-- 투명성 패널 -->
-            <div class="transparency-panel">
-                <div class="transparency-header">
-                    <div class="transparency-icon">🔍</div>
-                    <div>
-                        <h3>투명성 점수</h3>
-                        <div class="transparency-score" id="transparencyScore">95%</div>
-                        <p>모든 AI 모델과 예측 과정이 완전 공개됩니다</p>
-                    </div>
-                </div>
-                
-                <div class="transparency-features">
-                    <div class="feature-item">
-                        <div class="feature-status active">✓</div>
-                        <span>알고리즘 공개</span>
-                    </div>
-                    <div class="feature-item">
-                        <div class="feature-status active">✓</div>
-                        <span>성능 데이터 공개</span>
-                    </div>
-                    <div class="feature-item">
-                        <div class="feature-status active">✓</div>
-                        <span>통계적 검증</span>
-                    </div>
-                    <div class="feature-item">
-                        <div class="feature-status active">✓</div>
-                        <span>실시간 모니터링</span>
-                    </div>
-                    <div class="feature-item">
-                        <div class="feature-status active">✓</div>
-                        <span>감사 추적</span>
-                    </div>
-                    <div class="feature-item">
-                        <div class="feature-status active">✓</div>
-                        <span>데이터 무결성</span>
-                    </div>
-                </div>
+        </div>
+        
+        <div class="chart-container">
+            <div class="chart-title">
+                <i class="fas fa-server"></i>
+                API 엔드포인트 통계
             </div>
-            
-            <!-- 메트릭 카드들 -->
-            <div class="metrics-grid">
-                <div class="metric-card">
-                    <div class="metric-header">
-                        <span class="metric-title">AI 예측 정확도</span>
-                        <div class="metric-icon" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6;">
-                            🎯
-                        </div>
-                    </div>
-                    <div class="metric-value" id="accuracyRate">18.4%</div>
-                    <div class="metric-change neutral" id="accuracyChange">
-                        <span>→</span>
-                        변화없음
-                    </div>
-                </div>
-                
-                <div class="metric-card">
-                    <div class="metric-header">
-                        <span class="metric-title">응답 시간</span>
-                        <div class="metric-icon" style="background: rgba(16, 185, 129, 0.1); color: #10b981;">
-                            ⚡
-                        </div>
-                    </div>
-                    <div class="metric-value" id="responseTime">245ms</div>
-                    <div class="metric-change positive" id="responseTimeChange">
-                        <span>↓</span>
-                        12% 개선
-                    </div>
-                </div>
-                
-                <div class="metric-card">
-                    <div class="metric-header">
-                        <span class="metric-title">일일 사용자</span>
-                        <div class="metric-icon" style="background: rgba(168, 85, 247, 0.1); color: #a855f7;">
-                            👥
-                        </div>
-                    </div>
-                    <div class="metric-value" id="dailyUsers">1,247</div>
-                    <div class="metric-change positive" id="usersChange">
-                        <span>↑</span>
-                        8.2% 증가
-                    </div>
-                </div>
-                
-                <div class="metric-card">
-                    <div class="metric-header">
-                        <span class="metric-title">시스템 가동률</span>
-                        <div class="metric-icon" style="background: rgba(34, 197, 94, 0.1); color: #22c55e;">
-                            💚
-                        </div>
-                    </div>
-                    <div class="metric-value" id="uptime">99.8%</div>
-                    <div class="metric-change positive" id="uptimeChange">
-                        <span>↑</span>
-                        목표 달성
-                    </div>
-                </div>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>엔드포인트</th>
+                            <th>요청 수</th>
+                            <th>평균 응답시간</th>
+                            <th>에러 수</th>
+                            <th>에러율</th>
+                        </tr>
+                    </thead>
+                    <tbody id="endpointStats">
+                        <!-- 동적으로 생성됩니다 -->
+                    </tbody>
+                </table>
             </div>
-            
-            <!-- 성능 차트 섹션 -->
-            <div class="chart-section">
-                <div class="chart-header">
-                    <h3 class="chart-title">AI 모델 성능 추이</h3>
-                    <div class="chart-controls">
-                        <button class="chart-control active" data-period="1h">1시간</button>
-                        <button class="chart-control" data-period="24h">24시간</button>
-                        <button class="chart-control" data-period="7d">7일</button>
-                        <button class="chart-control" data-period="30d">30일</button>
-                    </div>
-                </div>
-                <div class="chart-container">
-                    <canvas id="performanceChart"></canvas>
-                </div>
+        </div>
+        
+        <div class="alert-section" id="alertSection" style="display: none;">
+            <div class="chart-title">
+                <i class="fas fa-exclamation-triangle"></i>
+                시스템 알림
             </div>
-            
-            <!-- 응답시간 차트 -->
-            <div class="chart-section">
-                <div class="chart-header">
-                    <h3 class="chart-title">시스템 응답 시간</h3>
-                </div>
-                <div class="chart-container">
-                    <canvas id="responseTimeChart"></canvas>
-                </div>
+            <div id="alertList">
+                <!-- 동적으로 생성됩니다 -->
             </div>
-            
-            <!-- 알람 섹션 -->
-            <div class="alerts-section">
-                <h3 class="chart-title" style="margin-bottom: 20px;">최근 알람 & 이벤트</h3>
-                <div id="alertsList">
-                    <!-- 알람 아이템들이 동적으로 추가됩니다 -->
-                </div>
+        </div>
+        
+        <div class="chart-container">
+            <div class="chart-title">
+                <i class="fas fa-info-circle"></i>
+                시스템 정보
+            </div>
+            <div class="system-info" id="systemInfo">
+                <!-- 동적으로 생성됩니다 -->
             </div>
         </div>
     </div>
-    
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script>
-        // 전역 변수
-        let performanceChart, responseTimeChart;
-        let refreshInterval;
-        const REFRESH_INTERVAL = 30000; // 30초
+        let performanceChart = null;
+        let autoRefreshInterval = null;
+        let isRefreshing = false;
         
         // 초기화
         document.addEventListener('DOMContentLoaded', function() {
             initializeCharts();
-            setupNavigation();
-            startAutoRefresh();
-            loadInitialData();
+            refreshData();
+            setupAutoRefresh();
         });
         
-        // 내비게이션 설정
-        function setupNavigation() {
-            const navLinks = document.querySelectorAll('.nav-link');
-            navLinks.forEach(link => {
-                link.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    navLinks.forEach(l => l.classList.remove('active'));
-                    this.classList.add('active');
-                    
-                    const section = this.getAttribute('data-section');
-                    showSection(section);
-                });
+        // 자동 새로고침 설정
+        function setupAutoRefresh() {
+            const autoRefreshCheckbox = document.getElementById('autoRefresh');
+            
+            autoRefreshCheckbox.addEventListener('change', function() {
+                if (this.checked) {
+                    autoRefreshInterval = setInterval(refreshData, 30000); // 30초마다
+                } else {
+                    clearInterval(autoRefreshInterval);
+                }
             });
-        }
-        
-        // 섹션 표시
-        function showSection(section) {
-            // 실제 구현에서는 각 섹션별 콘텐츠를 동적으로 로드
-            console.log('Showing section:', section);
+            
+            // 기본적으로 자동 새로고침 활성화
+            autoRefreshInterval = setInterval(refreshData, 30000);
         }
         
         // 차트 초기화
         function initializeCharts() {
-            // 성능 차트
-            const performanceCtx = document.getElementById('performanceChart').getContext('2d');
-            performanceChart = new Chart(performanceCtx, {
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+            performanceChart = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: [],
                     datasets: [{
-                        label: 'AI 예측 정확도 (%)',
+                        label: 'CPU (%)',
                         data: [],
-                        borderColor: '#3b82f6',
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                        tension: 0.4,
-                        fill: true
+                        borderColor: '#e74c3c',
+                        backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                        tension: 0.4
                     }, {
-                        label: '이론적 기댓값 (%)',
+                        label: 'Memory (%)',
                         data: [],
-                        borderColor: '#ef4444',
-                        borderDash: [5, 5],
-                        fill: false
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            labels: {
-                                color: '#e2e8f0'
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            ticks: { color: '#94a3b8' },
-                            grid: { color: '#334155' }
-                        },
-                        y: {
-                            ticks: { color: '#94a3b8' },
-                            grid: { color: '#334155' },
-                            beginAtZero: true,
-                            max: 30
-                        }
-                    }
-                }
-            });
-            
-            // 응답시간 차트
-            const responseCtx = document.getElementById('responseTimeChart').getContext('2d');
-            responseTimeChart = new Chart(responseCtx, {
-                type: 'line',
-                data: {
-                    labels: [],
-                    datasets: [{
-                        label: '응답 시간 (ms)',
+                        borderColor: '#f39c12',
+                        backgroundColor: 'rgba(243, 156, 18, 0.1)',
+                        tension: 0.4
+                    }, {
+                        label: '응답시간 (ms)',
                         data: [],
-                        borderColor: '#10b981',
-                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderColor: '#3498db',
+                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
                         tension: 0.4,
-                        fill: true
+                        yAxisID: 'y1'
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            labels: {
-                                color: '#e2e8f0'
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: '사용률 (%)'
                             }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: '응답시간 (ms)'
+                            },
+                            grid: {
+                                drawOnChartArea: false,
+                            },
                         }
                     },
-                    scales: {
-                        x: {
-                            ticks: { color: '#94a3b8' },
-                            grid: { color: '#334155' }
-                        },
-                        y: {
-                            ticks: { color: '#94a3b8' },
-                            grid: { color: '#334155' },
-                            beginAtZero: true
+                    plugins: {
+                        legend: {
+                            position: 'top'
                         }
                     }
                 }
             });
-        }
-        
-        // 초기 데이터 로드
-        function loadInitialData() {
-            // 샘플 데이터로 차트 초기화
-            const now = new Date();
-            const labels = [];
-            const accuracyData = [];
-            const responseTimeData = [];
-            const theoreticalData = [];
-            
-            for (let i = 23; i >= 0; i--) {
-                const time = new Date(now.getTime() - i * 60 * 60 * 1000);
-                labels.push(time.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }));
-                accuracyData.push(15 + Math.random() * 10);
-                responseTimeData.push(200 + Math.random() * 100);
-                theoreticalData.push(13.33);
-            }
-            
-            performanceChart.data.labels = labels;
-            performanceChart.data.datasets[0].data = accuracyData;
-            performanceChart.data.datasets[1].data = theoreticalData;
-            performanceChart.update();
-            
-            responseTimeChart.data.labels = labels;
-            responseTimeChart.data.datasets[0].data = responseTimeData;
-            responseTimeChart.update();
-            
-            // 알람 목록 로드
-            loadAlerts();
-        }
-        
-        // 알람 목록 로드
-        function loadAlerts() {
-            const alertsList = document.getElementById('alertsList');
-            const sampleAlerts = [
-                {
-                    type: 'warning',
-                    message: '응답 시간이 평균보다 15% 증가했습니다',
-                    time: '5분 전'
-                },
-                {
-                    type: 'info',
-                    message: '투명성 보고서가 성공적으로 생성되었습니다',
-                    time: '1시간 전'
-                },
-                {
-                    type: 'warning',
-                    message: 'AI 모델 정확도가 일시적으로 감소했습니다',
-                    time: '2시간 전'
-                }
-            ];
-            
-            alertsList.innerHTML = sampleAlerts.map(alert => `
-                <div class="alert-item">
-                    <div class="alert-icon ${alert.type}">
-                        ${alert.type === 'warning' ? '⚠️' : alert.type === 'error' ? '❌' : 'ℹ️'}
-                    </div>
-                    <div class="alert-content">
-                        <div class="alert-message">${alert.message}</div>
-                        <div class="alert-time">${alert.time}</div>
-                    </div>
-                </div>
-            `).join('');
-        }
-        
-        // 자동 새로고침 시작
-        function startAutoRefresh() {
-            refreshInterval = setInterval(() => {
-                refreshData();
-            }, REFRESH_INTERVAL);
         }
         
         // 데이터 새로고침
         async function refreshData() {
-            const indicator = document.getElementById('refreshIndicator');
-            indicator.style.display = 'flex';
+            if (isRefreshing) return;
+            isRefreshing = true;
             
             try {
-                // API에서 최신 데이터 가져오기
-                const [dashboardData, alertsData] = await Promise.all([
-                    fetchDashboardData(),
-                    fetchAlertsData()
-                ]);
+                // 성능 통계 가져오기
+                const performanceResponse = await fetch('/admin/performance');
+                const performanceData = await performanceResponse.json();
                 
-                updateMetrics(dashboardData);
-                updateCharts(dashboardData);
-                updateAlerts(alertsData);
-                updateSystemStatus(dashboardData);
+                if (performanceData.success) {
+                    updateMetrics(performanceData.data);
+                    updateSystemStatus(performanceData.data);
+                    updateEndpointStats(performanceData.data.endpoints);
+                    updateSystemInfo(performanceData.data);
+                    updateChart(performanceData.data);
+                }
                 
+                // 캐시 정보 가져오기
+                const cacheResponse = await fetch('/admin/cache/info');
+                const cacheData = await cacheResponse.json();
+                
+                if (cacheData.success) {
+                    updateCacheMetrics(cacheData.data);
+                }
+                
+                document.getElementById('lastUpdate').textContent = 
+                    `마지막 업데이트: ${new Date().toLocaleString()}`;
+                    
             } catch (error) {
                 console.error('데이터 새로고침 실패:', error);
-                updateSystemStatus({ status: 'error' });
-            } finally {
-                setTimeout(() => {
-                    indicator.style.display = 'none';
-                }, 1000);
+                showAlert('데이터 새로고침에 실패했습니다.', 'critical');
             }
-        }
-        
-        // 대시보드 데이터 가져오기
-        async function fetchDashboardData() {
-            try {
-                const response = await fetch('/monitoring/dashboard');
-                return await response.json();
-            } catch (error) {
-                // 오류 시 샘플 데이터 반환
-                return {
-                    summary: {
-                        avg_accuracy_rate: 18.4 + (Math.random() - 0.5) * 2,
-                        avg_response_time_ms: 245 + Math.random() * 50,
-                        total_alerts_24h: Math.floor(Math.random() * 10),
-                        system_status: 'healthy'
-                    }
-                };
-            }
-        }
-        
-        // 알람 데이터 가져오기
-        async function fetchAlertsData() {
-            try {
-                const response = await fetch('/monitoring/alerts');
-                return await response.json();
-            } catch (error) {
-                return { alerts: [] };
-            }
+            
+            isRefreshing = false;
         }
         
         // 메트릭 업데이트
         function updateMetrics(data) {
-            if (data.summary) {
-                document.getElementById('accuracyRate').textContent = 
-                    data.summary.avg_accuracy_rate.toFixed(1) + '%';
-                document.getElementById('responseTime').textContent = 
-                    Math.round(data.summary.avg_response_time_ms) + 'ms';
-            }
+            const metricsGrid = document.getElementById('metricsGrid');
+            const overview = data.overview;
+            const system = data.system;
+            
+            metricsGrid.innerHTML = `
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <div class="metric-title">
+                            <i class="fas fa-globe"></i>
+                            총 요청 수
+                        </div>
+                    </div>
+                    <div class="metric-value">${overview.total_requests.toLocaleString()}</div>
+                    <div class="metric-label">전체 API 요청</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <div class="metric-title">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            에러율
+                        </div>
+                    </div>
+                    <div class="metric-value" style="color: ${overview.error_rate > 5 ? '#e74c3c' : '#27ae60'}">${overview.error_rate}%</div>
+                    <div class="metric-label">${overview.total_errors}개 에러</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <div class="metric-title">
+                            <i class="fas fa-clock"></i>
+                            평균 응답시간
+                        </div>
+                    </div>
+                    <div class="metric-value" style="color: ${overview.average_response_time > 5 ? '#f39c12' : '#27ae60'}">${overview.average_response_time.toFixed(3)}s</div>
+                    <div class="metric-label">평균 처리 시간</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <div class="metric-title">
+                            <i class="fas fa-microchip"></i>
+                            CPU 사용률
+                        </div>
+                    </div>
+                    <div class="metric-value" style="color: ${system.current_cpu > 80 ? '#e74c3c' : '#27ae60'}">${system.current_cpu}%</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill progress-cpu" style="width: ${system.current_cpu}%"></div>
+                    </div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <div class="metric-title">
+                            <i class="fas fa-memory"></i>
+                            메모리 사용률
+                        </div>
+                    </div>
+                    <div class="metric-value" style="color: ${system.current_memory > 85 ? '#e74c3c' : '#27ae60'}">${system.current_memory}%</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill progress-memory" style="width: ${system.current_memory}%"></div>
+                    </div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <div class="metric-title">
+                            <i class="fas fa-hdd"></i>
+                            디스크 사용률
+                        </div>
+                    </div>
+                    <div class="metric-value" style="color: ${system.current_disk > 90 ? '#e74c3c' : '#27ae60'}">${system.current_disk}%</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill progress-disk" style="width: ${system.current_disk}%"></div>
+                    </div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <div class="metric-title">
+                            <i class="fas fa-arrow-up"></i>
+                            서버 가동시간
+                        </div>
+                    </div>
+                    <div class="metric-value">${overview.uptime_human}</div>
+                    <div class="metric-label">연속 가동</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <div class="metric-title">
+                            <i class="fas fa-heartbeat"></i>
+                            시스템 상태
+                        </div>
+                    </div>
+                    <div class="metric-value" style="color: ${getHealthColor(data.health_status)}">${getHealthLabel(data.health_status)}</div>
+                    <div class="metric-label">전반적 건강도</div>
+                </div>
+            `;
         }
         
-        // 차트 업데이트
-        function updateCharts(data) {
-            if (data.metrics) {
-                // 새로운 데이터 포인트 추가
-                const now = new Date();
-                const timeLabel = now.toLocaleTimeString('ko-KR', { 
-                    hour: '2-digit', 
-                    minute: '2-digit' 
-                });
-                
-                // 최대 24개 데이터 포인트 유지
-                if (performanceChart.data.labels.length >= 24) {
-                    performanceChart.data.labels.shift();
-                    performanceChart.data.datasets[0].data.shift();
-                    performanceChart.data.datasets[1].data.shift();
-                }
-                
-                performanceChart.data.labels.push(timeLabel);
-                performanceChart.data.datasets[0].data.push(
-                    data.summary?.avg_accuracy_rate || 18.4
-                );
-                performanceChart.data.datasets[1].data.push(13.33);
-                performanceChart.update('none');
-                
-                // 응답시간 차트도 동일하게 업데이트
-                if (responseTimeChart.data.labels.length >= 24) {
-                    responseTimeChart.data.labels.shift();
-                    responseTimeChart.data.datasets[0].data.shift();
-                }
-                
-                responseTimeChart.data.labels.push(timeLabel);
-                responseTimeChart.data.datasets[0].data.push(
-                    data.summary?.avg_response_time_ms || 245
-                );
-                responseTimeChart.update('none');
-            }
-        }
-        
-        // 알람 목록 업데이트
-        function updateAlerts(alertsData) {
-            if (alertsData.alerts && alertsData.alerts.length > 0) {
-                loadAlerts(); // 새로운 알람이 있으면 목록 새로고침
-            }
+        // 캐시 메트릭 추가
+        function updateCacheMetrics(cacheData) {
+            const metricsGrid = document.getElementById('metricsGrid');
+            const stats = cacheData.stats;
+            
+            const cacheCard = `
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <div class="metric-title">
+                            <i class="fas fa-database"></i>
+                            캐시 히트율
+                        </div>
+                    </div>
+                    <div class="metric-value" style="color: ${stats.hit_rate > 80 ? '#27ae60' : stats.hit_rate > 60 ? '#f39c12' : '#e74c3c'}">${stats.hit_rate.toFixed(1)}%</div>
+                    <div class="metric-label">${stats.total_operations}회 연산</div>
+                </div>
+            `;
+            
+            metricsGrid.insertAdjacentHTML('beforeend', cacheCard);
         }
         
         // 시스템 상태 업데이트
         function updateSystemStatus(data) {
             const statusElement = document.getElementById('systemStatus');
-            const status = data.summary?.system_status || 'unknown';
+            const health = data.health_status;
             
-            statusElement.className = 'status-indicator';
-            
-            if (status === 'healthy') {
-                statusElement.classList.add('healthy');
-                statusElement.innerHTML = '<span>●</span>시스템 정상';
-            } else if (status === 'degraded') {
-                statusElement.classList.add('warning');
-                statusElement.innerHTML = '<span>●</span>성능 저하';
-            } else {
-                statusElement.classList.add('critical');
-                statusElement.innerHTML = '<span>●</span>시스템 오류';
-            }
+            statusElement.className = `status-badge status-${health}`;
+            statusElement.textContent = getHealthLabel(health);
         }
         
-        // 차트 기간 변경
-        document.querySelectorAll('.chart-control').forEach(button => {
-            button.addEventListener('click', function() {
-                document.querySelectorAll('.chart-control').forEach(b => 
-                    b.classList.remove('active'));
-                this.classList.add('active');
+        // 엔드포인트 통계 업데이트
+        function updateEndpointStats(endpoints) {
+            const tbody = document.getElementById('endpointStats');
+            tbody.innerHTML = '';
+            
+            Object.entries(endpoints).forEach(([endpoint, stats]) => {
+                const errorRate = ((stats.errors / stats.count) * 100).toFixed(1);
+                const row = tbody.insertRow();
                 
-                const period = this.getAttribute('data-period');
-                loadChartData(period);
+                row.innerHTML = `
+                    <td><code>${endpoint}</code></td>
+                    <td>${stats.count.toLocaleString()}</td>
+                    <td>${stats.avg_time.toFixed(3)}s</td>
+                    <td>${stats.errors}</td>
+                    <td style="color: ${errorRate > 5 ? '#e74c3c' : '#27ae60'}">${errorRate}%</td>
+                `;
             });
-        });
-        
-        // 기간별 차트 데이터 로드
-        function loadChartData(period) {
-            // 실제 구현에서는 API에서 기간별 데이터를 가져옴
-            console.log('Loading chart data for period:', period);
         }
         
-        // 페이지 종료 시 정리
-        window.addEventListener('beforeunload', function() {
-            if (refreshInterval) {
-                clearInterval(refreshInterval);
+        // 시스템 정보 업데이트
+        function updateSystemInfo(data) {
+            const systemInfo = document.getElementById('systemInfo');
+            const overview = data.overview;
+            
+            systemInfo.innerHTML = `
+                <div class="info-item">
+                    <div class="info-label">모니터링 활성화</div>
+                    <div class="info-value">${data.monitoring_active ? '활성' : '비활성'}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">수집 간격</div>
+                    <div class="info-value">${data.collection_interval}초</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">응답시간 임계값</div>
+                    <div class="info-value">${data.thresholds.response_time}초</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">CPU 임계값</div>
+                    <div class="info-value">${data.thresholds.cpu_usage}%</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">메모리 임계값</div>
+                    <div class="info-value">${data.thresholds.memory_usage}%</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">디스크 임계값</div>
+                    <div class="info-value">${data.thresholds.disk_usage}%</div>
+                </div>
+            `;
+        }
+        
+        // 차트 업데이트
+        function updateChart(data) {
+            const system = data.system;
+            const overview = data.overview;
+            
+            // 현재 시간을 라벨로 추가
+            const currentTime = new Date().toLocaleTimeString();
+            performanceChart.data.labels.push(currentTime);
+            
+            // 데이터 포인트 추가
+            performanceChart.data.datasets[0].data.push(system.current_cpu);
+            performanceChart.data.datasets[1].data.push(system.current_memory);
+            performanceChart.data.datasets[2].data.push(overview.average_response_time * 1000); // ms로 변환
+            
+            // 최대 20개 데이터 포인트만 유지
+            const maxPoints = 20;
+            if (performanceChart.data.labels.length > maxPoints) {
+                performanceChart.data.labels.shift();
+                performanceChart.data.datasets.forEach(dataset => {
+                    dataset.data.shift();
+                });
             }
-        });
+            
+            performanceChart.update();
+        }
+        
+        // 유틸리티 함수들
+        function getHealthColor(health) {
+            switch(health) {
+                case 'healthy': return '#27ae60';
+                case 'warning': return '#f39c12';
+                case 'critical': return '#e74c3c';
+                default: return '#7f8c8d';
+            }
+        }
+        
+        function getHealthLabel(health) {
+            switch(health) {
+                case 'healthy': return '정상';
+                case 'warning': return '주의';
+                case 'critical': return '위험';
+                default: return '알 수 없음';
+            }
+        }
+        
+        function showAlert(message, type = 'warning') {
+            const alertSection = document.getElementById('alertSection');
+            const alertList = document.getElementById('alertList');
+            
+            const alertItem = document.createElement('div');
+            alertItem.className = `alert-item alert-${type}`;
+            alertItem.innerHTML = `
+                <i class="fas fa-${type === 'critical' ? 'exclamation-triangle' : 'exclamation-circle'}"></i>
+                <span>${message}</span>
+            `;
+            
+            alertList.appendChild(alertItem);
+            alertSection.style.display = 'block';
+            
+            // 5초 후 자동 제거
+            setTimeout(() => {
+                alertItem.remove();
+                if (alertList.children.length === 0) {
+                    alertSection.style.display = 'none';
+                }
+            }, 5000);
+        }
+        
+        // 캐시 정리
+        async function clearCache() {
+            try {
+                const response = await fetch('/admin/cache/clear', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ pattern: '*' })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert(`캐시 정리 완료: ${result.cleared_count}개 항목 삭제`, 'info');
+                    refreshData();
+                } else {
+                    showAlert('캐시 정리에 실패했습니다.', 'critical');
+                }
+            } catch (error) {
+                showAlert('캐시 정리 중 오류가 발생했습니다.', 'critical');
+            }
+        }
+        
+        // 메트릭 내보내기
+        async function exportMetrics() {
+            try {
+                window.open('/admin/performance/export?format=json', '_blank');
+            } catch (error) {
+                showAlert('메트릭 내보내기에 실패했습니다.', 'critical');
+            }
+        }
     </script>
 </body>
 </html>
