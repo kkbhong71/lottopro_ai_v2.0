@@ -1,4 +1,4 @@
-/* 15가지 기능을 모두 지원하는 완전한 스타일시트 */
+/* LottoPro AI v2.0 - 고급 에러 처리 및 사용자 경험 개선 스타일시트 */
 
 /* ===== 1. CSS Variables (색상 시스템) ===== */
 :root {
@@ -52,6 +52,16 @@
   --bg-dark: #2c3e50;
   --bg-light: #ecf0f1;
   
+  /* Error & Status Colors */
+  --error-color: #dc3545;
+  --error-light: #f8d7da;
+  --error-dark: #721c24;
+  --error-border: #f5c6cb;
+  
+  --network-online: #28a745;
+  --network-offline: #dc3545;
+  --network-unstable: #ffc107;
+  
   /* Gradient Colors */
   --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   --gradient-secondary: linear-gradient(45deg, #3498db, #2c3e50);
@@ -59,6 +69,7 @@
   --gradient-warning: linear-gradient(45deg, #f39c12, #f1c40f);
   --gradient-danger: linear-gradient(45deg, #e74c3c, #c0392b);
   --gradient-info: linear-gradient(45deg, #3498db, #5dade2);
+  --gradient-error: linear-gradient(45deg, #dc3545, #c82333);
   
   /* Spacing */
   --spacing-xs: 0.25rem;
@@ -82,11 +93,15 @@
   --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
   --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1);
   --shadow-inner: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  --shadow-error: 0 4px 12px rgba(220, 53, 69, 0.3);
+  --shadow-success: 0 4px 12px rgba(40, 167, 69, 0.3);
+  --shadow-warning: 0 4px 12px rgba(255, 193, 7, 0.3);
   
   /* Transitions */
   --transition-fast: 0.15s ease;
   --transition-normal: 0.3s ease;
   --transition-slow: 0.5s ease;
+  --transition-error: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   
   /* Z-index */
   --z-dropdown: 1000;
@@ -97,6 +112,8 @@
   --z-popover: 1060;
   --z-tooltip: 1070;
   --z-toast: 1080;
+  --z-loading-overlay: 9998;
+  --z-network-status: 9999;
 }
 
 /* ===== 2. Base Styles ===== */
@@ -120,7 +137,344 @@ body {
   overflow-x: hidden;
 }
 
-/* ===== 3. Typography ===== */
+/* ===== 3. 에러 처리 및 알림 시스템 ===== */
+
+/* 전역 로딩 오버레이 */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-loading-overlay);
+  backdrop-filter: blur(5px);
+  animation: fadeIn var(--transition-normal);
+}
+
+.loading-content {
+  text-align: center;
+  color: white;
+  padding: var(--spacing-xl);
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--border-radius-lg);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+.loading-title {
+  margin: var(--spacing-md) 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.loading-subtitle {
+  margin-bottom: var(--spacing-md);
+  opacity: 0.8;
+}
+
+.loading-progress {
+  margin-top: var(--spacing-md);
+  width: 300px;
+}
+
+.loading-progress .progress {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.loading-progress .progress-bar {
+  background: var(--gradient-secondary);
+}
+
+/* 에러 메시지 컨테이너 */
+.error-container {
+  animation: slideInDown var(--transition-error);
+}
+
+.error-container.d-none {
+  animation: slideOutUp var(--transition-error);
+}
+
+/* 기본 에러 메시지 */
+.error-message {
+  background: var(--gradient-error);
+  color: white;
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius-lg);
+  border: none;
+  box-shadow: var(--shadow-error);
+  position: relative;
+  overflow: hidden;
+  animation: errorPulse 0.5s ease-in-out;
+}
+
+.error-message::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+  transform: rotate(45deg);
+  animation: errorShine 2s infinite;
+}
+
+/* 확장된 에러 메시지 */
+.error-message-expanded {
+  background: white;
+  color: var(--error-dark);
+  border: 2px solid var(--error-color);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-error);
+}
+
+.error-header {
+  text-align: center;
+  margin-bottom: var(--spacing-lg);
+}
+
+.error-body {
+  text-align: left;
+}
+
+.error-actions {
+  margin-top: var(--spacing-md);
+}
+
+.error-actions .btn {
+  margin-right: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+}
+
+/* 경고 메시지 */
+.warning-message {
+  background: var(--gradient-warning);
+  color: var(--warning-dark);
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius-lg);
+  border: none;
+  box-shadow: var(--shadow-warning);
+  animation: warningPulse 0.3s ease-in-out;
+}
+
+/* 성공 메시지 */
+.success-message {
+  background: var(--gradient-success);
+  color: white;
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius-lg);
+  border: none;
+  box-shadow: var(--shadow-success);
+  animation: successSlide 0.3s ease-in-out;
+}
+
+/* 작은 알림 */
+.alert-sm {
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-size: 0.875rem;
+}
+
+/* 토스트 알림 개선 */
+.toast {
+  border: none;
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(10px);
+  animation: toastSlideIn var(--transition-normal);
+}
+
+.toast.text-bg-danger {
+  background: var(--gradient-error) !important;
+  border-left: 4px solid var(--error-dark);
+}
+
+.toast.text-bg-success {
+  background: var(--gradient-success) !important;
+  border-left: 4px solid var(--success-dark);
+}
+
+.toast.text-bg-warning {
+  background: var(--gradient-warning) !important;
+  border-left: 4px solid var(--warning-dark);
+  color: var(--warning-dark) !important;
+}
+
+.toast.text-bg-info {
+  background: var(--gradient-info) !important;
+  border-left: 4px solid var(--info-dark);
+}
+
+/* ===== 4. 네트워크 상태 인디케이터 ===== */
+.network-status {
+  position: fixed;
+  top: 80px;
+  right: var(--spacing-md);
+  background: var(--network-offline);
+  color: white;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--border-radius-pill);
+  font-size: 0.875rem;
+  z-index: var(--z-network-status);
+  animation: networkAlert 1s infinite alternate;
+  box-shadow: var(--shadow-lg);
+}
+
+.network-status.online {
+  background: var(--network-online);
+  animation: none;
+}
+
+.network-status.unstable {
+  background: var(--network-unstable);
+  color: var(--dark-color);
+  animation: networkUnstable 2s infinite;
+}
+
+/* 연결 상태 표시 */
+.status-indicator {
+  display: inline-flex;
+  align-items: center;
+}
+
+.status-indicator i {
+  font-size: 0.75rem;
+  animation: statusPulse 2s infinite;
+}
+
+/* ===== 5. 입력 유효성 검사 스타일 ===== */
+.form-control.is-invalid {
+  border-color: var(--error-color);
+  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+  animation: inputError 0.3s ease-in-out;
+}
+
+.form-control.is-valid {
+  border-color: var(--success-color);
+  box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+  animation: inputSuccess 0.3s ease-in-out;
+}
+
+.form-control.is-invalid:focus,
+.form-control.is-valid:focus {
+  box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.25);
+}
+
+/* 번호 입력 필드 향상 */
+.number-input {
+  transition: all var(--transition-normal);
+  position: relative;
+}
+
+.number-input:focus {
+  transform: scale(1.05);
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+}
+
+.number-input.is-invalid {
+  background-color: rgba(220, 53, 69, 0.1);
+}
+
+.number-input.is-valid {
+  background-color: rgba(40, 167, 69, 0.1);
+}
+
+/* 입력 도움말 */
+.input-help {
+  animation: fadeInUp var(--transition-normal);
+}
+
+/* ===== 6. 진행 상태 표시 ===== */
+.progress-container {
+  animation: fadeInDown var(--transition-normal);
+}
+
+.prediction-steps {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  opacity: 0.5;
+  transition: all var(--transition-normal);
+}
+
+.step.active {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.step i {
+  font-size: 1.5rem;
+  margin-bottom: var(--spacing-sm);
+  color: var(--secondary-color);
+}
+
+.step.active i {
+  color: var(--primary-color);
+  animation: stepPulse 1s infinite;
+}
+
+.step span {
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+/* 진행률 바 개선 */
+.progress {
+  height: 6px;
+  border-radius: var(--border-radius-sm);
+  overflow: hidden;
+  background: var(--light-color);
+}
+
+.progress-bar {
+  background: var(--gradient-secondary);
+  transition: width var(--transition-slow);
+}
+
+.progress-bar-animated {
+  animation: progress-bar-stripes 1s linear infinite;
+}
+
+/* ===== 7. 서비스 상태 카드 ===== */
+.service-status-card {
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius-lg);
+  border: 2px solid transparent;
+  transition: all var(--transition-normal);
+}
+
+.service-status-card.alert-success {
+  background: rgba(40, 167, 69, 0.1);
+  border-color: var(--success-color);
+  color: var(--success-dark);
+}
+
+.service-status-card.alert-warning {
+  background: rgba(255, 193, 7, 0.1);
+  border-color: var(--warning-color);
+  color: var(--warning-dark);
+}
+
+.service-status-card.alert-danger {
+  background: rgba(220, 53, 69, 0.1);
+  border-color: var(--error-color);
+  color: var(--error-dark);
+}
+
+/* ===== 8. Typography ===== */
 h1, h2, h3, h4, h5, h6 {
   font-weight: 600;
   line-height: 1.2;
@@ -151,7 +505,7 @@ a:hover {
   text-decoration: underline;
 }
 
-/* ===== 4. Layout Components ===== */
+/* ===== 9. Layout Components ===== */
 .container {
   max-width: 1200px;
   margin: 0 auto;
@@ -169,7 +523,7 @@ a:hover {
   padding: 0 var(--spacing-sm);
 }
 
-/* ===== 5. Hero Section ===== */
+/* ===== 10. Hero Section ===== */
 .hero-section {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
@@ -193,12 +547,7 @@ a:hover {
   animation: shine 3s infinite;
 }
 
-@keyframes shine {
-  0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
-  100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
-}
-
-/* ===== 6. Navigation ===== */
+/* ===== 11. Navigation ===== */
 .navbar {
   backdrop-filter: blur(10px);
   transition: var(--transition-normal);
@@ -253,7 +602,7 @@ a:hover {
   width: 80%;
 }
 
-/* ===== 7. Cards & Feature Cards ===== */
+/* ===== 12. Cards & Feature Cards ===== */
 .card {
   background: var(--bg-primary);
   border-radius: var(--border-radius-lg);
@@ -308,7 +657,7 @@ a:hover {
   text-align: center;
 }
 
-/* ===== 8. Buttons ===== */
+/* ===== 13. Buttons ===== */
 .btn {
   border: none;
   border-radius: var(--border-radius-pill);
@@ -339,6 +688,15 @@ a:hover {
 .btn:hover::before {
   width: 300%;
   height: 300%;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn:disabled::before {
+  display: none;
 }
 
 .btn-primary {
@@ -383,6 +741,17 @@ a:hover {
   color: var(--text-light);
 }
 
+.btn-outline-secondary {
+  border: 2px solid var(--text-secondary);
+  color: var(--text-secondary);
+  background: transparent;
+}
+
+.btn-outline-secondary:hover {
+  background: var(--text-secondary);
+  color: var(--text-light);
+}
+
 .btn-lg {
   padding: var(--spacing-md) var(--spacing-xl);
   font-size: 1.125rem;
@@ -393,7 +762,17 @@ a:hover {
   font-size: 0.875rem;
 }
 
-/* ===== 9. Number Display Components ===== */
+/* 로딩 버튼 상태 */
+.btn .spinner-border-sm {
+  width: 1rem;
+  height: 1rem;
+}
+
+.btn:disabled .spinner-border-sm {
+  animation: spin 1s linear infinite;
+}
+
+/* ===== 14. Number Display Components ===== */
 .number-ball {
   display: inline-block;
   width: 40px;
@@ -433,16 +812,6 @@ a:hover {
   animation: pulse-cold 2s infinite;
 }
 
-@keyframes pulse-hot {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-}
-
-@keyframes pulse-cold {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(0.95); opacity: 0.8; }
-}
-
 .number-display {
   display: flex;
   flex-wrap: wrap;
@@ -459,43 +828,7 @@ a:hover {
   margin-bottom: var(--spacing-md);
 }
 
-.number-input {
-  text-align: center;
-  font-weight: bold;
-  font-size: 1.1rem;
-  border: 2px solid var(--light-color);
-  border-radius: var(--border-radius-md);
-  padding: var(--spacing-sm);
-  transition: var(--transition-normal);
-}
-
-.number-input:focus {
-  border-color: var(--secondary-color);
-  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
-  outline: none;
-}
-
-.number-input-enhanced {
-  position: relative;
-  background: var(--bg-primary);
-  border: 2px solid var(--light-color);
-  transition: var(--transition-normal);
-}
-
-.number-input-enhanced:focus {
-  border-color: var(--secondary-color);
-  transform: scale(1.05);
-}
-
-.number-input-enhanced:valid {
-  border-color: var(--success-color);
-}
-
-.number-input-enhanced:invalid {
-  border-color: var(--danger-color);
-}
-
-/* ===== 10. Prediction Results ===== */
+/* ===== 15. Prediction Results ===== */
 .prediction-result {
   background: var(--bg-primary);
   border-radius: var(--border-radius-lg);
@@ -540,7 +873,7 @@ a:hover {
   transition: width var(--transition-slow);
 }
 
-/* ===== 11. Tools & Utilities ===== */
+/* ===== 16. Tools & Utilities ===== */
 .tool-card {
   background: var(--bg-primary);
   border-radius: var(--border-radius-lg);
@@ -570,53 +903,7 @@ a:hover {
   border-left: 4px solid var(--success-color);
 }
 
-/* ===== 12. Loading States ===== */
-.loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: var(--spacing-xxl);
-}
-
-.spinner-border {
-  color: var(--secondary-color);
-}
-
-/* ===== 13. Status Indicators ===== */
-.status-indicator {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  border-radius: var(--border-radius-round);
-  margin-right: var(--spacing-sm);
-}
-
-.status-online {
-  background: var(--success-color);
-  animation: pulse-online 2s infinite;
-}
-
-.status-offline {
-  background: var(--danger-color);
-}
-
-.status-warning {
-  background: var(--warning-color);
-  animation: blink 1s infinite;
-}
-
-@keyframes pulse-online {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
-@keyframes blink {
-  0%, 50% { opacity: 1; }
-  51%, 100% { opacity: 0; }
-}
-
-/* ===== 14. Saved Numbers Management ===== */
+/* ===== 17. Saved Numbers Management ===== */
 .saved-numbers-container {
   max-height: 400px;
   overflow-y: auto;
@@ -673,7 +960,7 @@ a:hover {
   color: var(--secondary-color);
 }
 
-/* ===== 15. Store Locator ===== */
+/* ===== 18. Store Locator ===== */
 .store-item {
   background: var(--bg-primary);
   border: 1px solid var(--light-color);
@@ -719,7 +1006,12 @@ a:hover {
   color: var(--info-color);
 }
 
-/* ===== 16. Back to Top Button ===== */
+.store-results {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+/* ===== 19. Back to Top Button ===== */
 .back-to-top {
   position: fixed;
   bottom: 30px;
@@ -750,6 +1042,153 @@ a:hover {
   animation: back-to-top-appear var(--transition-normal);
 }
 
+/* ===== 20. Loading States ===== */
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xxl);
+}
+
+.spinner-border {
+  color: var(--secondary-color);
+}
+
+.loading .spinner-border {
+  width: 3rem;
+  height: 3rem;
+}
+
+/* ===== 21. Animations ===== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideOutUp {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes errorPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+@keyframes warningPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+@keyframes successSlide {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes errorShine {
+  0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+  100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+}
+
+@keyframes networkAlert {
+  from { opacity: 0.8; }
+  to { opacity: 1; }
+}
+
+@keyframes networkUnstable {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+@keyframes statusPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes inputError {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+@keyframes inputSuccess {
+  from {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+@keyframes stepPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+@keyframes pulse-hot {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+@keyframes pulse-cold {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(0.95); opacity: 0.8; }
+}
+
+@keyframes shine {
+  0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+  100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+}
+
 @keyframes back-to-top-appear {
   from {
     opacity: 0;
@@ -761,49 +1200,7 @@ a:hover {
   }
 }
 
-/* ===== 17. Alerts & Notifications ===== */
-.alert {
-  border-radius: var(--border-radius-md);
-  padding: var(--spacing-md);
-  margin: var(--spacing-md) 0;
-  border: none;
-  position: relative;
-}
-
-.alert-success {
-  background: rgba(39, 174, 96, 0.1);
-  color: var(--success-dark);
-  border-left: 4px solid var(--success-color);
-}
-
-.alert-warning {
-  background: rgba(243, 156, 18, 0.1);
-  color: var(--warning-dark);
-  border-left: 4px solid var(--warning-color);
-}
-
-.alert-danger {
-  background: rgba(231, 76, 60, 0.1);
-  color: var(--danger-dark);
-  border-left: 4px solid var(--danger-color);
-}
-
-.alert-info {
-  background: rgba(52, 152, 219, 0.1);
-  color: var(--info-dark);
-  border-left: 4px solid var(--info-color);
-}
-
-.toast {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: var(--z-toast);
-  max-width: 350px;
-  animation: toast-slide-in var(--transition-normal);
-}
-
-@keyframes toast-slide-in {
+@keyframes toastSlideIn {
   from {
     transform: translateX(100%);
     opacity: 0;
@@ -814,7 +1211,90 @@ a:hover {
   }
 }
 
-/* ===== 18. Responsive Design ===== */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes progress-bar-stripes {
+  0% { background-position: 1rem 0; }
+  100% { background-position: 0 0; }
+}
+
+/* ===== 22. Accessibility Improvements ===== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Focus styles for accessibility */
+.btn:focus,
+.form-control:focus,
+.nav-link:focus {
+  outline: 2px solid var(--secondary-color);
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --border-radius-sm: 0;
+    --border-radius-md: 0;
+    --border-radius-lg: 0;
+    --border-radius-xl: 0;
+  }
+  
+  .btn,
+  .card,
+  .feature-card,
+  .number-ball,
+  .alert {
+    border: 2px solid currentColor;
+  }
+  
+  .number-ball {
+    background: transparent;
+    color: var(--text-primary);
+  }
+}
+
+/* Screen reader only content */
+.visually-hidden-focusable:not(:focus):not(:focus-within) {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+.visually-hidden-focusable:focus {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: auto;
+  height: auto;
+  padding: 1rem;
+  margin: 0;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+  background: var(--secondary-color);
+  color: white;
+  z-index: calc(var(--z-toast) + 1);
+  text-decoration: none;
+  border-radius: 0 0 8px 0;
+}
+
+/* ===== 23. Responsive Design ===== */
 @media (max-width: 1199px) {
   .container {
     max-width: 960px;
@@ -833,6 +1313,16 @@ a:hover {
   .number-input-grid {
     grid-template-columns: repeat(3, 1fr);
     gap: var(--spacing-md);
+  }
+  
+  .navbar-nav .btn {
+    margin: 0.25rem 0;
+    width: 100%;
+    text-align: left;
+  }
+  
+  .navbar-nav .nav-item {
+    margin: 0.125rem 0;
   }
 }
 
@@ -878,6 +1368,32 @@ a:hover {
     left: 10px;
     max-width: none;
   }
+  
+  .network-status {
+    top: 70px;
+    right: var(--spacing-sm);
+    font-size: 0.75rem;
+    padding: var(--spacing-xs) var(--spacing-sm);
+  }
+  
+  .navbar-brand {
+    font-size: 1.2rem;
+  }
+  
+  .prediction-steps {
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+  
+  .step {
+    flex-direction: row;
+    gap: var(--spacing-sm);
+  }
+  
+  .step i {
+    margin-bottom: 0;
+    margin-right: var(--spacing-sm);
+  }
 }
 
 @media (max-width: 575px) {
@@ -893,9 +1409,54 @@ a:hover {
     flex-direction: column;
     gap: var(--spacing-xs);
   }
+  
+  .loading-content {
+    padding: var(--spacing-md);
+  }
+  
+  .loading-progress {
+    width: 250px;
+  }
+  
+  .error-actions .btn {
+    width: 100%;
+    margin-right: 0;
+  }
 }
 
-/* ===== 19. Dark Mode Support ===== */
+/* ===== 24. Print Styles ===== */
+@media print {
+  .navbar,
+  footer,
+  #back-to-top,
+  .loading-overlay,
+  .network-status,
+  #global-notifications,
+  .error-container,
+  .btn {
+    display: none !important;
+  }
+  
+  main {
+    padding-top: 0 !important;
+  }
+  
+  .feature-card,
+  .card,
+  .tool-card {
+    break-inside: avoid;
+    box-shadow: none;
+    border: 1px solid #ddd;
+  }
+  
+  .number-ball {
+    background: white !important;
+    color: black !important;
+    border: 1px solid black;
+  }
+}
+
+/* ===== 25. Dark Mode Support ===== */
 @media (prefers-color-scheme: dark) {
   :root {
     --bg-primary: #1a1a1a;
@@ -906,28 +1467,196 @@ a:hover {
     --light-color: #404040;
     --light-dark: #4a4a4a;
   }
-}
-
-/* ===== 20. High Contrast Support ===== */
-@media (prefers-contrast: high) {
-  :root {
-    --border-radius-sm: 0;
-    --border-radius-md: 0;
-    --border-radius-lg: 0;
-    --border-radius-xl: 0;
-  }
   
-  .btn,
   .card,
   .feature-card,
-  .number-ball,
-  .alert {
-    border: 2px solid currentColor;
-  }
-  
-  .number-ball {
-    background: transparent;
+  .tool-card {
+    background: var(--bg-primary);
     color: var(--text-primary);
   }
-}`
+  
+  .form-control {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border-color: var(--light-color);
+  }
+  
+  .hero-section {
+    background: rgba(26, 26, 26, 0.95);
+    color: var(--text-primary);
+  }
+}
+
+/* ===== 26. Custom Scrollbar ===== */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+  border-radius: var(--border-radius-sm);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--secondary-color);
+  border-radius: var(--border-radius-sm);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--secondary-dark);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--secondary-color) var(--bg-secondary);
+}
+
+/* ===== 27. Special Effects ===== */
+.glow-effect {
+  animation: glow 2s infinite alternate;
+}
+
+@keyframes glow {
+  from {
+    box-shadow: 0 0 5px var(--secondary-color);
+  }
+  to {
+    box-shadow: 0 0 20px var(--secondary-color), 0 0 30px var(--secondary-color);
+  }
+}
+
+.shake-effect {
+  animation: shake 0.5s;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+  20%, 40%, 60%, 80% { transform: translateX(10px); }
+}
+
+.bounce-effect {
+  animation: bounce 1s;
+}
+
+@keyframes bounce {
+  0%, 20%, 53%, 80%, 100% { transform: translateY(0); }
+  40%, 43% { transform: translateY(-30px); }
+  70% { transform: translateY(-15px); }
+  90% { transform: translateY(-4px); }
+}
+
+/* ===== 28. Performance Optimizations ===== */
+.will-change-transform {
+  will-change: transform;
+}
+
+.will-change-opacity {
+  will-change: opacity;
+}
+
+.gpu-accelerated {
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/* ===== 29. Browser Compatibility ===== */
+/* IE11 fallbacks */
+@supports not (display: grid) {
+  .number-input-grid {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  
+  .number-input-grid > * {
+    flex: 1 1 calc(16.666% - 1rem);
+    margin: 0.25rem;
+  }
+}
+
+/* Safari fixes */
+@supports (-webkit-touch-callout: none) {
+  .loading-overlay {
+    -webkit-backdrop-filter: blur(5px);
+  }
+  
+  .hero-section {
+    -webkit-backdrop-filter: blur(10px);
+  }
+  
+  .navbar {
+    -webkit-backdrop-filter: blur(10px);
+  }
+}
+
+/* ===== 30. Utility Classes ===== */
+.text-gradient {
+  background: var(--gradient-secondary);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+.shadow-soft {
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+}
+
+.border-gradient {
+  border: 2px solid;
+  border-image: var(--gradient-secondary) 1;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.user-select-none {
+  user-select: none;
+}
+
+.overflow-hidden {
+  overflow: hidden;
+}
+
+.position-relative {
+  position: relative;
+}
+
+.position-absolute {
+  position: absolute;
+}
+
+.w-100 {
+  width: 100%;
+}
+
+.h-100 {
+  height: 100%;
+}
+
+.d-flex {
+  display: flex;
+}
+
+.align-items-center {
+  align-items: center;
+}
+
+.justify-content-center {
+  justify-content: center;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.mt-auto {
+  margin-top: auto;
+}
+
+.mb-auto {
+  margin-bottom: auto;
 }
