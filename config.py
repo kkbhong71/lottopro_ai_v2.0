@@ -1,120 +1,119 @@
 """
-LottoPro AI v2.0 - 애플리케이션 설정
-환경별 설정 클래스와 투명성 관련 설정
+LottoPro-AI 환경 설정 관리
+개발/스테이징/프로덕션 환경별 설정 분리
 """
 
 import os
 from datetime import timedelta
-from dotenv import load_dotenv
-
-# .env 파일 로드
-load_dotenv()
+from typing import Dict, Any
 
 class Config:
     """기본 설정 클래스"""
     
-    # === 기본 Flask 설정 ===
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
+    # Flask 기본 설정
+    SECRET_KEY = os.environ.get('SECRET_KEY', 'lottopro-ai-v2-enhanced-2024-default-key')
+    PERMANENT_SESSION_LIFETIME = timedelta(days=30)
     
-    # === 데이터베이스 설정 ===
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///data/lottopro.db'
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_POOL_SIZE = int(os.environ.get('DATABASE_POOL_SIZE', 10))
-    SQLALCHEMY_POOL_TIMEOUT = int(os.environ.get('DATABASE_POOL_TIMEOUT', 30))
+    # 데이터베이스 설정 (미래 확장용)
+    DATABASE_URL = os.environ.get('DATABASE_URL', 'sqlite:///lottopro.db')
     
-    # === 투명성 및 컴플라이언스 설정 ===
-    TRANSPARENCY_MODE = os.environ.get('TRANSPARENCY_MODE', 'enabled').lower() == 'enabled'
-    DATA_RETENTION_DAYS = int(os.environ.get('DATA_RETENTION_DAYS', 365))
-    AUDIT_LOG_ENABLED = os.environ.get('AUDIT_LOG_ENABLED', 'true').lower() == 'true'
-    STATISTICAL_VALIDATION = os.environ.get('STATISTICAL_VALIDATION', 'strict')
-    
-    # === 보안 설정 ===
-    SESSION_COOKIE_SECURE = os.environ.get('SESSION_COOKIE_SECURE', 'true').lower() == 'true'
-    SESSION_COOKIE_HTTPONLY = True
-    SESSION_COOKIE_SAMESITE = 'Lax'
-    SESSION_PERMANENT = False
-    PERMANENT_SESSION_LIFETIME = timedelta(hours=1)
-    WTF_CSRF_ENABLED = os.environ.get('WTF_CSRF_ENABLED', 'true').lower() == 'true'
-    
-    # === Rate Limiting 설정 ===
-    RATELIMIT_STORAGE_URL = os.environ.get('RATELIMIT_STORAGE_URL', 'memory://')
-    RATELIMIT_DEFAULT = os.environ.get('RATELIMIT_DEFAULT', '100 per hour')
-    RATELIMIT_API = os.environ.get('RATELIMIT_API', '50 per hour')
-    
-    # === 캐시 설정 ===
-    CACHE_TYPE = os.environ.get('CACHE_TYPE', 'simple')
-    CACHE_REDIS_URL = os.environ.get('CACHE_REDIS_URL', 'redis://localhost:6379/1')
+    # Redis 캐시 설정
+    REDIS_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
+    CACHE_TYPE = os.environ.get('CACHE_TYPE', 'redis')  # redis, memory
     CACHE_DEFAULT_TIMEOUT = int(os.environ.get('CACHE_DEFAULT_TIMEOUT', 300))
+    CACHE_KEY_PREFIX = os.environ.get('CACHE_KEY_PREFIX', 'lottopro:')
     
-    # === 로깅 설정 ===
+    # 성능 모니터링 설정
+    MONITORING_ENABLED = os.environ.get('MONITORING_ENABLED', 'true').lower() == 'true'
+    MONITORING_COLLECTION_INTERVAL = int(os.environ.get('MONITORING_COLLECTION_INTERVAL', 30))
+    
+    # 성능 임계값 설정
+    PERFORMANCE_THRESHOLDS = {
+        'response_time': float(os.environ.get('THRESHOLD_RESPONSE_TIME', 10.0)),
+        'error_rate': float(os.environ.get('THRESHOLD_ERROR_RATE', 0.05)),
+        'cpu_usage': float(os.environ.get('THRESHOLD_CPU_USAGE', 80.0)),
+        'memory_usage': float(os.environ.get('THRESHOLD_MEMORY_USAGE', 85.0)),
+        'disk_usage': float(os.environ.get('THRESHOLD_DISK_USAGE', 95.0))
+    }
+    
+    # Rate Limiting 설정
+    RATE_LIMIT_ENABLED = os.environ.get('RATE_LIMIT_ENABLED', 'true').lower() == 'true'
+    RATE_LIMIT_DEFAULT = os.environ.get('RATE_LIMIT_DEFAULT', '100/hour')
+    RATE_LIMIT_PREDICT = os.environ.get('RATE_LIMIT_PREDICT', '30/hour')
+    RATE_LIMIT_SAVE_NUMBERS = os.environ.get('RATE_LIMIT_SAVE_NUMBERS', '50/hour')
+    
+    # 로그 설정
     LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO')
-    LOG_FILE = os.environ.get('LOG_FILE', 'logs/lottopro.log')
+    LOG_FORMAT = os.environ.get('LOG_FORMAT', '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    LOG_TO_FILE = os.environ.get('LOG_TO_FILE', 'false').lower() == 'true'
+    LOG_FILE_PATH = os.environ.get('LOG_FILE_PATH', 'logs/lottopro.log')
     LOG_MAX_BYTES = int(os.environ.get('LOG_MAX_BYTES', 10485760))  # 10MB
     LOG_BACKUP_COUNT = int(os.environ.get('LOG_BACKUP_COUNT', 5))
     
-    # === 모니터링 설정 ===
-    MONITORING_ENABLED = os.environ.get('MONITORING_ENABLED', 'true').lower() == 'true'
-    MONITORING_PORT = int(os.environ.get('MONITORING_PORT', 5001))
-    PROMETHEUS_METRICS = os.environ.get('PROMETHEUS_METRICS', 'true').lower() == 'true'
-    HEALTH_CHECK_INTERVAL = int(os.environ.get('HEALTH_CHECK_INTERVAL', 30))
+    # 보안 설정
+    CORS_ENABLED = os.environ.get('CORS_ENABLED', 'true').lower() == 'true'
+    CORS_ORIGINS = os.environ.get('CORS_ORIGINS', '*').split(',')
+    SECURE_HEADERS_ENABLED = os.environ.get('SECURE_HEADERS_ENABLED', 'true').lower() == 'true'
     
-    # === AI 모델 설정 ===
-    MODEL_UPDATE_INTERVAL = os.environ.get('MODEL_UPDATE_INTERVAL', 'weekly')
-    PREDICTION_HISTORY_LIMIT = int(os.environ.get('PREDICTION_HISTORY_LIMIT', 1000))
-    STATISTICAL_SIGNIFICANCE_LEVEL = float(os.environ.get('STATISTICAL_SIGNIFICANCE_LEVEL', 0.05))
+    # API 설정
+    API_VERSION = os.environ.get('API_VERSION', 'v2.1')
+    MAX_CONTENT_LENGTH = int(os.environ.get('MAX_CONTENT_LENGTH', 16 * 1024 * 1024))  # 16MB
     
-    # === 외부 서비스 설정 ===
-    LOTTERY_DATA_SOURCE = os.environ.get('LOTTERY_DATA_SOURCE', 'manual')
-    DATA_UPDATE_SCHEDULE = os.environ.get('DATA_UPDATE_SCHEDULE', '0 2 * * 6')
+    # 외부 서비스 설정
+    EXTERNAL_API_TIMEOUT = int(os.environ.get('EXTERNAL_API_TIMEOUT', 30))
+    USER_AGENT = f"LottoPro-AI/{API_VERSION} (https://lottopro-ai-v2-0.onrender.com)"
     
-    # === 법적 준수 설정 ===
-    AGE_VERIFICATION_REQUIRED = os.environ.get('AGE_VERIFICATION_REQUIRED', 'true').lower() == 'true'
-    GAMBLING_WARNING_ENABLED = os.environ.get('GAMBLING_WARNING_ENABLED', 'true').lower() == 'true'
-    JURISDICTION = os.environ.get('JURISDICTION', 'KR')
-    COMPLIANCE_MODE = os.environ.get('COMPLIANCE_MODE', 'strict')
+    # 데이터 설정
+    SAMPLE_DATA_SIZE = int(os.environ.get('SAMPLE_DATA_SIZE', 200))
+    MAX_SAVED_NUMBERS_PER_USER = int(os.environ.get('MAX_SAVED_NUMBERS_PER_USER', 50))
     
-    # === 알림 설정 ===
-    ALERT_EMAIL_ENABLED = os.environ.get('ALERT_EMAIL_ENABLED', 'false').lower() == 'true'
-    ALERT_EMAIL_SMTP_SERVER = os.environ.get('ALERT_EMAIL_SMTP_SERVER', 'smtp.gmail.com')
-    ALERT_EMAIL_PORT = int(os.environ.get('ALERT_EMAIL_PORT', 587))
-    ALERT_EMAIL_USERNAME = os.environ.get('ALERT_EMAIL_USERNAME', '')
-    ALERT_EMAIL_PASSWORD = os.environ.get('ALERT_EMAIL_PASSWORD', '')
-    ALERT_EMAIL_RECIPIENTS = os.environ.get('ALERT_EMAIL_RECIPIENTS', '').split(',')
+    # AI 예측 설정
+    AI_PREDICTION_CACHE_TTL = int(os.environ.get('AI_PREDICTION_CACHE_TTL', 300))  # 5분
+    AI_STATS_CACHE_TTL = int(os.environ.get('AI_STATS_CACHE_TTL', 600))  # 10분
+    AI_MODEL_WEIGHTS_UPDATE_INTERVAL = int(os.environ.get('AI_MODEL_WEIGHTS_UPDATE_INTERVAL', 3600))  # 1시간
     
-    # === 백업 설정 ===
-    BACKUP_ENABLED = os.environ.get('BACKUP_ENABLED', 'true').lower() == 'true'
-    BACKUP_SCHEDULE = os.environ.get('BACKUP_SCHEDULE', '0 3 * * *')
-    BACKUP_RETENTION_DAYS = int(os.environ.get('BACKUP_RETENTION_DAYS', 30))
-    BACKUP_LOCATION = os.environ.get('BACKUP_LOCATION', '/app/backups')
+    # 시뮬레이션 설정
+    MAX_SIMULATION_ROUNDS = int(os.environ.get('MAX_SIMULATION_ROUNDS', 50000))
+    SIMULATION_TIMEOUT = int(os.environ.get('SIMULATION_TIMEOUT', 20))
     
-    # === 투명성 관련 상수 ===
-    TRANSPARENCY_FEATURES = {
-        'algorithm_disclosure': True,
-        'performance_metrics': True,
-        'statistical_validation': True,
-        'prediction_history': True,
-        'model_comparison': True,
-        'real_time_monitoring': True,
-        'audit_trail': True,
-        'data_integrity_checks': True
-    }
+    # 관리자 API 설정
+    ADMIN_API_ENABLED = os.environ.get('ADMIN_API_ENABLED', 'true').lower() == 'true'
+    ADMIN_API_KEY = os.environ.get('ADMIN_API_KEY')  # 설정 시에만 활성화
     
-    ETHICAL_GUIDELINES = {
-        'no_guarantee_disclaimer': True,
-        'gambling_addiction_warning': True,
-        'age_restriction_enforcement': True,
-        'responsible_gaming_promotion': True,
-        'financial_risk_warning': True
-    }
+    @classmethod
+    def get_redis_config(cls) -> Dict[str, Any]:
+        """Redis 설정 반환"""
+        return {
+            'url': cls.REDIS_URL,
+            'default_ttl': cls.CACHE_DEFAULT_TIMEOUT,
+            'key_prefix': cls.CACHE_KEY_PREFIX,
+            'max_connections': int(os.environ.get('REDIS_MAX_CONNECTIONS', 20)),
+            'socket_timeout': int(os.environ.get('REDIS_SOCKET_TIMEOUT', 5)),
+            'socket_connect_timeout': int(os.environ.get('REDIS_SOCKET_CONNECT_TIMEOUT', 5)),
+            'retry_on_timeout': os.environ.get('REDIS_RETRY_ON_TIMEOUT', 'true').lower() == 'true'
+        }
     
-    # === 성능 설정 ===
-    JSON_SORT_KEYS = False
-    JSONIFY_PRETTYPRINT_REGULAR = False
+    @classmethod
+    def get_monitoring_config(cls) -> Dict[str, Any]:
+        """모니터링 설정 반환"""
+        return {
+            'enabled': cls.MONITORING_ENABLED,
+            'collection_interval': cls.MONITORING_COLLECTION_INTERVAL,
+            'thresholds': cls.PERFORMANCE_THRESHOLDS,
+            'auto_start': os.environ.get('MONITORING_AUTO_START', 'true').lower() == 'true',
+            'alert_enabled': os.environ.get('MONITORING_ALERT_ENABLED', 'true').lower() == 'true'
+        }
     
-    @staticmethod
-    def init_app(app):
-        """애플리케이션 초기화"""
-        pass
+    @classmethod
+    def get_cache_config(cls) -> Dict[str, Any]:
+        """캐시 설정 반환"""
+        return {
+            'type': cls.CACHE_TYPE,
+            'default_ttl': cls.CACHE_DEFAULT_TIMEOUT,
+            'memory_cache_size': int(os.environ.get('MEMORY_CACHE_SIZE', 1000)),
+            'enable_compression': os.environ.get('CACHE_COMPRESSION', 'true').lower() == 'true',
+            'enable_warming': os.environ.get('CACHE_WARMING', 'true').lower() == 'true'
+        }
 
 class DevelopmentConfig(Config):
     """개발 환경 설정"""
@@ -122,64 +121,83 @@ class DevelopmentConfig(Config):
     DEBUG = True
     TESTING = False
     
-    # 개발 환경에서는 보안 설정 완화
-    SESSION_COOKIE_SECURE = False
-    WTF_CSRF_ENABLED = False
+    # 개발용 낮은 임계값
+    PERFORMANCE_THRESHOLDS = {
+        'response_time': 15.0,
+        'error_rate': 0.1,
+        'cpu_usage': 90.0,
+        'memory_usage': 90.0,
+        'disk_usage': 98.0
+    }
     
-    # 더 자세한 로깅
+    # 개발용 관대한 Rate Limit
+    RATE_LIMIT_DEFAULT = '1000/hour'
+    RATE_LIMIT_PREDICT = '100/hour'
+    RATE_LIMIT_SAVE_NUMBERS = '200/hour'
+    
+    # 로그 레벨
     LOG_LEVEL = 'DEBUG'
+    LOG_TO_FILE = True
     
-    # 캐시 비활성화 (개발 중 즉시 반영을 위해)
-    CACHE_TYPE = 'null'
+    # 개발용 Redis (로컬)
+    REDIS_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/1')
     
-    # Rate limiting 완화
-    RATELIMIT_DEFAULT = '1000 per hour'
-    RATELIMIT_API = '500 per hour'
-    
-    # 투명성 기능 모두 활성화 (테스트용)
-    TRANSPARENCY_MODE = True
-    STATISTICAL_VALIDATION = 'permissive'
-    
-    @classmethod
-    def init_app(cls, app):
-        Config.init_app(app)
-        
-        # 개발 환경 전용 설정
-        app.logger.setLevel('DEBUG')
+    # CORS 설정 (개발용)
+    CORS_ORIGINS = ['http://localhost:3000', 'http://localhost:5000', 'http://127.0.0.1:5000']
 
 class TestingConfig(Config):
     """테스트 환경 설정"""
     
+    DEBUG = True
     TESTING = True
+    
+    # 테스트용 메모리 캐시
+    CACHE_TYPE = 'memory'
+    REDIS_URL = 'redis://localhost:6379/2'
+    
+    # 테스트용 빠른 설정
+    CACHE_DEFAULT_TIMEOUT = 10
+    AI_PREDICTION_CACHE_TTL = 10
+    AI_STATS_CACHE_TTL = 10
+    
+    # 모니터링 비활성화
+    MONITORING_ENABLED = False
+    
+    # Rate Limit 비활성화
+    RATE_LIMIT_ENABLED = False
+    
+    # 로그 최소화
+    LOG_LEVEL = 'WARNING'
+    LOG_TO_FILE = False
+    
+    # 테스트용 작은 데이터 크기
+    SAMPLE_DATA_SIZE = 50
+    MAX_SIMULATION_ROUNDS = 1000
+
+class StagingConfig(Config):
+    """스테이징 환경 설정"""
+    
     DEBUG = False
+    TESTING = False
     
-    # 테스트용 인메모리 데이터베이스
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
+    # 프로덕션과 유사하지만 약간 관대한 설정
+    PERFORMANCE_THRESHOLDS = {
+        'response_time': 12.0,
+        'error_rate': 0.08,
+        'cpu_usage': 85.0,
+        'memory_usage': 88.0,
+        'disk_usage': 95.0
+    }
     
-    # CSRF 비활성화 (테스트 편의성)
-    WTF_CSRF_ENABLED = False
+    # 스테이징용 Redis
+    REDIS_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/3')
     
-    # 캐시 비활성화
-    CACHE_TYPE = 'null'
+    # 로그 설정
+    LOG_LEVEL = 'INFO'
+    LOG_TO_FILE = True
     
-    # Rate limiting 비활성화
-    RATELIMIT_STORAGE_URL = 'memory://'
-    RATELIMIT_DEFAULT = '10000 per hour'
-    
-    # 빠른 테스트를 위한 설정
-    SESSION_PERMANENT = False
-    PERMANENT_SESSION_LIFETIME = timedelta(minutes=5)
-    
-    # 테스트 데이터 제한
-    PREDICTION_HISTORY_LIMIT = 100
-    DATA_RETENTION_DAYS = 7
-    
-    @classmethod
-    def init_app(cls, app):
-        Config.init_app(app)
-        
-        # 테스트 환경 설정
-        app.logger.disabled = True
+    # CORS 설정
+    CORS_ORIGINS = ['https://lottopro-staging.example.com']
 
 class ProductionConfig(Config):
     """프로덕션 환경 설정"""
@@ -187,92 +205,108 @@ class ProductionConfig(Config):
     DEBUG = False
     TESTING = False
     
-    # 프로덕션 보안 강화
+    # 보안 강화
     SESSION_COOKIE_SECURE = True
     SESSION_COOKIE_HTTPONLY = True
-    SESSION_COOKIE_SAMESITE = 'Strict'
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    SECURE_HEADERS_ENABLED = True
     
-    # 엄격한 투명성 및 컴플라이언스
-    TRANSPARENCY_MODE = True
-    STATISTICAL_VALIDATION = 'strict'
-    COMPLIANCE_MODE = 'strict'
+    # 엄격한 성능 임계값
+    PERFORMANCE_THRESHOLDS = {
+        'response_time': 8.0,
+        'error_rate': 0.03,
+        'cpu_usage': 75.0,
+        'memory_usage': 80.0,
+        'disk_usage': 90.0
+    }
     
-    # 프로덕션 로깅 설정
+    # 엄격한 Rate Limit
+    RATE_LIMIT_DEFAULT = '50/hour'
+    RATE_LIMIT_PREDICT = '20/hour'
+    RATE_LIMIT_SAVE_NUMBERS = '30/hour'
+    
+    # 로그 설정
     LOG_LEVEL = 'WARNING'
-    AUDIT_LOG_ENABLED = True
+    LOG_TO_FILE = True
     
-    # 성능 최적화
-    SQLALCHEMY_POOL_SIZE = 20
-    SQLALCHEMY_POOL_TIMEOUT = 30
-    CACHE_DEFAULT_TIMEOUT = 600  # 10분
+    # 압축 및 최적화
+    CACHE_COMPRESSION = True
     
-    # 모니터링 강화
-    MONITORING_ENABLED = True
-    PROMETHEUS_METRICS = True
+    # CORS 설정 (실제 도메인)
+    CORS_ORIGINS = ['https://lottopro-ai-v2-0.onrender.com']
     
-    @classmethod
-    def init_app(cls, app):
-        Config.init_app(app)
-        
-        # 프로덕션 환경 전용 설정
-        import logging
-        from logging.handlers import RotatingFileHandler
-        
-        if not os.path.exists('logs'):
-            os.mkdir('logs')
-        
-        file_handler = RotatingFileHandler(
-            cls.LOG_FILE,
-            maxBytes=cls.LOG_MAX_BYTES,
-            backupCount=cls.LOG_BACKUP_COUNT
-        )
-        file_handler.setFormatter(logging.Formatter(
-            '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
-        ))
-        file_handler.setLevel(logging.INFO)
-        app.logger.addHandler(file_handler)
-        
-        app.logger.setLevel(logging.INFO)
-        app.logger.info('LottoPro AI startup')
-
-class DockerConfig(ProductionConfig):
-    """Docker 컨테이너 환경 설정"""
-    
-    # Docker 환경에 맞는 경로 설정
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:////app/data/lottopro.db'
-    LOG_FILE = '/app/logs/lottopro.log'
-    BACKUP_LOCATION = '/app/data/backups'
-    
-    # 컨테이너 환경에서의 헬스체크
-    HEALTH_CHECK_INTERVAL = 30
-    
-    @classmethod
-    def init_app(cls, app):
-        ProductionConfig.init_app(app)
-        
-        # Docker 환경 전용 설정
-        import logging
-        
-        # 컨테이너 로그는 stdout으로 출력
-        stream_handler = logging.StreamHandler()
-        stream_handler.setLevel(logging.INFO)
-        stream_handler.setFormatter(logging.Formatter(
-            '%(asctime)s %(levelname)s: %(message)s'
-        ))
-        app.logger.addHandler(stream_handler)
+    # 관리자 API 보안
+    ADMIN_API_ENABLED = bool(os.environ.get('ADMIN_API_KEY'))
 
 # 환경별 설정 매핑
 config = {
     'development': DevelopmentConfig,
     'testing': TestingConfig,
+    'staging': StagingConfig,
     'production': ProductionConfig,
-    'docker': DockerConfig,
     'default': DevelopmentConfig
 }
 
-def get_config(config_name=None):
-    """설정 클래스 반환"""
+def get_config(config_name: str = None) -> Config:
+    """환경 설정 반환"""
     if config_name is None:
-        config_name = os.environ.get('FLASK_ENV', 'default')
+        config_name = os.environ.get('FLASK_ENV', 'development')
     
     return config.get(config_name, config['default'])
+
+def validate_config(config_obj: Config) -> list:
+    """설정 유효성 검사"""
+    errors = []
+    
+    # 필수 환경 변수 확인
+    required_vars = ['SECRET_KEY']
+    for var in required_vars:
+        if not getattr(config_obj, var) or getattr(config_obj, var) == f'lottopro-ai-v2-enhanced-2024-default-key':
+            errors.append(f"Missing or default {var}")
+    
+    # Redis URL 형식 확인
+    redis_url = config_obj.REDIS_URL
+    if redis_url and not (redis_url.startswith('redis://') or redis_url.startswith('rediss://')):
+        errors.append("Invalid Redis URL format")
+    
+    # 성능 임계값 유효성 확인
+    thresholds = config_obj.PERFORMANCE_THRESHOLDS
+    if thresholds['response_time'] <= 0:
+        errors.append("Response time threshold must be positive")
+    
+    if not 0 <= thresholds['error_rate'] <= 1:
+        errors.append("Error rate threshold must be between 0 and 1")
+    
+    for usage_key in ['cpu_usage', 'memory_usage', 'disk_usage']:
+        if not 0 <= thresholds[usage_key] <= 100:
+            errors.append(f"{usage_key} threshold must be between 0 and 100")
+    
+    return errors
+
+def print_config_summary(config_obj: Config):
+    """설정 요약 출력"""
+    print("=== LottoPro-AI Configuration Summary ===")
+    print(f"Environment: {os.environ.get('FLASK_ENV', 'development')}")
+    print(f"Debug Mode: {config_obj.DEBUG}")
+    print(f"Redis URL: {config_obj.REDIS_URL}")
+    print(f"Cache Type: {config_obj.CACHE_TYPE}")
+    print(f"Monitoring Enabled: {config_obj.MONITORING_ENABLED}")
+    print(f"Rate Limiting Enabled: {config_obj.RATE_LIMIT_ENABLED}")
+    print(f"Admin API Enabled: {config_obj.ADMIN_API_ENABLED}")
+    print(f"Log Level: {config_obj.LOG_LEVEL}")
+    print("==========================================")
+
+if __name__ == '__main__':
+    # 설정 테스트
+    config_name = os.environ.get('FLASK_ENV', 'development')
+    config_obj = get_config(config_name)
+    
+    print_config_summary(config_obj)
+    
+    errors = validate_config(config_obj)
+    if errors:
+        print("Configuration Errors:")
+        for error in errors:
+            print(f"- {error}")
+    else:
+        print("Configuration validation passed!")
