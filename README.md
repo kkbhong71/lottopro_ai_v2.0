@@ -469,4 +469,4 @@ docker-compose --profile logging up -d
 
 **⚡ LottoPro-AI v2.1 - 성능과 안정성을 겸비한 AI 로또 예측 시스템**
 
-*Made with ❤️ by LottoPro Team*
+*Made with ❤️ by LottoPro KIM*
