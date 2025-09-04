@@ -1,0 +1,87 @@
+[Unit]
+Description=LottoPro-AI Web Application with Performance Monitoring
+Documentation=https://github.com/user/lottopro-ai-v2
+After=network.target network-online.target redis.service
+Wants=network-online.target
+Requires=redis.service
+
+[Service]
+Type=simple
+User=lottopro
+Group=lottopro
+WorkingDirectory=/opt/lottopro-ai
+
+# 환경 변수 설정
+Environment=FLASK_ENV=production
+Environment=PYTHONPATH=/opt/lottopro-ai
+Environment=PATH=/opt/lottopro-ai/venv/bin:/usr/local/bin:/usr/bin:/bin
+EnvironmentFile=-/opt/lottopro-ai/.env
+
+# 실행 명령
+ExecStart=/opt/lottopro-ai/venv/bin/python app.py
+ExecReload=/bin/kill -HUP $MAINPID
+
+# 재시작 정책
+Restart=always
+RestartSec=10
+StartLimitInterval=300
+StartLimitBurst=3
+
+# 보안 설정
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/opt/lottopro-ai/logs /opt/lottopro-ai/data /opt/lottopro-ai/backups
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictRealtime=yes
+RestrictNamespaces=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+
+# 리소스 제한
+LimitNOFILE=65536
+LimitNPROC=4096
+MemoryMax=1G
+CPUQuota=200%
+
+# 로깅 설정
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=lottopro-ai
+
+# PID 파일
+PIDFile=/var/run/lottopro-ai.pid
+
+# 시작 전 준비 작업
+ExecStartPre=/bin/mkdir -p /opt/lottopro-ai/logs
+ExecStartPre=/bin/mkdir -p /opt/lottopro-ai/data/temp
+ExecStartPre=/bin/chown -R lottopro:lottopro /opt/lottopro-ai/logs
+ExecStartPre=/bin/chown -R lottopro:lottopro /opt/lottopro-ai/data
+
+# 중지 시 정리 작업
+ExecStopPost=/bin/rm -f /var/run/lottopro-ai.pid
+
+# 와치독 설정 (30초)
+WatchdogSec=30
+
+[Install]
+WantedBy=multi-user.target
+Also=redis.service
+
+# 사용법:
+# sudo cp lottopro-ai.service /etc/systemd/system/
+# sudo systemctl daemon-reload
+# sudo systemctl enable lottopro-ai
+# sudo systemctl start lottopro-ai
+# sudo systemctl status lottopro-ai
+
+# 로그 확인:
+# sudo journalctl -u lottopro-ai -f
+# sudo journalctl -u lottopro-ai --since "1 hour ago"
+
+# 성능 모니터링:
+# sudo systemctl show lottopro-ai --property=MemoryCurrent
+# sudo systemctl show lottopro-ai --property=CPUUsageNSec
