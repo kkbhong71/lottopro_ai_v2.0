@@ -3,38 +3,143 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LottoPro AI {{ version or 'v2.0' }} - AI 로또 번호 예측</title>
+    <meta name="description" content="LottoPro AI v2.0 - 5가지 독자적인 AI 모델로 분석하는 무료 로또 예측 서비스. QR스캔, 번호저장, 당첨확인, 시뮬레이션 등 15가지 프리미엄 기능 제공.">
+    <meta name="keywords" content="로또, 로또예측, AI로또, 로또번호추천, 로또당첨번호, 로또분석, QR스캔, 무료로또">
+    <meta name="author" content="LottoPro AI Team">
+    <meta name="robots" content="index, follow">
     
-    <!-- Bootstrap CSS -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="LottoPro AI v2.0 - AI 로또 예측 서비스">
+    <meta property="og:description" content="5가지 독자적인 AI 모델이 과거 데이터를 분석하여 최적의 로또 예상번호를 무료로 추천해드립니다.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://lottopro-ai-v2-0.onrender.com">
+    <meta property="og:image" content="/static/images/og-image.jpg">
+    <meta property="og:site_name" content="LottoPro AI">
+    
+    <!-- Theme Colors -->
+    <meta name="theme-color" content="#667eea">
+    <meta name="msapplication-navbutton-color" content="#667eea">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="LottoPro AI">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <title>LottoPro AI v2.0 - 무료 AI 로또 예측 서비스</title>
+    
+    <!-- Preconnect for faster loading -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet" integrity="sha512-t4GWSVZO1eC8BM339Xd7Uphw5s17a86tIZIj8qRxhnKub6WoyhnrxeCIMeAqBPgdZGlCcG2PrZjMc+Wr78+5Xg==" crossorigin="anonymous">
+    
     <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous">
+    
+    <!-- Animate.css for enhanced animations -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet" integrity="sha512-c42qTSw/wPZ3/5LBzD+Bw5f7bSF2oxou6wEb+I/lqeaKV5FDIfMvvRp772y4jcJLKuGUOpbJMdg/BTl50fJYAw==" crossorigin="anonymous">
+    
     <!-- Custom CSS -->
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    
+    <!-- Favicon and App Icons -->
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/apple-touch-icon.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    
+    <!-- Structured Data for SEO -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "LottoPro AI v2.0",
+        "description": "5가지 독자적인 AI 모델이 과거 데이터를 분석하여 최적의 로또 예상번호를 무료로 추천하는 서비스",
+        "url": "https://lottopro-ai-v2-0.onrender.com",
+        "applicationCategory": "UtilityApplication",
+        "operatingSystem": "Web Browser",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "KRW"
+        },
+        "creator": {
+            "@type": "Organization",
+            "name": "LottoPro AI Team"
+        },
+        "featureList": [
+            "5가지 AI 예측 모델",
+            "QR코드 당첨 확인",
+            "번호 저장 및 관리",
+            "당첨 시뮬레이션",
+            "로또 판매점 찾기",
+            "세금 계산기",
+            "실시간 통계 분석"
+        ]
+    }
+    </script>
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+    <!-- Skip to main content for accessibility -->
+    <a href="#main-content" class="visually-hidden-focusable">메인 콘텐츠로 건너뛰기</a>
+    
+    <!-- 전역 에러/성공 알림 컨테이너 -->
+    <div id="global-notifications" class="position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+        <!-- 토스트 메시지들이 동적으로 추가됨 -->
+    </div>
+    
+    <!-- 전역 로딩 오버레이 -->
+    <div id="global-loading-overlay" class="loading-overlay d-none">
+        <div class="loading-content">
+            <div class="loading-spinner">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">로딩 중...</span>
+                </div>
+            </div>
+            <h4 class="loading-title">처리 중입니다...</h4>
+            <p class="loading-subtitle">잠시만 기다려주세요</p>
+            <div class="loading-progress">
+                <div class="progress">
+                    <div id="loading-progress-bar" class="progress-bar progress-bar-animated" role="progressbar"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 네트워크 상태 인디케이터 -->
+    <div id="network-status" class="network-status d-none">
+        <i class="fas fa-wifi me-2"></i>
+        <span id="network-status-text">연결 확인 중...</span>
+    </div>
+
+    <!-- Enhanced Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm fixed-top">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="#">
-                <i class="fas fa-magic me-2"></i>
-                LottoPro AI {{ version or 'v2.0' }}
+            <!-- 브랜드 로고 -->
+            <a class="navbar-brand fw-bold" href="#" onclick="scrollToTop()">
+                <i class="fas fa-gem me-2 text-warning"></i>
+                <span class="d-none d-sm-inline">LottoPro AI</span>
+                <span class="d-inline d-sm-none">LottoPro</span>
+                <span class="badge bg-warning text-dark ms-2 animate__animated animate__pulse animate__infinite">{{ version or 'v2.0' }}</span>
+                <span class="badge bg-success ms-1">FREE</span>
             </a>
             
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <!-- 모바일 토글 버튼 -->
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="메뉴 토글">
                 <span class="navbar-toggler-icon"></span>
             </button>
             
+            <!-- 네비게이션 메뉴 -->
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
                         <a class="nav-link active" href="#prediction" data-bs-toggle="tab">
-                            <i class="fas fa-brain me-1"></i>AI 예측
+                            <i class="fas fa-magic me-1"></i>AI 예측
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="#statistics" data-bs-toggle="tab">
-                            <i class="fas fa-chart-bar me-1"></i>통계 분석
+                            <i class="fas fa-chart-bar me-1"></i>통계
                         </a>
                     </li>
                     <li class="nav-item">
@@ -50,12 +155,23 @@
                     </li>
                 </ul>
                 
+                <!-- 우측 버튼들 -->
                 <div class="navbar-nav">
-                    <span class="nav-link">
-                        <span class="status-indicator" id="status-indicator"></span>
-                        <span id="status-text">정상 운영</span>
+                    <!-- 연결 상태 표시 -->
+                    <span class="nav-link d-flex align-items-center">
+                        <div class="status-indicator me-2" id="connection-status">
+                            <i class="fas fa-circle text-success" id="status-icon"></i>
+                        </div>
+                        <span id="status-text" class="d-none d-md-inline">연결됨</span>
                     </span>
-                    <button class="btn btn-outline-light btn-sm ms-2" onclick="checkHealth()">
+                    
+                    <!-- 긴급 새로고침 버튼 -->
+                    <button class="btn btn-outline-light btn-sm ms-2 d-none" id="emergency-refresh-btn" onclick="handleEmergencyRefresh()">
+                        <i class="fas fa-redo me-1"></i>새로고침
+                    </button>
+                    
+                    <!-- 상태확인 버튼 -->
+                    <button class="btn btn-outline-info btn-sm ms-2" onclick="checkSystemHealth()" id="health-check-btn">
                         <i class="fas fa-heartbeat me-1"></i>상태확인
                     </button>
                 </div>
@@ -64,320 +180,645 @@
     </nav>
 
     <!-- Main Content -->
-    <div class="container-fluid">
-        <div class="tab-content mt-4">
-            
-            <!-- AI 예측 탭 -->
-            <div class="tab-pane fade show active" id="prediction">
-                <!-- Hero Section -->
-                <div class="hero-section text-center mb-4">
-                    <h1 class="display-4 fw-bold mb-4">
-                        <i class="fas fa-brain me-3 text-primary"></i>
-                        AI 기반 로또 번호 분석 시스템
-                    </h1>
-                    <p class="lead mb-4">
-                        투명한 알고리즘과 검증된 통계 분석으로 최적의 번호 조합을 제공합니다
-                    </p>
-                    
-                    <!-- 법적 고지사항 -->
-                    <div class="alert alert-warning mb-4">
-                        <div class="d-flex align-items-start">
-                            <i class="fas fa-exclamation-triangle me-2 mt-1"></i>
-                            <div>
-                                <strong>중요 고지:</strong> 본 서비스는 오락 목적이며, 로또 당첨을 보장하지 않습니다. 
-                                로또는 순수한 확률게임으로 AI 예측 역시 참고용일 뿐입니다.
-                                <br><strong>만 19세 이상만 이용 가능하며, 책임감 있는 구매를 권장합니다.</strong>
+    <main id="main-content" style="padding-top: 76px;" role="main">
+        <div class="container-fluid">
+            <div class="tab-content mt-4">
+                
+                <!-- AI 예측 탭 -->
+                <div class="tab-pane fade show active" id="prediction">
+                    <!-- Hero Section -->
+                    <div class="hero-section text-center mb-4">
+                        <h1 class="display-4 fw-bold mb-4">
+                            <i class="fas fa-brain me-3 text-primary"></i>
+                            AI 기반 로또 번호 분석 시스템
+                        </h1>
+                        <p class="lead mb-4">
+                            5가지 독자적인 AI 모델과 검증된 통계 분석으로 최적의 번호 조합을 제공합니다
+                        </p>
+                        
+                        <!-- 서비스 상태 표시 -->
+                        <div class="service-status-card mb-4" id="service-status">
+                            <div class="d-flex align-items-center justify-content-center">
+                                <div class="spinner-border spinner-border-sm text-primary me-2" role="status" id="status-spinner">
+                                    <span class="visually-hidden">상태 확인 중...</span>
+                                </div>
+                                <span id="service-status-text">서비스 상태 확인 중...</span>
+                            </div>
+                        </div>
+                        
+                        <!-- 법적 고지사항 -->
+                        <div class="alert alert-warning mb-4">
+                            <div class="d-flex align-items-start">
+                                <i class="fas fa-exclamation-triangle me-2 mt-1"></i>
+                                <div>
+                                    <strong>중요 고지:</strong> 본 서비스는 오락 목적이며, 로또 당첨을 보장하지 않습니다. 
+                                    로또는 순수한 확률게임으로 AI 예측 역시 참고용일 뿐입니다.
+                                    <br><strong>만 19세 이상만 이용 가능하며, 책임감 있는 구매를 권장합니다.</strong>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- 사용자 입력 섹션 -->
-                <div class="row justify-content-center mb-4">
-                    <div class="col-lg-8">
-                        <div class="feature-card">
-                            <h3 class="text-center mb-4">
-                                <i class="fas fa-magic me-2"></i>AI 예상번호 생성
-                            </h3>
-                            
-                            <div class="card border-0 shadow">
-                                <div class="card-header bg-primary text-white">
-                                    <h5 class="mb-0">
-                                        <i class="fas fa-heart me-2"></i>선호하는 번호 입력 (선택사항)
-                                    </h5>
-                                </div>
-                                <div class="card-body">
-                                    <p class="text-muted mb-3">
-                                        생일, 기념일 등 원하는 번호가 있다면 입력하세요. AI가 나머지를 추천해드립니다.
-                                    </p>
-                                    <div class="number-input-grid">
-                                        <input type="number" class="form-control text-center number-input" placeholder="1" min="1" max="45" id="num1">
-                                        <input type="number" class="form-control text-center number-input" placeholder="2" min="1" max="45" id="num2">
-                                        <input type="number" class="form-control text-center number-input" placeholder="3" min="1" max="45" id="num3">
-                                        <input type="number" class="form-control text-center number-input" placeholder="4" min="1" max="45" id="num4">
-                                        <input type="number" class="form-control text-center number-input" placeholder="5" min="1" max="45" id="num5">
-                                        <input type="number" class="form-control text-center number-input" placeholder="6" min="1" max="45" id="num6">
+                    <!-- 사용자 입력 섹션 -->
+                    <div class="row justify-content-center mb-4">
+                        <div class="col-lg-8">
+                            <div class="feature-card">
+                                <h3 class="text-center mb-4">
+                                    <i class="fas fa-magic me-2"></i>AI 예상번호 생성
+                                </h3>
+                                
+                                <div class="card border-0 shadow">
+                                    <div class="card-header bg-primary text-white">
+                                        <h5 class="mb-0">
+                                            <i class="fas fa-heart me-2"></i>선호하는 번호 입력 (선택사항)
+                                        </h5>
                                     </div>
-                                    
-                                    <div class="text-center mt-4">
-                                        <button class="btn btn-primary btn-lg me-3" onclick="window.lottoPro.modules.prediction.generate()">
-                                            <i class="fas fa-magic me-2"></i>AI 예상번호 생성하기
+                                    <div class="card-body">
+                                        <p class="text-muted mb-3">
+                                            생일, 기념일 등 원하는 번호가 있다면 입력하세요. AI가 나머지를 추천해드립니다.
+                                        </p>
+                                        
+                                        <!-- 입력 에러 표시 영역 -->
+                                        <div id="input-error-container" class="error-container d-none mb-3">
+                                            <div class="alert alert-danger error-message" role="alert">
+                                                <i class="fas fa-exclamation-circle me-2"></i>
+                                                <span id="input-error-message">오류가 발생했습니다.</span>
+                                                <button type="button" class="btn-close btn-close-white" onclick="hideInputError()"></button>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="number-input-grid">
+                                            <input type="number" class="form-control text-center number-input" 
+                                                placeholder="1" min="1" max="45" id="num1" 
+                                                oninput="validateNumberInput(this)" onblur="validateNumberInput(this)">
+                                            <input type="number" class="form-control text-center number-input" 
+                                                placeholder="2" min="1" max="45" id="num2"
+                                                oninput="validateNumberInput(this)" onblur="validateNumberInput(this)">
+                                            <input type="number" class="form-control text-center number-input" 
+                                                placeholder="3" min="1" max="45" id="num3"
+                                                oninput="validateNumberInput(this)" onblur="validateNumberInput(this)">
+                                            <input type="number" class="form-control text-center number-input" 
+                                                placeholder="4" min="1" max="45" id="num4"
+                                                oninput="validateNumberInput(this)" onblur="validateNumberInput(this)">
+                                            <input type="number" class="form-control text-center number-input" 
+                                                placeholder="5" min="1" max="45" id="num5"
+                                                oninput="validateNumberInput(this)" onblur="validateNumberInput(this)">
+                                            <input type="number" class="form-control text-center number-input" 
+                                                placeholder="6" min="1" max="45" id="num6"
+                                                oninput="validateNumberInput(this)" onblur="validateNumberInput(this)">
+                                        </div>
+                                        
+                                        <!-- 입력 도움말 -->
+                                        <div class="input-help mt-2">
+                                            <small class="text-muted">
+                                                <i class="fas fa-info-circle me-1"></i>
+                                                1-45 범위의 숫자를 입력하세요. 중복 번호는 자동으로 제거됩니다.
+                                            </small>
+                                        </div>
+                                        
+                                        <div class="text-center mt-4">
+                                            <button class="btn btn-primary btn-lg me-3" id="predict-btn" onclick="generatePrediction()">
+                                                <i class="fas fa-magic me-2"></i>AI 예상번호 생성하기
+                                                <span class="spinner-border spinner-border-sm ms-2 d-none" id="predict-spinner" role="status"></span>
+                                            </button>
+                                            <button class="btn btn-outline-secondary" onclick="generateRandomAndPredict()" id="random-predict-btn">
+                                                <i class="fas fa-dice me-2"></i>랜덤 생성
+                                            </button>
+                                        </div>
+                                        
+                                        <!-- 빠른 액션 버튼들 -->
+                                        <div class="text-center mt-3">
+                                            <div class="btn-group" role="group">
+                                                <button type="button" class="btn btn-outline-info btn-sm" onclick="clearAllInputs()">
+                                                    <i class="fas fa-eraser me-1"></i>전체 지우기
+                                                </button>
+                                                <button type="button" class="btn btn-outline-success btn-sm" onclick="fillRandomNumbers()">
+                                                    <i class="fas fa-random me-1"></i>랜덤 입력
+                                                </button>
+                                                <button type="button" class="btn btn-outline-warning btn-sm" onclick="showNumberHelper()">
+                                                    <i class="fas fa-question-circle me-1"></i>도움말
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 예측 진행 상태 -->
+                    <div id="prediction-progress" class="progress-container d-none mb-4">
+                        <div class="card border-primary">
+                            <div class="card-body text-center">
+                                <div class="prediction-steps">
+                                    <div class="step active" id="step-1">
+                                        <i class="fas fa-cog fa-spin"></i>
+                                        <span>데이터 준비 중...</span>
+                                    </div>
+                                    <div class="step" id="step-2">
+                                        <i class="fas fa-brain"></i>
+                                        <span>AI 모델 분석 중...</span>
+                                    </div>
+                                    <div class="step" id="step-3">
+                                        <i class="fas fa-chart-line"></i>
+                                        <span>결과 생성 중...</span>
+                                    </div>
+                                </div>
+                                <div class="progress mt-3">
+                                    <div id="prediction-progress-bar" class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%"></div>
+                                </div>
+                                <p class="text-muted mt-2 mb-0">
+                                    <span id="progress-message">AI가 1185회차 데이터를 분석하고 있습니다...</span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 에러 상태 표시 -->
+                    <div id="prediction-error" class="error-container d-none mb-4">
+                        <div class="alert alert-danger error-message-expanded" role="alert">
+                            <div class="error-header">
+                                <i class="fas fa-exclamation-triangle fa-2x text-danger mb-3"></i>
+                                <h4 class="alert-heading">예측 생성 중 오류가 발생했습니다</h4>
+                            </div>
+                            <div class="error-body">
+                                <p class="mb-3"><strong>오류 내용:</strong> <span id="prediction-error-message">알 수 없는 오류</span></p>
+                                <p class="mb-3"><strong>오류 코드:</strong> <code id="prediction-error-code">ERR_UNKNOWN</code></p>
+                                <hr>
+                                <div class="error-actions">
+                                    <h6>해결 방법:</h6>
+                                    <ul class="mb-3" id="error-solutions">
+                                        <li>잠시 후 다시 시도해 주세요.</li>
+                                        <li>입력한 번호를 확인해 주세요.</li>
+                                        <li>문제가 지속되면 새로고침해 주세요.</li>
+                                    </ul>
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-danger" onclick="retryPrediction()">
+                                            <i class="fas fa-redo me-2"></i>다시 시도
                                         </button>
-                                        <button class="btn btn-outline-secondary" onclick="generateRandomAndPredict()">
-                                            <i class="fas fa-dice me-2"></i>랜덤 생성
+                                        <button class="btn btn-outline-secondary" onclick="hidePredictionError()">
+                                            <i class="fas fa-times me-2"></i>닫기
+                                        </button>
+                                        <button class="btn btn-outline-info" onclick="reportError()">
+                                            <i class="fas fa-bug me-2"></i>오류 신고
                                         </button>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                
-                <!-- 로딩 -->
-                <div id="loading" class="loading">
-                    <div class="spinner-border mb-3" role="status"></div>
-                    <h4>AI 모델이 데이터를 분석하고 있습니다...</h4>
-                    <p class="text-muted">잠시만 기다려주세요. 최적의 번호를 찾고 있어요!</p>
-                </div>
-                
-                <!-- 결과 -->
-                <div id="results" style="display: none;">
-                    <!-- TOP 추천 -->
-                    <div class="feature-card mb-4">
-                        <h4 class="text-center mb-4">
-                            <i class="fas fa-crown me-2 text-warning"></i>AI 최고 추천 번호
-                        </h4>
-                        <div class="row" id="top-recommendations">
-                            <!-- 동적 생성 -->
-                        </div>
-                    </div>
                     
-                    <!-- 모델별 결과 -->
-                    <div class="feature-card">
-                        <h4 class="text-center mb-4">
-                            <i class="fas fa-robot me-2 text-info"></i>모델별 상세 분석 결과
-                        </h4>
-                        <div class="row" id="model-results">
-                            <!-- 동적 생성 -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- 통계 분석 탭 -->
-            <div class="tab-pane fade" id="statistics">
-                <div class="row">
-                    <div class="col-lg-6 mb-4">
-                        <div class="feature-card h-100">
-                            <h4 class="mb-3">
-                                <i class="fas fa-fire text-danger me-2"></i>핫 넘버
+                    <!-- 결과 -->
+                    <div id="results" class="d-none">
+                        <!-- TOP 추천 -->
+                        <div class="feature-card mb-4">
+                            <h4 class="text-center mb-4">
+                                <i class="fas fa-crown me-2 text-warning"></i>AI 최고 추천 번호
                             </h4>
-                            <div id="hotNumbers" class="number-display">
-                                <div class="loading">데이터 로딩 중...</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="col-lg-6 mb-4">
-                        <div class="feature-card h-100">
-                            <h4 class="mb-3">
-                                <i class="fas fa-snowflake text-info me-2"></i>콜드 넘버
-                            </h4>
-                            <div id="coldNumbers" class="number-display">
-                                <div class="loading">데이터 로딩 중...</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="row">
-                    <div class="col-lg-4 mb-4">
-                        <div class="feature-card h-100">
-                            <h5 class="mb-3">
-                                <i class="fas fa-arrow-right text-warning me-2"></i>이월수 분석
-                            </h5>
-                            <div id="carryOverAnalysis">
-                                <div class="loading">분석 중...</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="col-lg-4 mb-4">
-                        <div class="feature-card h-100">
-                            <h5 class="mb-3">
-                                <i class="fas fa-handshake text-success me-2"></i>궁합수 분석
-                            </h5>
-                            <div id="companionAnalysis">
-                                <div class="loading">분석 중...</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="col-lg-4 mb-4">
-                        <div class="feature-card h-100">
-                            <h5 class="mb-3">
-                                <i class="fas fa-chart-line text-primary me-2"></i>패턴 분석
-                            </h5>
-                            <div id="patternAnalysis">
-                                <div class="loading">분석 중...</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- 도구 탭 -->
-            <div class="tab-pane fade" id="tools">
-                <div class="row">
-                    <div class="col-lg-4 mb-4">
-                        <div class="tool-card">
-                            <div class="tool-icon text-success">
-                                <i class="fas fa-calculator"></i>
-                            </div>
-                            <h5>세금 계산기</h5>
-                            <p class="text-muted">당첨금의 세금을 미리 계산해보세요</p>
-                            <div class="mb-3">
-                                <input type="number" class="form-control" id="tax-amount" placeholder="당첨금액 입력">
-                            </div>
-                            <button class="btn btn-success w-100" onclick="window.lottoPro.modules.tools.calculateTax()">
-                                <i class="fas fa-calculator me-2"></i>계산하기
-                            </button>
-                            <div id="tax-result" class="mt-3 d-none"></div>
-                        </div>
-                    </div>
-                    
-                    <div class="col-lg-4 mb-4">
-                        <div class="tool-card">
-                            <div class="tool-icon text-primary">
-                                <i class="fas fa-chart-area"></i>
-                            </div>
-                            <h5>당첨 시뮬레이션</h5>
-                            <p class="text-muted">내 번호로 가상 시뮬레이션</p>
-                            <div class="mb-3">
-                                <input type="number" class="form-control" id="sim-rounds" placeholder="시뮬레이션 횟수" value="1000">
-                            </div>
-                            <button class="btn btn-primary w-100" onclick="runSimulation()">
-                                <i class="fas fa-play me-2"></i>시뮬레이션
-                            </button>
-                            <div id="simulation-result" class="mt-3 d-none"></div>
-                        </div>
-                    </div>
-                    
-                    <div class="col-lg-4 mb-4">
-                        <div class="tool-card">
-                            <div class="tool-icon text-warning">
-                                <i class="fas fa-qrcode"></i>
-                            </div>
-                            <h5>QR 코드 생성</h5>
-                            <p class="text-muted">번호를 QR 코드로 변환</p>
-                            <button class="btn btn-warning w-100" onclick="generateQRCode()">
-                                <i class="fas fa-qrcode me-2"></i>QR 생성
-                            </button>
-                            <div id="qr-result" class="mt-3 text-center"></div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="row">
-                    <div class="col-lg-6 mb-4">
-                        <div class="feature-card">
-                            <h5 class="mb-3">
-                                <i class="fas fa-map-marker-alt text-danger me-2"></i>판매점 찾기
-                            </h5>
-                            <div class="input-group mb-3">
-                                <input type="text" class="form-control" id="store-search" placeholder="지역명 입력 (예: 강남, 평택)">
-                                <button class="btn btn-outline-secondary" type="button" onclick="searchStores()">
-                                    <i class="fas fa-search"></i>
-                                </button>
-                                <button class="btn btn-outline-primary" type="button" onclick="getCurrentLocation()">
-                                    <i class="fas fa-location-arrow"></i>내 위치
-                                </button>
-                            </div>
-                            <div id="store-results" class="store-results"></div>
-                        </div>
-                    </div>
-                    
-                    <div class="col-lg-6 mb-4">
-                        <div class="feature-card">
-                            <h5 class="mb-3">
-                                <i class="fas fa-trophy text-success me-2"></i>당첨 확인
-                            </h5>
-                            <p class="text-muted mb-3">내 번호가 당첨되었는지 확인해보세요</p>
-                            <div class="number-input-grid mb-3">
-                                <input type="number" class="form-control text-center" placeholder="1" min="1" max="45" id="check1">
-                                <input type="number" class="form-control text-center" placeholder="2" min="1" max="45" id="check2">
-                                <input type="number" class="form-control text-center" placeholder="3" min="1" max="45" id="check3">
-                                <input type="number" class="form-control text-center" placeholder="4" min="1" max="45" id="check4">
-                                <input type="number" class="form-control text-center" placeholder="5" min="1" max="45" id="check5">
-                                <input type="number" class="form-control text-center" placeholder="6" min="1" max="45" id="check6">
-                            </div>
-                            <button class="btn btn-success w-100" onclick="checkWinning()">
-                                <i class="fas fa-search me-2"></i>당첨 확인
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- 내 번호 탭 -->
-            <div class="tab-pane fade" id="numbers">
-                <div class="row">
-                    <div class="col-lg-8">
-                        <div class="feature-card">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h4>
-                                    <i class="fas fa-heart text-danger me-2"></i>저장된 번호
-                                    <span class="badge bg-primary" id="total-saved">0</span>
-                                </h4>
-                                <button class="btn btn-outline-primary" onclick="window.lottoPro.events.openQuickSaveModal()">
-                                    <i class="fas fa-plus me-2"></i>빠른 저장
-                                </button>
-                            </div>
-                            <div id="saved-numbers-list">
+                            <div class="row" id="top-recommendations">
                                 <!-- 동적 생성 -->
                             </div>
                         </div>
-                    </div>
-                    
-                    <div class="col-lg-4">
+                        
+                        <!-- 모델별 결과 -->
                         <div class="feature-card">
-                            <h5 class="mb-3">
-                                <i class="fas fa-plus-circle text-success me-2"></i>번호 저장
-                            </h5>
-                            <div class="mb-3">
-                                <label class="form-label">라벨</label>
-                                <input type="text" class="form-control" id="save-label" placeholder="예: 생일 번호">
+                            <h4 class="text-center mb-4">
+                                <i class="fas fa-robot me-2 text-info"></i>모델별 상세 분석 결과
+                            </h4>
+                            <div class="row" id="model-results">
+                                <!-- 동적 생성 -->
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label">번호</label>
-                                <div class="number-input-grid">
-                                    <input type="number" class="form-control text-center" placeholder="1" min="1" max="45" id="save-num1">
-                                    <input type="number" class="form-control text-center" placeholder="2" min="1" max="45" id="save-num2">
-                                    <input type="number" class="form-control text-center" placeholder="3" min="1" max="45" id="save-num3">
-                                    <input type="number" class="form-control text-center" placeholder="4" min="1" max="45" id="save-num4">
-                                    <input type="number" class="form-control text-center" placeholder="5" min="1" max="45" id="save-num5">
-                                    <input type="number" class="form-control text-center" placeholder="6" min="1" max="45" id="save-num6">
-                                </div>
-                            </div>
-                            <button class="btn btn-success w-100" onclick="window.lottoPro.modules.savedNumbers.save()">
-                                <i class="fas fa-save me-2"></i>저장하기
-                            </button>
                         </div>
                         
-                        <div class="feature-card mt-4">
-                            <h5 class="mb-3">
-                                <i class="fas fa-dice text-warning me-2"></i>랜덤 생성
-                            </h5>
-                            <div class="mb-3">
-                                <label class="form-label">생성 개수</label>
-                                <input type="number" class="form-control" id="random-count" value="1" min="1" max="5">
+                        <!-- 결과 액션 버튼들 -->
+                        <div class="text-center mt-4">
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-success" onclick="saveTopRecommendation()">
+                                    <i class="fas fa-heart me-2"></i>최고 추천 저장
+                                </button>
+                                <button type="button" class="btn btn-info" onclick="generateQRFromResults()">
+                                    <i class="fas fa-qrcode me-2"></i>QR 코드 생성
+                                </button>
+                                <button type="button" class="btn btn-outline-primary" onclick="generatePrediction()">
+                                    <i class="fas fa-redo me-2"></i>새로 생성
+                                </button>
                             </div>
-                            <button class="btn btn-warning w-100" onclick="generateRandomNumbers()">
-                                <i class="fas fa-dice me-2"></i>랜덤 생성
-                            </button>
-                            <div id="random-results" class="mt-3"></div>
                         </div>
                     </div>
+                </div>
+                
+                <!-- 통계 분석 탭 -->
+                <div class="tab-pane fade" id="statistics">
+                    <!-- 통계 로딩 상태 -->
+                    <div id="stats-loading" class="text-center py-5">
+                        <div class="spinner-border text-primary mb-3" role="status">
+                            <span class="visually-hidden">통계 로딩 중...</span>
+                        </div>
+                        <h4>통계 데이터 로딩 중...</h4>
+                        <p class="text-muted">1185회차 데이터를 분석하고 있습니다.</p>
+                    </div>
+                    
+                    <!-- 통계 에러 상태 -->
+                    <div id="stats-error" class="error-container d-none">
+                        <div class="alert alert-warning error-message" role="alert">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>통계 데이터 로드 실패</strong>
+                            <p class="mb-2">통계 데이터를 불러오는 중 오류가 발생했습니다.</p>
+                            <button class="btn btn-warning btn-sm" onclick="retryStatsLoad()">
+                                <i class="fas fa-redo me-2"></i>다시 시도
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 통계 콘텐츠 -->
+                    <div id="stats-content" class="d-none">
+                        <div class="row">
+                            <div class="col-lg-6 mb-4">
+                                <div class="feature-card h-100">
+                                    <h4 class="mb-3">
+                                        <i class="fas fa-fire text-danger me-2"></i>핫 넘버
+                                    </h4>
+                                    <div id="hotNumbers" class="number-display">
+                                        <!-- 동적 생성 -->
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-lg-6 mb-4">
+                                <div class="feature-card h-100">
+                                    <h4 class="mb-3">
+                                        <i class="fas fa-snowflake text-info me-2"></i>콜드 넘버
+                                    </h4>
+                                    <div id="coldNumbers" class="number-display">
+                                        <!-- 동적 생성 -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-lg-4 mb-4">
+                                <div class="feature-card h-100">
+                                    <h5 class="mb-3">
+                                        <i class="fas fa-arrow-right text-warning me-2"></i>이월수 분석
+                                    </h5>
+                                    <div id="carryOverAnalysis">
+                                        <!-- 동적 생성 -->
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-lg-4 mb-4">
+                                <div class="feature-card h-100">
+                                    <h5 class="mb-3">
+                                        <i class="fas fa-handshake text-success me-2"></i>궁합수 분석
+                                    </h5>
+                                    <div id="companionAnalysis">
+                                        <!-- 동적 생성 -->
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-lg-4 mb-4">
+                                <div class="feature-card h-100">
+                                    <h5 class="mb-3">
+                                        <i class="fas fa-chart-line text-primary me-2"></i>패턴 분석
+                                    </h5>
+                                    <div id="patternAnalysis">
+                                        <!-- 동적 생성 -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 도구 탭 -->
+                <div class="tab-pane fade" id="tools">
+                    <div class="row">
+                        <div class="col-lg-4 mb-4">
+                            <div class="tool-card">
+                                <div class="tool-icon text-success">
+                                    <i class="fas fa-calculator"></i>
+                                </div>
+                                <h5>세금 계산기</h5>
+                                <p class="text-muted">당첨금의 세금을 미리 계산해보세요</p>
+                                
+                                <!-- 세금 계산 에러 표시 -->
+                                <div id="tax-error" class="error-container d-none mb-3">
+                                    <div class="alert alert-danger alert-sm" role="alert">
+                                        <i class="fas fa-exclamation-circle me-1"></i>
+                                        <span id="tax-error-message">입력 오류</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <input type="number" class="form-control" id="tax-amount" 
+                                        placeholder="당첨금액 입력" min="0" max="100000000000"
+                                        oninput="validateTaxInput(this)">
+                                    <div class="form-text">최대 1,000억원까지 계산 가능</div>
+                                </div>
+                                <button class="btn btn-success w-100" onclick="calculateTax()" id="tax-calc-btn">
+                                    <i class="fas fa-calculator me-2"></i>계산하기
+                                    <span class="spinner-border spinner-border-sm ms-2 d-none" id="tax-spinner"></span>
+                                </button>
+                                <div id="tax-result" class="mt-3 d-none"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-lg-4 mb-4">
+                            <div class="tool-card">
+                                <div class="tool-icon text-primary">
+                                    <i class="fas fa-chart-area"></i>
+                                </div>
+                                <h5>당첨 시뮬레이션</h5>
+                                <p class="text-muted">내 번호로 가상 시뮬레이션</p>
+                                
+                                <!-- 시뮬레이션 에러 표시 -->
+                                <div id="sim-error" class="error-container d-none mb-3">
+                                    <div class="alert alert-danger alert-sm" role="alert">
+                                        <i class="fas fa-exclamation-circle me-1"></i>
+                                        <span id="sim-error-message">시뮬레이션 오류</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <input type="number" class="form-control" id="sim-rounds" 
+                                        placeholder="시뮬레이션 횟수" value="1000" min="1" max="50000"
+                                        oninput="validateSimInput(this)">
+                                    <div class="form-text">1~50,000회 범위 (권장: 1,000회)</div>
+                                </div>
+                                <button class="btn btn-primary w-100" onclick="runSimulation()" id="sim-btn">
+                                    <i class="fas fa-play me-2"></i>시뮬레이션
+                                    <span class="spinner-border spinner-border-sm ms-2 d-none" id="sim-spinner"></span>
+                                </button>
+                                <div id="simulation-result" class="mt-3 d-none"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-lg-4 mb-4">
+                            <div class="tool-card">
+                                <div class="tool-icon text-warning">
+                                    <i class="fas fa-qrcode"></i>
+                                </div>
+                                <h5>QR 코드 생성</h5>
+                                <p class="text-muted">번호를 QR 코드로 변환</p>
+                                
+                                <!-- QR 생성 에러 표시 -->
+                                <div id="qr-error" class="error-container d-none mb-3">
+                                    <div class="alert alert-danger alert-sm" role="alert">
+                                        <i class="fas fa-exclamation-circle me-1"></i>
+                                        <span id="qr-error-message">QR 생성 오류</span>
+                                    </div>
+                                </div>
+                                
+                                <button class="btn btn-warning w-100" onclick="generateQRCode()" id="qr-btn">
+                                    <i class="fas fa-qrcode me-2"></i>QR 생성
+                                    <span class="spinner-border spinner-border-sm ms-2 d-none" id="qr-spinner"></span>
+                                </button>
+                                <div id="qr-result" class="mt-3 text-center"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-lg-6 mb-4">
+                            <div class="feature-card">
+                                <h5 class="mb-3">
+                                    <i class="fas fa-map-marker-alt text-danger me-2"></i>판매점 찾기
+                                </h5>
+                                
+                                <!-- 판매점 검색 에러 표시 -->
+                                <div id="store-error" class="error-container d-none mb-3">
+                                    <div class="alert alert-warning alert-sm" role="alert">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>
+                                        <span id="store-error-message">검색 오류</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="input-group mb-3">
+                                    <input type="text" class="form-control" id="store-search" 
+                                        placeholder="지역명 입력 (예: 강남, 평택)" maxlength="50">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="searchStores()" id="store-search-btn">
+                                        <i class="fas fa-search"></i>
+                                        <span class="spinner-border spinner-border-sm ms-1 d-none" id="store-search-spinner"></span>
+                                    </button>
+                                    <button class="btn btn-outline-primary" type="button" onclick="getCurrentLocation()" id="location-btn">
+                                        <i class="fas fa-location-arrow"></i>내 위치
+                                        <span class="spinner-border spinner-border-sm ms-1 d-none" id="location-spinner"></span>
+                                    </button>
+                                </div>
+                                <div id="store-results" class="store-results"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-lg-6 mb-4">
+                            <div class="feature-card">
+                                <h5 class="mb-3">
+                                    <i class="fas fa-trophy text-success me-2"></i>당첨 확인
+                                </h5>
+                                <p class="text-muted mb-3">내 번호가 당첨되었는지 확인해보세요</p>
+                                
+                                <!-- 당첨 확인 에러 표시 -->
+                                <div id="winning-error" class="error-container d-none mb-3">
+                                    <div class="alert alert-danger alert-sm" role="alert">
+                                        <i class="fas fa-exclamation-circle me-1"></i>
+                                        <span id="winning-error-message">당첨 확인 오류</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="number-input-grid mb-3">
+                                    <input type="number" class="form-control text-center" placeholder="1" min="1" max="45" id="check1" 
+                                        oninput="validateNumberInput(this)">
+                                    <input type="number" class="form-control text-center" placeholder="2" min="1" max="45" id="check2"
+                                        oninput="validateNumberInput(this)">
+                                    <input type="number" class="form-control text-center" placeholder="3" min="1" max="45" id="check3"
+                                        oninput="validateNumberInput(this)">
+                                    <input type="number" class="form-control text-center" placeholder="4" min="1" max="45" id="check4"
+                                        oninput="validateNumberInput(this)">
+                                    <input type="number" class="form-control text-center" placeholder="5" min="1" max="45" id="check5"
+                                        oninput="validateNumberInput(this)">
+                                    <input type="number" class="form-control text-center" placeholder="6" min="1" max="45" id="check6"
+                                        oninput="validateNumberInput(this)">
+                                </div>
+                                <button class="btn btn-success w-100" onclick="checkWinning()" id="winning-check-btn">
+                                    <i class="fas fa-search me-2"></i>당첨 확인
+                                    <span class="spinner-border spinner-border-sm ms-2 d-none" id="winning-spinner"></span>
+                                </button>
+                                <div id="winning-result" class="mt-3 d-none"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 내 번호 탭 -->
+                <div class="tab-pane fade" id="numbers">
+                    <div class="row">
+                        <div class="col-lg-8">
+                            <div class="feature-card">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h4>
+                                        <i class="fas fa-heart text-danger me-2"></i>저장된 번호
+                                        <span class="badge bg-primary" id="total-saved">0</span>
+                                    </h4>
+                                    <div class="btn-group">
+                                        <button class="btn btn-outline-primary" onclick="openQuickSaveModal()">
+                                            <i class="fas fa-plus me-2"></i>빠른 저장
+                                        </button>
+                                        <button class="btn btn-outline-secondary" onclick="exportSavedNumbers()">
+                                            <i class="fas fa-download me-2"></i>내보내기
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- 저장된 번호 로딩/에러 상태 -->
+                                <div id="saved-numbers-loading" class="text-center py-3">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">로딩 중...</span>
+                                    </div>
+                                    <p class="text-muted mt-2">저장된 번호를 불러오고 있습니다...</p>
+                                </div>
+                                
+                                <div id="saved-numbers-error" class="error-container d-none">
+                                    <div class="alert alert-warning" role="alert">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                        저장된 번호를 불러올 수 없습니다.
+                                        <button class="btn btn-warning btn-sm ms-2" onclick="loadSavedNumbers()">
+                                            <i class="fas fa-redo me-1"></i>다시 시도
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div id="saved-numbers-list" class="d-none">
+                                    <!-- 동적 생성 -->
+                                </div>
+                                
+                                <!-- 빈 상태 -->
+                                <div id="saved-numbers-empty" class="text-center py-5 d-none">
+                                    <i class="fas fa-heart-broken fa-3x text-muted mb-3"></i>
+                                    <h5 class="text-muted">저장된 번호가 없습니다</h5>
+                                    <p class="text-muted">소중한 번호들을 저장해보세요!</p>
+                                    <button class="btn btn-primary" onclick="openQuickSaveModal()">
+                                        <i class="fas fa-plus me-2"></i>첫 번호 저장하기
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-lg-4">
+                            <div class="feature-card">
+                                <h5 class="mb-3">
+                                    <i class="fas fa-plus-circle text-success me-2"></i>번호 저장
+                                </h5>
+                                
+                                <!-- 저장 에러 표시 -->
+                                <div id="save-error" class="error-container d-none mb-3">
+                                    <div class="alert alert-danger alert-sm" role="alert">
+                                        <i class="fas fa-exclamation-circle me-1"></i>
+                                        <span id="save-error-message">저장 오류</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">라벨</label>
+                                    <input type="text" class="form-control" id="save-label" 
+                                        placeholder="예: 생일 번호" maxlength="50"
+                                        oninput="validateSaveLabel(this)">
+                                    <div class="form-text">최대 50자까지 입력 가능</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">번호</label>
+                                    <div class="number-input-grid">
+                                        <input type="number" class="form-control text-center" placeholder="1" min="1" max="45" id="save-num1"
+                                            oninput="validateNumberInput(this)">
+                                        <input type="number" class="form-control text-center" placeholder="2" min="1" max="45" id="save-num2"
+                                            oninput="validateNumberInput(this)">
+                                        <input type="number" class="form-control text-center" placeholder="3" min="1" max="45" id="save-num3"
+                                            oninput="validateNumberInput(this)">
+                                        <input type="number" class="form-control text-center" placeholder="4" min="1" max="45" id="save-num4"
+                                            oninput="validateNumberInput(this)">
+                                        <input type="number" class="form-control text-center" placeholder="5" min="1" max="45" id="save-num5"
+                                            oninput="validateNumberInput(this)">
+                                        <input type="number" class="form-control text-center" placeholder="6" min="1" max="45" id="save-num6"
+                                            oninput="validateNumberInput(this)">
+                                    </div>
+                                </div>
+                                <button class="btn btn-success w-100" onclick="saveNumbers()" id="save-btn">
+                                    <i class="fas fa-save me-2"></i>저장하기
+                                    <span class="spinner-border spinner-border-sm ms-2 d-none" id="save-spinner"></span>
+                                </button>
+                            </div>
+                            
+                            <div class="feature-card mt-4">
+                                <h5 class="mb-3">
+                                    <i class="fas fa-dice text-warning me-2"></i>랜덤 생성
+                                </h5>
+                                
+                                <!-- 랜덤 생성 에러 표시 -->
+                                <div id="random-error" class="error-container d-none mb-3">
+                                    <div class="alert alert-danger alert-sm" role="alert">
+                                        <i class="fas fa-exclamation-circle me-1"></i>
+                                        <span id="random-error-message">랜덤 생성 오류</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">생성 개수</label>
+                                    <input type="number" class="form-control" id="random-count" value="1" min="1" max="10"
+                                        oninput="validateRandomCount(this)">
+                                    <div class="form-text">1~10개까지 생성 가능</div>
+                                </div>
+                                <button class="btn btn-warning w-100" onclick="generateRandomNumbers()" id="random-btn">
+                                    <i class="fas fa-dice me-2"></i>랜덤 생성
+                                    <span class="spinner-border spinner-border-sm ms-2 d-none" id="random-spinner"></span>
+                                </button>
+                                <div id="random-results" class="mt-3"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 번호 도움말 모달 -->
+    <div class="modal fade" id="numberHelpModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-question-circle me-2"></i>번호 입력 도움말
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <h6><i class="fas fa-info-circle text-primary me-2"></i>입력 규칙</h6>
+                    <ul class="mb-3">
+                        <li>1부터 45까지의 숫자만 입력 가능합니다</li>
+                        <li>중복된 번호는 자동으로 제거됩니다</li>
+                        <li>6개 모두 입력하지 않아도 됩니다</li>
+                        <li>빈 칸은 AI가 자동으로 추천합니다</li>
+                    </ul>
+                    
+                    <h6><i class="fas fa-lightbulb text-warning me-2"></i>추천 방법</h6>
+                    <ul class="mb-3">
+                        <li><strong>생일:</strong> 본인이나 가족의 생일 사용</li>
+                        <li><strong>기념일:</strong> 의미 있는 날짜 활용</li>
+                        <li><strong>통계:</strong> 핫넘버나 콜드넘버 참고</li>
+                        <li><strong>패턴:</strong> 연속번호나 간격 번호 조합</li>
+                    </ul>
+                    
+                    <h6><i class="fas fa-exclamation-triangle text-danger me-2"></i>주의사항</h6>
+                    <p class="text-muted mb-0">
+                        번호 선택은 순전히 개인의 선택이며, 어떤 번호든 당첨 확률은 동일합니다. 
+                        AI 추천도 참고용이므로 책임감 있게 이용해 주세요.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+                    <button type="button" class="btn btn-primary" onclick="fillRandomNumbers(); bootstrap.Modal.getInstance(document.getElementById('numberHelpModal')).hide();">
+                        <i class="fas fa-dice me-2"></i>랜덤 채우기
+                    </button>
                 </div>
             </div>
         </div>
@@ -394,7 +835,18 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body" id="health-results">
-                    <!-- 동적 생성 -->
+                    <div class="text-center py-3">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">상태 확인 중...</span>
+                        </div>
+                        <p class="mt-2">시스템 상태를 확인하고 있습니다...</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+                    <button type="button" class="btn btn-primary" onclick="checkSystemHealth()">
+                        <i class="fas fa-redo me-2"></i>새로고침
+                    </button>
                 </div>
             </div>
         </div>
@@ -413,6 +865,11 @@
             <p class="mb-0 small">
                 © {{ copyright_year or '2025' }} LottoPro AI. 모든 예측은 통계적 분석이며 당첨을 보장하지 않습니다.
             </p>
+            <p class="mb-0 small mt-2">
+                <span class="text-success">
+                    <i class="fas fa-shield-alt me-1"></i>고급 에러 처리 시스템 적용
+                </span>
+            </p>
         </div>
     </footer>
 
@@ -423,294 +880,364 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-    <!-- Custom JS -->
-    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
     
+    <!-- Custom JS (main.js는 이미 생성 완료) -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    
+    <!-- 추가 에러 처리 스크립트 -->
     <script>
-        // 추가 기능들을 위한 글로벌 함수들
-        async function generateRandomAndPredict() {
-            try {
-                const response = await window.lottoPro.api.generateRandom(1);
-                if (response.success && response.random_sets.length > 0) {
-                    const randomNumbers = response.random_sets[0].numbers;
-                    
-                    // 입력 필드에 랜덤 번호 설정
-                    for (let i = 1; i <= 6; i++) {
-                        document.getElementById(`num${i}`).value = randomNumbers[i-1];
-                    }
-                    
-                    // 예측 실행
-                    await window.lottoPro.modules.prediction.generate();
-                }
-            } catch (error) {
-                console.error('Random generation failed:', error);
-                window.lottoPro.utils.showToast('랜덤 생성 실패: ' + error.message, 'danger');
+        // 전역 에러 처리
+        window.addEventListener('error', function(e) {
+            console.error('Global JavaScript Error:', e.error);
+            showToast('예상치 못한 오류가 발생했습니다.', 'danger');
+        });
+        
+        window.addEventListener('unhandledrejection', function(e) {
+            console.error('Unhandled Promise Rejection:', e.reason);
+            showToast('네트워크 오류가 발생했습니다.', 'warning');
+        });
+        
+        // 네트워크 상태 모니터링
+        function updateNetworkStatus() {
+            const statusElement = document.getElementById('network-status');
+            const statusTextElement = document.getElementById('network-status-text');
+            const statusIconElement = document.getElementById('status-icon');
+            const connectionStatusElement = document.getElementById('connection-status');
+            
+            if (navigator.onLine) {
+                statusElement.classList.remove('d-block');
+                statusElement.classList.add('d-none');
+                statusTextElement.textContent = '온라인';
+                statusIconElement.className = 'fas fa-circle text-success';
+                document.getElementById('status-text').textContent = '연결됨';
+                
+                // 연결 테스트
+                testConnection();
+            } else {
+                statusElement.classList.remove('d-none');
+                statusElement.classList.add('d-block');
+                statusTextElement.textContent = '오프라인';
+                statusIconElement.className = 'fas fa-circle text-danger';
+                document.getElementById('status-text').textContent = '오프라인';
+                
+                showEmergencyRefreshButton(true);
             }
         }
-
-        async function runSimulation() {
-            const numbers = [];
-            for (let i = 1; i <= 6; i++) {
-                const input = document.getElementById(`num${i}`);
-                if (input.value) numbers.push(parseInt(input.value));
-            }
-            
-            if (numbers.length !== 6) {
-                window.lottoPro.utils.showToast('6개 번호를 모두 입력해주세요.', 'warning');
-                return;
-            }
-            
-            const rounds = parseInt(document.getElementById('sim-rounds').value) || 1000;
-            
+        
+        // 연결 테스트
+        async function testConnection() {
             try {
-                const response = await window.lottoPro.api.runSimulation(numbers, rounds);
-                if (response.success) {
-                    displaySimulationResult(response);
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000);
+                
+                const response = await fetch('/api/health', {
+                    method: 'GET',
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                
+                if (response.ok) {
+                    document.getElementById('status-icon').className = 'fas fa-circle text-success';
+                    document.getElementById('status-text').textContent = '연결됨';
+                    showEmergencyRefreshButton(false);
+                } else {
+                    throw new Error('Server error');
                 }
             } catch (error) {
-                window.lottoPro.utils.showToast('시뮬레이션 실패: ' + error.message, 'danger');
+                document.getElementById('status-icon').className = 'fas fa-circle text-warning';
+                document.getElementById('status-text').textContent = '불안정';
+                showEmergencyRefreshButton(true);
             }
         }
-
-        function displaySimulationResult(data) {
-            const resultElement = document.getElementById('simulation-result');
-            const html = `
-                <h6 class="fw-bold">시뮬레이션 결과</h6>
-                <div class="row text-center mb-2">
-                    <div class="col">
-                        <div class="badge bg-success">${data.results['1등']}회</div>
-                        <div class="small">1등</div>
+        
+        // 긴급 새로고침 버튼 표시/숨김
+        function showEmergencyRefreshButton(show) {
+            const btn = document.getElementById('emergency-refresh-btn');
+            if (show) {
+                btn.classList.remove('d-none');
+            } else {
+                btn.classList.add('d-none');
+            }
+        }
+        
+        // 긴급 새로고침 처리
+        function handleEmergencyRefresh() {
+            if (confirm('페이지를 새로고침하시겠습니까? 입력한 데이터가 삭제될 수 있습니다.')) {
+                window.location.reload();
+            }
+        }
+        
+        // 토스트 메시지 표시
+        function showToast(message, type = 'info', duration = 5000) {
+            const toastContainer = document.getElementById('global-notifications');
+            const toastId = 'toast-' + Date.now();
+            
+            const toastHTML = `
+                <div id="${toastId}" class="toast align-items-center text-bg-${type} border-0" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <i class="fas fa-${type === 'danger' ? 'exclamation-triangle' : type === 'success' ? 'check-circle' : type === 'warning' ? 'exclamation-circle' : 'info-circle'} me-2"></i>
+                            ${message}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
                     </div>
-                    <div class="col">
-                        <div class="badge bg-info">${data.results['2등']}회</div>
-                        <div class="small">2등</div>
-                    </div>
-                    <div class="col">
-                        <div class="badge bg-warning">${data.results['3등']}회</div>
-                        <div class="small">3등</div>
-                    </div>
-                </div>
-                <div class="text-center">
-                    <div class="fw-bold ${data.net_profit >= 0 ? 'text-success' : 'text-danger'}">
-                        ${window.lottoPro.utils.formatCurrency(data.net_profit)}
-                    </div>
-                    <small>순손익 (수익률: ${data.profit_rate}%)</small>
                 </div>
             `;
-            resultElement.innerHTML = html;
-            resultElement.classList.remove('d-none');
-        }
-
-        async function generateQRCode() {
-            const numbers = [];
-            for (let i = 1; i <= 6; i++) {
-                const input = document.getElementById(`num${i}`);
-                if (input.value) numbers.push(parseInt(input.value));
-            }
             
-            if (numbers.length !== 6) {
-                window.lottoPro.utils.showToast('6개 번호를 모두 입력해주세요.', 'warning');
-                return;
-            }
+            toastContainer.insertAdjacentHTML('beforeend', toastHTML);
             
-            try {
-                const response = await window.lottoPro.api.generateQR(numbers);
-                if (response.success) {
-                    document.getElementById('qr-result').innerHTML = `
-                        <img src="${response.qr_code}" class="img-fluid" alt="QR Code">
-                        <div class="mt-2 small">번호: ${numbers.join(', ')}</div>
-                    `;
-                }
-            } catch (error) {
-                window.lottoPro.utils.showToast('QR 생성 실패: ' + error.message, 'danger');
-            }
-        }
-
-        async function searchStores() {
-            const query = document.getElementById('store-search').value;
-            if (!query.trim()) {
-                window.lottoPro.utils.showToast('검색어를 입력해주세요.', 'warning');
-                return;
-            }
+            const toastElement = document.getElementById(toastId);
+            const toast = new bootstrap.Toast(toastElement, { delay: duration });
+            toast.show();
             
-            try {
-                const response = await window.lottoPro.api.searchStores(query);
-                if (response.success) {
-                    displayStoreResults(response.stores);
-                }
-            } catch (error) {
-                window.lottoPro.utils.showToast('검색 실패: ' + error.message, 'danger');
-            }
-        }
-
-        async function getCurrentLocation() {
-            try {
-                const position = await window.lottoPro.utils.getUserLocation();
-                const response = await window.lottoPro.api.searchStores('', position.lat, position.lng);
-                if (response.success) {
-                    displayStoreResults(response.stores);
-                }
-            } catch (error) {
-                window.lottoPro.utils.showToast('위치 검색 실패: ' + error.message, 'danger');
-            }
-        }
-
-        function displayStoreResults(stores) {
-            const container = document.getElementById('store-results');
-            if (stores.length === 0) {
-                container.innerHTML = '<p class="text-muted">검색 결과가 없습니다.</p>';
-                return;
-            }
-            
-            let html = '';
-            stores.slice(0, 5).forEach(store => {
-                html += `
-                    <div class="store-item">
-                        <div class="store-name">${store.name}</div>
-                        <div class="store-address">${store.address}</div>
-                        <div class="store-info">
-                            <span class="store-wins">${store.first_wins}회 1등</span>
-                            <span class="store-distance">${store.distance ? store.distance + 'km' : store.business_hours}</span>
-                        </div>
-                    </div>
-                `;
+            // 토스트가 숨겨진 후 DOM에서 제거
+            toastElement.addEventListener('hidden.bs.toast', function() {
+                toastElement.remove();
             });
-            container.innerHTML = html;
         }
-
-        async function checkWinning() {
-            const numbers = [];
+        
+        // 입력 유효성 검사 함수들
+        function validateNumberInput(input) {
+            const value = parseInt(input.value);
+            input.classList.remove('is-invalid', 'is-valid');
+            
+            if (input.value === '') {
+                return true; // 빈 값은 허용
+            }
+            
+            if (isNaN(value) || value < 1 || value > 45) {
+                input.classList.add('is-invalid');
+                input.setCustomValidity('1-45 범위의 숫자를 입력하세요.');
+                return false;
+            } else {
+                input.classList.add('is-valid');
+                input.setCustomValidity('');
+                return true;
+            }
+        }
+        
+        function validateTaxInput(input) {
+            const value = parseFloat(input.value);
+            input.classList.remove('is-invalid', 'is-valid');
+            
+            if (input.value === '') {
+                return true;
+            }
+            
+            if (isNaN(value) || value < 0 || value > 100000000000) {
+                input.classList.add('is-invalid');
+                showError('tax-error', '0원 이상 1,000억원 이하의 금액을 입력하세요.');
+                return false;
+            } else {
+                input.classList.add('is-valid');
+                hideError('tax-error');
+                return true;
+            }
+        }
+        
+        function validateSimInput(input) {
+            const value = parseInt(input.value);
+            input.classList.remove('is-invalid', 'is-valid');
+            
+            if (input.value === '') {
+                return true;
+            }
+            
+            if (isNaN(value) || value < 1 || value > 50000) {
+                input.classList.add('is-invalid');
+                showError('sim-error', '1~50,000 범위의 숫자를 입력하세요.');
+                return false;
+            } else {
+                input.classList.add('is-valid');
+                hideError('sim-error');
+                return true;
+            }
+        }
+        
+        function validateRandomCount(input) {
+            const value = parseInt(input.value);
+            input.classList.remove('is-invalid', 'is-valid');
+            
+            if (isNaN(value) || value < 1 || value > 10) {
+                input.classList.add('is-invalid');
+                showError('random-error', '1~10 범위의 숫자를 입력하세요.');
+                return false;
+            } else {
+                input.classList.add('is-valid');
+                hideError('random-error');
+                return true;
+            }
+        }
+        
+        function validateSaveLabel(input) {
+            const value = input.value.trim();
+            input.classList.remove('is-invalid', 'is-valid');
+            
+            if (value.length > 50) {
+                input.classList.add('is-invalid');
+                showError('save-error', '라벨은 50자 이하로 입력하세요.');
+                return false;
+            } else if (value.length > 0) {
+                input.classList.add('is-valid');
+                hideError('save-error');
+                return true;
+            }
+            return true;
+        }
+        
+        // 에러 표시/숨김 함수들
+        function showError(containerId, message) {
+            const container = document.getElementById(containerId);
+            const messageElement = document.getElementById(containerId.replace('-error', '-error-message'));
+            
+            if (container && messageElement) {
+                messageElement.textContent = message;
+                container.classList.remove('d-none');
+                container.classList.add('d-block');
+            }
+        }
+        
+        function hideError(containerId) {
+            const container = document.getElementById(containerId);
+            if (container) {
+                container.classList.remove('d-block');
+                container.classList.add('d-none');
+            }
+        }
+        
+        // 유틸리티 함수들
+        function clearAllInputs() {
             for (let i = 1; i <= 6; i++) {
-                const input = document.getElementById(`check${i}`);
-                if (input.value) numbers.push(parseInt(input.value));
+                document.getElementById(`num${i}`).value = '';
+                document.getElementById(`num${i}`).classList.remove('is-valid', 'is-invalid');
             }
-            
-            if (numbers.length !== 6) {
-                window.lottoPro.utils.showToast('6개 번호를 모두 입력해주세요.', 'warning');
-                return;
-            }
-            
-            await window.lottoPro.modules.tools.checkWinning(numbers);
+            hideInputError();
         }
-
-        async function generateRandomNumbers() {
-            const count = parseInt(document.getElementById('random-count').value) || 1;
+        
+        function fillRandomNumbers() {
+            const numbers = [];
+            while (numbers.length < 6) {
+                const num = Math.floor(Math.random() * 45) + 1;
+                if (!numbers.includes(num)) {
+                    numbers.push(num);
+                }
+            }
+            
+            numbers.sort((a, b) => a - b);
+            
+            for (let i = 0; i < 6; i++) {
+                const input = document.getElementById(`num${i + 1}`);
+                input.value = numbers[i];
+                validateNumberInput(input);
+            }
+        }
+        
+        function showNumberHelper() {
+            const modal = new bootstrap.Modal(document.getElementById('numberHelpModal'));
+            modal.show();
+        }
+        
+        function hideInputError() {
+            const container = document.getElementById('input-error-container');
+            container.classList.remove('d-block');
+            container.classList.add('d-none');
+        }
+        
+        function showInputError(message) {
+            const container = document.getElementById('input-error-container');
+            const messageElement = document.getElementById('input-error-message');
+            
+            messageElement.textContent = message;
+            container.classList.remove('d-none');
+            container.classList.add('d-block');
+            
+            // 입력 섹션으로 스크롤
+            container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        
+        // 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            // 네트워크 상태 모니터링 시작
+            updateNetworkStatus();
+            
+            window.addEventListener('online', updateNetworkStatus);
+            window.addEventListener('offline', updateNetworkStatus);
+            
+            // 주기적 연결 테스트 (30초마다)
+            setInterval(testConnection, 30000);
+            
+            // 서비스 상태 초기 확인
+            checkServiceStatus();
+        });
+        
+        // 서비스 상태 확인
+        async function checkServiceStatus() {
+            const statusContainer = document.getElementById('service-status');
+            const statusText = document.getElementById('service-status-text');
+            const statusSpinner = document.getElementById('status-spinner');
             
             try {
-                const response = await window.lottoPro.api.generateRandom(count);
-                if (response.success) {
-                    let html = '';
-                    response.random_sets.forEach((set, index) => {
-                        html += `
-                            <div class="prediction-result mb-2">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <small class="fw-bold">랜덤 ${index + 1}</small>
-                                    <button class="btn btn-sm btn-outline-success" onclick="window.lottoPro.modules.savedNumbers.quickSave([${set.numbers.join(',')}], '랜덤 ${index + 1}')">
-                                        <i class="fas fa-heart me-1"></i>저장
-                                    </button>
-                                </div>
-                                <div class="number-display justify-content-start">
-                                    ${set.numbers.map(num => `<span class="number-ball">${num}</span>`).join('')}
-                                </div>
-                            </div>
-                        `;
-                    });
-                    document.getElementById('random-results').innerHTML = html;
+                const response = await fetch('/api/health');
+                const data = await response.json();
+                
+                if (data.status === 'healthy') {
+                    statusSpinner.style.display = 'none';
+                    statusText.innerHTML = '<i class="fas fa-check-circle text-success me-2"></i>모든 시스템이 정상 작동 중입니다';
+                    statusContainer.className = 'service-status-card mb-4 alert alert-success';
+                } else {
+                    throw new Error('Service unhealthy');
                 }
             } catch (error) {
-                window.lottoPro.utils.showToast('랜덤 생성 실패: ' + error.message, 'danger');
+                statusSpinner.style.display = 'none';
+                statusText.innerHTML = '<i class="fas fa-exclamation-triangle text-warning me-2"></i>일부 기능이 제한될 수 있습니다';
+                statusContainer.className = 'service-status-card mb-4 alert alert-warning';
             }
         }
+        
+        // Back to Top Button
+        const backToTopButton = document.getElementById('back-to-top');
+        if (backToTopButton) {
+            window.addEventListener('scroll', function() {
+                if (window.scrollY > 300) {
+                    backToTopButton.style.display = 'block';
+                } else {
+                    backToTopButton.style.display = 'none';
+                }
+            });
 
-        async function checkHealth() {
-            try {
-                const response = await window.lottoPro.api.checkHealth();
-                
-                let statusHtml = `
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <div class="card border-0 shadow">
-                                <div class="card-body text-center">
-                                    <i class="fas fa-server fa-2x text-primary mb-2"></i>
-                                    <h6>서비스 상태</h6>
-                                    <span class="badge ${response.status === 'healthy' ? 'bg-success' : 'bg-danger'}">${response.status}</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <div class="card border-0 shadow">
-                                <div class="card-body text-center">
-                                    <i class="fas fa-database fa-2x text-info mb-2"></i>
-                                    <h6>데이터 상태</h6>
-                                    <small>${response.sample_data_count || 0}회차 분석 준비</small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <div class="card border-0 shadow">
-                                <div class="card-body text-center">
-                                    <i class="fas fa-chart-line fa-2x ${response.pandas_available ? 'text-success' : 'text-warning'} mb-2"></i>
-                                    <h6>데이터 분석</h6>
-                                    <span class="badge ${response.pandas_available ? 'bg-success' : 'bg-warning'}">
-                                        ${response.pandas_available ? '사용 가능' : '기본 모드'}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <div class="card border-0 shadow">
-                                <div class="card-body text-center">
-                                    <i class="fas fa-brain fa-2x ${response.ml_available ? 'text-success' : 'text-warning'} mb-2"></i>
-                                    <h6>머신러닝</h6>
-                                    <span class="badge ${response.ml_available ? 'bg-success' : 'bg-warning'}">
-                                        ${response.ml_available ? '사용 가능' : '기본 모드'}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <div class="card border-0 shadow">
-                                <div class="card-body text-center">
-                                    <i class="fas fa-qrcode fa-2x ${response.qr_available ? 'text-success' : 'text-warning'} mb-2"></i>
-                                    <h6>QR 스캔</h6>
-                                    <span class="badge ${response.qr_available ? 'bg-success' : 'bg-warning'}">
-                                        ${response.qr_available ? '사용 가능' : '준비 중'}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mt-3">
-                        <h6>지원 기능</h6>
-                        <div class="d-flex flex-wrap gap-2">
-                            ${response.features ? response.features.map(feature => 
-                                `<span class="badge bg-primary">${feature}</span>`
-                            ).join('') : ''}
-                        </div>
-                    </div>
-                `;
-                
-                document.getElementById('health-results').innerHTML = statusHtml;
-                
-                const modal = new bootstrap.Modal(document.getElementById('healthModal'));
-                modal.show();
-                
-            } catch (error) {
-                console.error('Health check failed:', error);
-                window.lottoPro.utils.showToast('시스템 상태 확인 실패: ' + error.message, 'danger');
-            }
+            backToTopButton.addEventListener('click', function() {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
         }
-
-        // 탭 전환 시 데이터 로드
+        
+        // Tab switching 이벤트
         document.addEventListener('shown.bs.tab', function (event) {
             const target = event.target.getAttribute('href');
             
             if (target === '#statistics') {
-                window.lottoPro.modules.stats.load();
+                loadStatistics();
             } else if (target === '#numbers') {
-                window.lottoPro.modules.savedNumbers.load();
+                loadSavedNumbers();
+            }
+        });
+        
+        // 키보드 단축키
+        document.addEventListener('keydown', function(e) {
+            // ESC: 모든 에러 메시지 닫기
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.error-container').forEach(container => {
+                    container.classList.add('d-none');
+                });
+            }
+            
+            // Ctrl+Enter: 예측 생성
+            if (e.ctrlKey && e.key === 'Enter') {
+                e.preventDefault();
+                generatePrediction();
             }
         });
     </script>
