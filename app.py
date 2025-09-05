@@ -842,68 +842,16 @@ def get_stats():
         safe_log(f"통계 API 실패: {str(e)}", 'error')
         return handle_api_error(e)
 
-# 🔧 수정된 health_check 함수 (Flask context 오류 해결)
+# 🔧 초간단 health_check 함수 (모든 복잡한 기능 제거)
 @app.route('/api/health')
-@timeout_handler(timeout_seconds=5)
 def health_check():
-    try:
-        # 기본 uptime 계산 (Flask context 불필요)
-        uptime = datetime.now() - performance_metrics.get('start_time', datetime.now())
-        
-        # 간단한 상태만 반환 (Flask context 문제 회피)
-        status = {
-            'status': 'healthy',
-            'timestamp': datetime.now().isoformat(),
-            'version': '2.1',
-            'uptime_seconds': int(uptime.total_seconds()),
-            'environment': 'production' if not app.config.get('DEBUG', False) else 'development',
-            'features': {
-                'cache_enabled': CACHE_AVAILABLE,
-                'monitoring_enabled': MONITORING_AVAILABLE,
-                'pandas_available': PANDAS_AVAILABLE,
-                'qr_available': QR_AVAILABLE,
-                'ml_available': ML_AVAILABLE
-            },
-            'data': {
-                'sample_data_count': len(sample_data) if sample_data else 0,
-                'ai_models_count': len(AI_MODELS_INFO),
-                'lottery_stores_count': len(LOTTERY_STORES)
-            },
-            'performance': {
-                'total_requests': performance_metrics.get('total_requests', 0),
-                'total_errors': performance_metrics.get('total_errors', 0),
-                'avg_response_time': round(performance_metrics.get('avg_response_time', 0), 3)
-            },
-            'message': 'Service is running normally'
-        }
-        
-        # 안전한 추가 정보 수집
-        try:
-            if CACHE_AVAILABLE and cache_manager:
-                status['cache'] = {'enabled': True, 'status': 'available'}
-            else:
-                status['cache'] = {'enabled': False}
-        except:
-            status['cache'] = {'enabled': CACHE_AVAILABLE, 'status': 'error'}
-        
-        try:
-            if MONITORING_AVAILABLE and monitor:
-                status['monitoring'] = {'enabled': True, 'status': 'available'}
-            else:
-                status['monitoring'] = {'enabled': False}
-        except:
-            status['monitoring'] = {'enabled': MONITORING_AVAILABLE, 'status': 'error'}
-        
-        return jsonify(status)
-        
-    except Exception as e:
-        safe_log(f"health check 실패: {str(e)}", 'error')
-        return jsonify({
-            'status': 'error',
-            'message': 'Health check failed',
-            'timestamp': datetime.now().isoformat(),
-            'error': str(e)
-        }), 500
+    """초간단 health check - 모든 복잡한 기능 제거"""
+    return jsonify({
+        'status': 'healthy',
+        'timestamp': datetime.now().isoformat(),
+        'version': '2.1',
+        'message': 'OK'
+    })
 
 def initialize_app():
     """애플리케이션 초기화 (간소화된 버전)"""
