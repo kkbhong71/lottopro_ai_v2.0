@@ -18,9 +18,6 @@ import concurrent.futures
 from functools import wraps
 import signal
 
-# 🆕 Config 시스템 import
-from config import get_config, validate_config, print_config_summary
-
 # 🆕 성능 모니터링 및 캐싱 시스템 import
 try:
     from monitoring.performance_monitor import init_monitoring, monitor_performance
@@ -62,37 +59,23 @@ except ImportError:
 # Flask 앱 초기화
 app = Flask(__name__)
 
-# 🆕 Config 객체 로드 및 검증
-config_obj = get_config(os.environ.get('FLASK_ENV', 'production'))
-app.config.from_object(config_obj)
+# 환경변수 기반 설정 (기존 방식 유지)
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'lottopro-ai-v2-enhanced-2024')
+app.config['DEBUG'] = os.environ.get('DEBUG', 'False').lower() == 'true'
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
 
-# 설정 검증
-config_errors = validate_config(config_obj)
-if config_errors:
-    print("⚠️  Configuration warnings:")
-    for error in config_errors:
-        print(f"   - {error}")
-
-# 설정 요약 출력
-print_config_summary(config_obj)
-
-# 🆕 Config 기반 환경 설정 (기존 하드코딩 대체)
-app.config['SECRET_KEY'] = config_obj.SECRET_KEY
-app.config['DEBUG'] = config_obj.DEBUG if hasattr(config_obj, 'DEBUG') else False
-app.config['PERMANENT_SESSION_LIFETIME'] = config_obj.PERMANENT_SESSION_LIFETIME
-
-# 보안 설정 (Config 기반)
+# 보안 설정
 if not app.config['DEBUG']:
-    app.config['SESSION_COOKIE_SECURE'] = getattr(config_obj, 'SESSION_COOKIE_SECURE', False)
-    app.config['SESSION_COOKIE_HTTPONLY'] = getattr(config_obj, 'SESSION_COOKIE_HTTPONLY', True)
-    app.config['SESSION_COOKIE_SAMESITE'] = getattr(config_obj, 'SESSION_COOKIE_SAMESITE', 'Lax')
+    app.config['SESSION_COOKIE_SECURE'] = False  # HTTP에서도 작동하도록 설정
+    app.config['SESSION_COOKIE_HTTPONLY'] = True
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 
-# 🆕 Config 기반 로깅 설정
+# 로깅 설정
 logging.basicConfig(
-    level=getattr(logging, config_obj.LOG_LEVEL),
-    format=config_obj.LOG_FORMAT
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
-app.logger.setLevel(getattr(logging, config_obj.LOG_LEVEL))
+app.logger.setLevel(logging.INFO)
 
 # 글로벌 변수
 sample_data = None
@@ -111,12 +94,9 @@ performance_metrics = {
 monitor = None
 cache_manager = None
 
-# 🆕 Config 기반 타임아웃 및 에러 처리 데코레이터
-def timeout_handler(timeout_seconds=None):
-    """요청 타임아웃 처리 데코레이터 (Config 기반)"""
-    if timeout_seconds is None:
-        timeout_seconds = getattr(config_obj, 'EXTERNAL_API_TIMEOUT', 10)
-    
+# 타임아웃 및 에러 처리 데코레이터
+def timeout_handler(timeout_seconds=10):
+    """요청 타임아웃 처리 데코레이터"""
     def decorator(f):
         @wraps(f)
         def wrapper(*args, **kwargs):
@@ -169,18 +149,11 @@ def timeout_handler(timeout_seconds=None):
         return wrapper
     return decorator
 
-def rate_limiter(max_requests=None, time_window=3600):
-    """요청 제한 데코레이터 (Config 기반)"""
-    if max_requests is None:
-        # Config에서 기본값 가져오기
-        max_requests = int(config_obj.RATE_LIMIT_DEFAULT.split('/')[0]) if hasattr(config_obj, 'RATE_LIMIT_DEFAULT') else 100
-    
+def rate_limiter(max_requests=100, time_window=3600):
+    """요청 제한 데코레이터 (시간당 최대 요청 수)"""
     def decorator(f):
         @wraps(f)
         def wrapper(*args, **kwargs):
-            if not getattr(config_obj, 'RATE_LIMIT_ENABLED', True):
-                return f(*args, **kwargs)
-            
             client_ip = request.environ.get('REMOTE_ADDR', 'unknown')
             current_time = time.time()
             
@@ -271,9 +244,8 @@ def validate_lotto_numbers(numbers):
     if not isinstance(numbers, list):
         return False, "번호는 리스트 형태여야 합니다."
     
-    max_numbers = getattr(config_obj, 'MAX_SAVED_NUMBERS_PER_USER', 6)
-    if len(numbers) > max_numbers:
-        return False, f"번호는 최대 {max_numbers}개까지 입력 가능합니다."
+    if len(numbers) > 6:
+        return False, "번호는 최대 6개까지 입력 가능합니다."
     
     for num in numbers:
         try:
@@ -307,29 +279,20 @@ def safe_log(message, level='info'):
 
 @app.after_request
 def add_security_headers(response):
-    """보안 헤더 및 성능 헤더 추가 (Config 기반)"""
-    if getattr(config_obj, 'SECURE_HEADERS_ENABLED', True):
-        # 보안 헤더
-        response.headers['X-Content-Type-Options'] = 'nosniff'
-        response.headers['X-Frame-Options'] = 'DENY'
-        response.headers['X-XSS-Protection'] = '1; mode=block'
-        response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    """보안 헤더 및 성능 헤더 추가"""
+    # 보안 헤더
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
     
     # 성능 헤더
     response.headers['Cache-Control'] = 'public, max-age=300' if request.endpoint != 'predict' else 'no-cache'
     
-    # CORS 헤더 (Config 기반)
-    if getattr(config_obj, 'CORS_ENABLED', True):
-        cors_origins = getattr(config_obj, 'CORS_ORIGINS', ['*'])
-        if '*' in cors_origins:
-            response.headers['Access-Control-Allow-Origin'] = '*'
-        else:
-            origin = request.headers.get('Origin')
-            if origin in cors_origins:
-                response.headers['Access-Control-Allow-Origin'] = origin
-        
-        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
-        response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+    # CORS 헤더 (필요시)
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
     
     return response
 
@@ -388,7 +351,7 @@ def too_many_requests(error):
         'error_type': 'too_many_requests'
     }), 429
 
-# AI 모델 정보 (기존과 동일)
+# AI 모델 정보
 AI_MODELS_INFO = {
     'frequency': {
         'name': '빈도분석 모델',
@@ -432,7 +395,7 @@ AI_MODELS_INFO = {
     }
 }
 
-# 예측 히스토리 및 판매점 데이터 (기존과 동일)
+# 예측 히스토리
 PREDICTION_HISTORY = [
     {
         'round': 1185,
@@ -458,7 +421,7 @@ PREDICTION_HISTORY = [
     }
 ]
 
-# 로또 판매점 데이터 (기존과 동일)
+# 로또 판매점 데이터
 LOTTERY_STORES = [
     {"name": "동대문 복권방", "address": "서울시 동대문구 장한로 195", "region": "서울", "district": "동대문구", "lat": 37.5745, "lng": 127.0098, "phone": "02-1234-5678", "first_wins": 15, "business_hours": "06:00-24:00"},
     {"name": "강남 로또타운", "address": "서울시 강남구 테헤란로 152", "region": "서울", "district": "강남구", "lat": 37.4979, "lng": 127.0276, "phone": "02-2345-6789", "first_wins": 23, "business_hours": "07:00-23:00"},
@@ -468,14 +431,12 @@ LOTTERY_STORES = [
 ]
 
 def generate_sample_data():
-    """샘플 데이터 생성 (Config 기반)"""
+    """샘플 데이터 생성"""
     try:
         np.random.seed(42)
         data = []
         
-        sample_size = getattr(config_obj, 'SAMPLE_DATA_SIZE', 200)
-        
-        for draw in range(1186, 1186-sample_size, -1):  # Config 기반 크기
+        for draw in range(1186, 986, -1):  # 200회차
             numbers = sorted(np.random.choice(range(1, 46), 6, replace=False))
             available = [x for x in range(1, 46) if x not in numbers]
             bonus = np.random.choice(available) if available else 7
@@ -499,10 +460,10 @@ def generate_sample_data():
         safe_log(f"샘플 데이터 생성 실패: {str(e)}", 'error')
         return []
 
-# 🆕 Config 기반 캐시 적용된 분석 함수들
-@cached(ttl=getattr(config_obj, 'AI_STATS_CACHE_TTL', 600), tags=['statistics']) if CACHE_AVAILABLE else lambda f: f
+# 🆕 캐시 적용된 분석 함수들
+@cached(ttl=600, tags=['statistics']) if CACHE_AVAILABLE else lambda f: f
 def calculate_frequency_analysis():
-    """빈도 분석 (Config 기반 캐시 적용)"""
+    """빈도 분석 (캐시 적용)"""
     if not sample_data:
         return {}
     
@@ -518,9 +479,9 @@ def calculate_frequency_analysis():
         safe_log(f"빈도 분석 실패: {str(e)}", 'error')
         return {}
 
-@cached(ttl=getattr(config_obj, 'AI_STATS_CACHE_TTL', 600), tags=['statistics']) if CACHE_AVAILABLE else lambda f: f
+@cached(ttl=600, tags=['statistics']) if CACHE_AVAILABLE else lambda f: f
 def calculate_carry_over_analysis():
-    """이월수 분석 (Config 기반 캐시 적용)"""
+    """이월수 분석 (캐시 적용)"""
     if not sample_data or len(sample_data) < 2:
         return []
     
@@ -548,9 +509,9 @@ def calculate_carry_over_analysis():
         safe_log(f"이월수 분석 실패: {str(e)}", 'error')
         return []
 
-@cached(ttl=getattr(config_obj, 'AI_STATS_CACHE_TTL', 600), tags=['statistics']) if CACHE_AVAILABLE else lambda f: f
+@cached(ttl=600, tags=['statistics']) if CACHE_AVAILABLE else lambda f: f
 def calculate_companion_analysis():
-    """궁합수 분석 (Config 기반 캐시 적용)"""
+    """궁합수 분석 (캐시 적용)"""
     if not sample_data:
         return {}
     
@@ -572,9 +533,9 @@ def calculate_companion_analysis():
         safe_log(f"궁합수 분석 실패: {str(e)}", 'error')
         return {}
 
-@cached(ttl=getattr(config_obj, 'AI_STATS_CACHE_TTL', 600), tags=['statistics']) if CACHE_AVAILABLE else lambda f: f
+@cached(ttl=600, tags=['statistics']) if CACHE_AVAILABLE else lambda f: f
 def calculate_pattern_analysis():
-    """패턴 분석 (Config 기반 캐시 적용)"""
+    """패턴 분석 (캐시 적용)"""
     if not sample_data:
         return {}
     
@@ -611,12 +572,12 @@ def calculate_pattern_analysis():
         return {}
 
 def generate_ai_prediction(user_numbers=None, model_type="frequency"):
-    """AI 예측 생성 (Config 기반 캐시 적용 개선된 에러 처리)"""
+    """AI 예측 생성 (캐시 적용 개선된 에러 처리)"""
     try:
         if user_numbers is None:
             user_numbers = []
         
-        # 🆕 Config 기반 캐시에서 먼저 확인
+        # 🆕 캐시에서 먼저 확인
         if CACHE_AVAILABLE and cache_manager:
             cached_result = cache_manager.get_cached_prediction(user_numbers, model_type)
             if cached_result:
@@ -681,10 +642,9 @@ def generate_ai_prediction(user_numbers=None, model_type="frequency"):
         
         result = sorted(numbers[:6])
         
-        # 🆕 Config 기반 TTL로 결과를 캐시에 저장
+        # 🆕 결과를 캐시에 저장 (5분)
         if CACHE_AVAILABLE and cache_manager:
-            cache_ttl = getattr(config_obj, 'AI_PREDICTION_CACHE_TTL', 300)
-            cache_manager.cache_prediction(user_numbers, model_type, result, ttl=cache_ttl)
+            cache_manager.cache_prediction(user_numbers, model_type, result, ttl=300)
             safe_log(f"캐시 저장: {model_type} 예측", 'info')
         
         return result
@@ -702,7 +662,7 @@ def index():
             'update_date': '2025.08.28',
             'analysis_round': 1186,
             'copyright_year': 2025,
-            'version': getattr(config_obj, 'API_VERSION', 'v2.1'),
+            'version': 'v2.1',
             'features_count': 15,
             'models_count': len(AI_MODELS_INFO),
             'monitoring_enabled': MONITORING_AVAILABLE,
@@ -718,8 +678,8 @@ def index():
 
 @app.route('/api/predict', methods=['POST'])
 @monitor_performance if MONITORING_AVAILABLE else lambda f: f  # 🆕 성능 모니터링
-@rate_limiter()  # Config 기반 Rate Limiting
-@timeout_handler()  # Config 기반 타임아웃
+@rate_limiter(max_requests=30, time_window=3600)  # 시간당 30회 제한
+@timeout_handler(timeout_seconds=15)
 def predict():
     try:
         # 요청 데이터 검증
@@ -736,7 +696,7 @@ def predict():
                 'error_type': 'validation'
             }), 400
         
-        # 🆕 Config 기반 전체 예측 결과 캐시 확인
+        # 🆕 전체 예측 결과 캐시 확인
         if CACHE_AVAILABLE and cache_manager:
             user_hash = hashlib.md5(json.dumps(sorted(user_numbers)).encode()).hexdigest()[:8]
             cache_key = f"full_prediction:{user_hash}"
@@ -805,7 +765,7 @@ def predict():
             'data_source': f"{len(sample_data)}회차 데이터" if sample_data else "샘플 데이터",
             'analysis_timestamp': datetime.now().isoformat(),
             'processing_time': round(prediction_time, 3),
-            'version': getattr(config_obj, 'API_VERSION', '2.1'),
+            'version': '2.1',
             'request_id': str(uuid.uuid4())[:8],
             'cached': False,
             'cache_info': {
@@ -814,12 +774,11 @@ def predict():
             }
         }
         
-        # 🆕 Config 기반 TTL로 전체 결과를 캐시에 저장
+        # 🆕 전체 결과를 캐시에 저장 (5분)
         if CACHE_AVAILABLE and cache_manager:
             user_hash = hashlib.md5(json.dumps(sorted(user_numbers)).encode()).hexdigest()[:8]
             cache_key = f"full_prediction:{user_hash}"
-            cache_ttl = getattr(config_obj, 'AI_PREDICTION_CACHE_TTL', 300)
-            cache_manager.set(cache_key, response, ttl=cache_ttl, tags=['predictions', 'full_results'])
+            cache_manager.set(cache_key, response, ttl=300, tags=['predictions', 'full_results'])
             safe_log("전체 예측 결과 캐시 저장", 'info')
         
         return jsonify(response)
@@ -828,113 +787,193 @@ def predict():
         safe_log(f"예측 API 실패: {str(e)}", 'error')
         return handle_api_error(e)
 
-# 나머지 API들은 기존과 유사하되 Config 기반으로 수정됨
-# (너무 길어지므로 핵심 부분만 포함)
+@app.route('/api/stats')
+@monitor_performance if MONITORING_AVAILABLE else lambda f: f  # 🆕 성능 모니터링
+@timeout_handler(timeout_seconds=10)
+def get_stats():
+    try:
+        # 🆕 캐시에서 먼저 확인
+        if CACHE_AVAILABLE and cache_manager:
+            cached_stats = cache_manager.get_cached_statistics('main')
+            if cached_stats:
+                return jsonify({
+                    'success': True,
+                    'cached': True,
+                    'cache_timestamp': time.time(),
+                    **cached_stats
+                })
+        
+        frequency = calculate_frequency_analysis()
+        
+        if frequency:
+            sorted_freq = sorted(frequency.items(), key=lambda x: x[1], reverse=True)
+            hot_numbers = sorted_freq[:8]
+            cold_numbers = sorted_freq[-8:]
+        else:
+            # 기본값 제공
+            hot_numbers = [[7, 15], [13, 14], [22, 13], [31, 12], [42, 11], [1, 10], [25, 9], [33, 8]]
+            cold_numbers = [[45, 5], [44, 6], [43, 7], [2, 8], [3, 9], [4, 10], [5, 11], [6, 12]]
+        
+        stats_data = {
+            'frequency': frequency,
+            'hot_numbers': hot_numbers,
+            'cold_numbers': cold_numbers,
+            'carry_over_analysis': calculate_carry_over_analysis(),
+            'companion_analysis': list(calculate_companion_analysis().items()),
+            'pattern_analysis': calculate_pattern_analysis(),
+            'total_draws': len(sample_data) if sample_data else 200,
+            'data_source': f"{len(sample_data)}회차 데이터" if sample_data else "샘플 데이터",
+            'last_updated': datetime.now().isoformat(),
+            'cache_status': 'fresh'
+        }
+        
+        # 🆕 결과를 캐시에 저장 (10분)
+        if CACHE_AVAILABLE and cache_manager:
+            cache_manager.cache_statistics('main', stats_data, ttl=600)
+            safe_log("통계 데이터 캐시 저장", 'info')
+        
+        return jsonify({
+            'success': True,
+            'cached': False,
+            **stats_data
+        })
+        
+    except Exception as e:
+        safe_log(f"통계 API 실패: {str(e)}", 'error')
+        return handle_api_error(e)
+
+@app.route('/api/health')
+@timeout_handler(timeout_seconds=5)
+def health_check():
+    try:
+        uptime = datetime.now() - performance_metrics.get('start_time', datetime.now())
+        
+        status = {
+            'status': 'healthy',
+            'timestamp': datetime.now().isoformat(),
+            'version': '2.1',  # 🆕 버전 업데이트
+            'environment': 'production' if not app.config['DEBUG'] else 'development',
+            'uptime_seconds': int(uptime.total_seconds()),
+            'features': {
+                'pandas_available': PANDAS_AVAILABLE,
+                'qr_available': QR_AVAILABLE,
+                'ml_available': ML_AVAILABLE,
+                'monitoring_available': MONITORING_AVAILABLE,  # 🆕
+                'cache_available': CACHE_AVAILABLE  # 🆕
+            },
+            'data': {
+                'sample_data_count': len(sample_data) if sample_data else 0,
+                'active_users': len(user_saved_numbers),
+                'lottery_stores_count': len(LOTTERY_STORES),
+                'ai_models_count': len(AI_MODELS_INFO)
+            },
+            'performance': {
+                'total_requests': performance_metrics.get('total_requests', 0),
+                'total_errors': performance_metrics.get('total_errors', 0),
+                'error_rate': round((performance_metrics.get('total_errors', 0) / 
+                                  max(performance_metrics.get('total_requests', 1), 1)) * 100, 2),
+                'avg_response_time': round(performance_metrics.get('avg_response_time', 0), 3)
+            },
+            'supported_regions': list(set([store['region'] for store in LOTTERY_STORES])),
+            'supported_features': [
+                'AI 예측', 'QR 스캔', '번호 저장', '당첨 확인', 
+                '통계 분석', '판매점 검색', '세금 계산', '시뮬레이션',
+                '빠른 저장', '랜덤 생성', '지역별 검색', 'AI 모델 정보',
+                '예측 히스토리', '패턴 분석', '이월수/궁합수 분석',
+                '성능 모니터링', '고급 캐싱'  # 🆕
+            ]
+        }
+        
+        # 🆕 고급 시스템 상태 추가
+        if MONITORING_AVAILABLE and monitor:
+            try:
+                monitor_stats = monitor.get_current_stats()
+                status['monitoring'] = {
+                    'enabled': True,
+                    'total_requests': monitor_stats['overview']['total_requests'],
+                    'error_rate': monitor_stats['overview']['error_rate'],
+                    'avg_response_time': monitor_stats['overview']['average_response_time'],
+                    'health_status': monitor_stats['health_status']
+                }
+            except:
+                status['monitoring'] = {'enabled': True, 'status': 'unavailable'}
+        else:
+            status['monitoring'] = {'enabled': False}
+        
+        if CACHE_AVAILABLE and cache_manager:
+            try:
+                cache_info = cache_manager.get_cache_info()
+                status['cache'] = {
+                    'enabled': True,
+                    'redis_available': cache_info.get('redis_available', False),
+                    'hit_rate': cache_info['stats']['hit_rate'] if cache_info['stats'] else 0,
+                    'total_operations': cache_info['stats']['total_operations'] if cache_info['stats'] else 0
+                }
+            except:
+                status['cache'] = {'enabled': True, 'status': 'unavailable'}
+        else:
+            status['cache'] = {'enabled': False}
+        
+        if sample_data:
+            status['data_source'] = f"실제 {len(sample_data)}회차 데이터"
+        else:
+            status['data_source'] = "샘플 데이터"
+        
+        return jsonify(status)
+        
+    except Exception as e:
+        safe_log(f"health check 실패: {str(e)}", 'error')
+        return jsonify({
+            'status': 'error',
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
 
 def initialize_app():
-    """애플리케이션 초기화 (완전 Config 통합 버전)"""
+    """애플리케이션 초기화 (간소화된 버전)"""
     global sample_data, monitor, cache_manager
     try:
         safe_log("=== 🚀 LottoPro-AI v2.1 초기화 시작 ===")
         
-        # 샘플 데이터 생성 (Config 기반)
+        # 샘플 데이터 생성
         sample_data = generate_sample_data()
         safe_log(f"✅ 샘플 데이터 생성 완료: {len(sample_data)}회차")
         
         # 성능 메트릭 초기화
         performance_metrics['start_time'] = datetime.now()
         
-        # 🆕 Config 기반 성능 모니터링 시스템 초기화
+        # 🆕 성능 모니터링 시스템 초기화
         if MONITORING_AVAILABLE:
             try:
-                monitoring_config = config_obj.get_monitoring_config()
                 monitor = init_monitoring(
                     app=app, 
-                    auto_start=monitoring_config.get('auto_start', True),
-                    custom_thresholds=monitoring_config.get('thresholds', {})
+                    auto_start=True,
+                    custom_thresholds={
+                        'response_time': 10.0,    # 10초
+                        'error_rate': 0.05,       # 5%
+                        'cpu_usage': 80.0,        # 80%
+                        'memory_usage': 85.0      # 85%
+                    }
                 )
                 app.monitor = monitor
                 safe_log("✅ 성능 모니터링 시스템 활성화 완료")
                 
-                # 알림 콜백 설정 (옵션)
-                if monitoring_config.get('alert_enabled', True):
-                    def log_performance_alert(alert_info):
-                        safe_log(f"⚠️  PERFORMANCE ALERT: {alert_info['type']} - {alert_info['message']}", 'warning')
-                    
-                    monitor.add_alert_callback(log_performance_alert)
-                
             except Exception as e:
                 safe_log(f"❌ 성능 모니터링 시스템 초기화 실패: {str(e)}", 'error')
         
-        # 🆕 Config 기반 캐시 시스템 초기화
+        # 🆕 캐시 시스템 초기화 (핵심 수정 부분)
         if CACHE_AVAILABLE:
             try:
-                cache_config = config_obj.get_cache_config()
-                redis_config = config_obj.get_redis_config()
-                
                 cache_manager = init_cache_system(
                     app=app,
-                    redis_url=redis_config.get('url'),
-                    default_ttl=cache_config.get('default_ttl', 300),
-                    memory_cache_size=cache_config.get('memory_cache_size', 1000),
-                    enable_compression=cache_config.get('enable_compression', True),
-                    enable_warming=cache_config.get('enable_warming', True)  # Config에서 가져오기
+                    redis_url=os.getenv('REDIS_URL'),  # 환경변수에서 Redis URL
+                    default_ttl=300,  # 5분 기본 TTL
+                    memory_cache_size=1000,
+                    enable_compression=True,
+                    enable_warming=os.getenv('CACHE_WARMING', 'true').lower() == 'true'  # 🔧 핵심 수정!
                 )
                 app.cache = cache_manager
                 safe_log("✅ 캐시 시스템 초기화 완료")
-                
-                # 캐시 워밍 함수들 정의
-                def warm_statistics_cache():
-                    """통계 데이터 미리 캐싱"""
-                    try:
-                        frequency = calculate_frequency_analysis()
-                        if frequency:
-                            basic_stats = {
-                                'frequency': frequency,
-                                'hot_numbers': sorted(frequency.items(), key=lambda x: x[1], reverse=True)[:8],
-                                'cold_numbers': sorted(frequency.items(), key=lambda x: x[1])[:8],
-                                'generated_at': time.time()
-                            }
-                            cache_ttl = getattr(config_obj, 'AI_STATS_CACHE_TTL', 600)
-                            return cache_manager.cache_statistics('main', basic_stats, ttl=cache_ttl)
-                        return True
-                    except Exception as e:
-                        safe_log(f"통계 캐시 워밍 실패: {str(e)}", 'error')
-                        return False
-                
-                def warm_prediction_cache():
-                    """인기 번호 조합 미리 캐싱"""
-                    try:
-                        popular_combinations = [
-                            [1, 2, 3, 4, 5, 6],      # 연속 번호
-                            [7, 14, 21, 28, 35, 42], # 7의 배수
-                            [3, 7, 11, 19, 23, 31],  # 소수 조합
-                        ]
-                        
-                        success_count = 0
-                        for numbers in popular_combinations:
-                            result = generate_ai_prediction(numbers, "frequency")
-                            if result:
-                                success_count += 1
-                        
-                        return success_count > 0
-                    except Exception as e:
-                        safe_log(f"예측 캐시 워밍 실패: {str(e)}", 'error')
-                        return False
-                
-                # 백그라운드에서 캐시 워밍 실행 (Config에서 활성화된 경우에만)
-                if cache_config.get('enable_warming', True):
-                    def background_cache_warming():
-                        time.sleep(3)  # 앱 완전 시작 후 실행
-                        warming_results = cache_manager.warm_cache([
-                            warm_statistics_cache,
-                            warm_prediction_cache
-                        ])
-                        safe_log(f"🔥 캐시 워밍 결과: {warming_results}")
-                    
-                    import threading
-                    warming_thread = threading.Thread(target=background_cache_warming, daemon=True)
-                    warming_thread.start()
                 
             except Exception as e:
                 safe_log(f"❌ 캐시 시스템 초기화 실패: {str(e)}", 'error')
@@ -955,10 +994,10 @@ if __name__ == '__main__':
     initialize_app()
     
     port = int(os.environ.get('PORT', 5000))
-    debug_mode = getattr(config_obj, 'DEBUG', False)
+    debug_mode = os.environ.get('DEBUG', 'False').lower() == 'true'
     
     safe_log(f"🚀 서버 시작 - 포트: {port}, 디버그 모드: {debug_mode}")
-    safe_log("=== 🎯 LottoPro AI v2.1 - 완전 Config 통합 버전 ===")
+    safe_log("=== 🎯 LottoPro AI v2.1 - 간소화된 안정 버전 ===")
     
     app.run(debug=debug_mode, host='0.0.0.0', port=port)
 else:
