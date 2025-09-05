@@ -6,12 +6,11 @@ class LottoApp {
         this.init();
     }
 
-    // 유틸리티 메서드들
-
     init() {
         this.bindEvents();
         this.loadInitialData();
-        console.log('🎰 로또프로 AI v2.0 (10개 알고리즘) 초기화 완료');
+        this.checkForWeeklyUpdate(); // 주간 업데이트 체크 추가
+        console.log('🎰 로또프로 AI v2.0 초기화 완료');
     }
 
     bindEvents() {
@@ -31,9 +30,19 @@ class LottoApp {
             }
         });
 
+        // 알고리즘 설명 탭 이벤트
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('tab-btn')) {
+                this.switchTab(e.target.dataset.tab);
+            }
+        });
+
         // 모달 이벤트
-        document.querySelector('.close').addEventListener('click', () => {
-            this.closeModal();
+        const closeButtons = document.querySelectorAll('.close');
+        closeButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                this.closeModal();
+            });
         });
 
         document.getElementById('copyNumbers').addEventListener('click', () => {
@@ -43,6 +52,14 @@ class LottoApp {
         document.getElementById('saveNumbers').addEventListener('click', () => {
             this.saveNumbers();
         });
+
+        // 상세 분석 버튼 이벤트 (있는 경우)
+        const analyzeBtn = document.getElementById('analyzeNumbers');
+        if (analyzeBtn) {
+            analyzeBtn.addEventListener('click', () => {
+                this.showDetailedAnalysis();
+            });
+        }
 
         // 모달 외부 클릭시 닫기
         window.addEventListener('click', (event) => {
@@ -69,9 +86,119 @@ class LottoApp {
     }
 
     updateDataInfo(data) {
-        document.getElementById('totalDraws').textContent = data.total_draws.toLocaleString();
+        // 기본 정보 업데이트
+        document.getElementById('totalDraws').textContent = data.current_expected_round ? 
+            data.current_expected_round.toLocaleString() : data.total_draws.toLocaleString();
         document.getElementById('lastDraw').textContent = `${data.last_draw_info.round}회`;
-        document.getElementById('lastUpdate').textContent = new Date().toLocaleDateString('ko-KR');
+        
+        // 다음 추첨 정보
+        if (data.next_draw) {
+            document.getElementById('nextDraw').textContent = `${data.next_draw.days_left}일 후`;
+        }
+        
+        // 최근 당첨번호 표시
+        this.displayRecentWinningNumbers(data);
+        
+        // 데이터 업데이트 시간 표시
+        this.displayDataUpdateInfo(data);
+    }
+
+    displayRecentWinningNumbers(data) {
+        const recentRoundText = document.getElementById('recentRoundText');
+        const recentRoundDate = document.getElementById('recentRoundDate');
+        const recentWinningNumbers = document.getElementById('recentWinningNumbers');
+        
+        if (data.recent_draw) {
+            const { round, date, numbers, bonus } = data.recent_draw;
+            
+            // 회차 및 날짜 정보
+            if (recentRoundText) {
+                recentRoundText.textContent = `${round}회차`;
+            }
+            if (recentRoundDate) {
+                recentRoundDate.textContent = this.formatDate(date);
+            }
+            
+            // 당첨번호 표시
+            if (recentWinningNumbers) {
+                recentWinningNumbers.innerHTML = '';
+                
+                // 일반 번호 6개
+                numbers.forEach((num, index) => {
+                    const numberElement = document.createElement('span');
+                    numberElement.className = 'recent-number';
+                    numberElement.textContent = num;
+                    numberElement.style.animationDelay = `${index * 0.1}s`;
+                    recentWinningNumbers.appendChild(numberElement);
+                });
+                
+                // 보너스 번호
+                const bonusElement = document.createElement('span');
+                bonusElement.className = 'recent-number recent-bonus';
+                bonusElement.textContent = bonus;
+                bonusElement.style.animationDelay = '0.6s';
+                recentWinningNumbers.appendChild(bonusElement);
+            }
+        }
+        
+        // 다음 추첨까지 남은 일수
+        const daysUntilDraw = document.getElementById('daysUntilDraw');
+        if (daysUntilDraw && data.next_draw) {
+            daysUntilDraw.textContent = `${data.next_draw.days_left}일`;
+            
+            // 당일이면 특별 표시
+            if (data.next_draw.days_left === 0) {
+                daysUntilDraw.textContent = '오늘!';
+                daysUntilDraw.style.color = '#FF6B6B';
+                daysUntilDraw.style.fontWeight = 'bold';
+            }
+        }
+    }
+
+    displayDataUpdateInfo(data) {
+        const dataUpdateTime = document.getElementById('dataUpdateTime');
+        if (dataUpdateTime) {
+            if (data.last_updated) {
+                dataUpdateTime.textContent = data.last_updated;
+            } else {
+                dataUpdateTime.textContent = new Date().toLocaleDateString('ko-KR');
+            }
+        }
+    }
+
+    formatDate(dateString) {
+        try {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('ko-KR', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                weekday: 'short'
+            });
+        } catch (e) {
+            return dateString;
+        }
+    }
+
+    // 자동 회차 업데이트 체크 (매주 월요일)
+    checkForWeeklyUpdate() {
+        const now = new Date();
+        const isMonday = now.getDay() === 1; // 월요일 = 1
+        const hour = now.getHours();
+        
+        // 월요일 오전 9시 이후에만 업데이트 체크
+        if (isMonday && hour >= 9) {
+            const lastUpdateCheck = localStorage.getItem('lastUpdateCheck');
+            const today = now.toDateString();
+            
+            if (lastUpdateCheck !== today) {
+                console.log('🔄 주간 업데이트 체크 실행 (월요일)');
+                this.loadInitialData(); // 데이터 새로고침
+                localStorage.setItem('lastUpdateCheck', today);
+                
+                this.showNotification('📅 주간 회차 정보가 업데이트되었습니다!', 'success');
+            }
+        }
     }
 
     async generatePredictions() {
@@ -415,6 +542,44 @@ class LottoApp {
         });
     }
 
+    switchTab(tabName) {
+        // 모든 탭 버튼에서 active 클래스 제거
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+
+        // 모든 탭 콘텐츠 숨기기
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.remove('active');
+        });
+
+        // 선택된 탭 버튼에 active 클래스 추가
+        document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+
+        // 선택된 탭 콘텐츠 표시
+        const targetTab = tabName === 'basic' ? 'basic-algorithms' : 'advanced-algorithms';
+        document.getElementById(targetTab).classList.add('active');
+
+        // 애니메이션 효과
+        this.animateTabContent(targetTab);
+    }
+
+    animateTabContent(tabId) {
+        const tabContent = document.getElementById(tabId);
+        const cards = tabContent.querySelectorAll('.algo-explanation-card');
+        
+        cards.forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(30px)';
+            
+            setTimeout(() => {
+                card.style.transition = 'all 0.5s ease';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, index * 100);
+        });
+    }
+
     async toggleStatistics() {
         const statisticsSection = document.getElementById('statisticsSection');
         const isVisible = statisticsSection.style.display !== 'none';
@@ -595,33 +760,6 @@ class LottoApp {
         }, 3000);
     }
 
-    // 성능 모니터링
-    getAlgorithmPerformance() {
-        const saved = JSON.parse(localStorage.getItem('savedLottoNumbers') || '[]');
-        const performance = {};
-        
-        saved.forEach(item => {
-            if (!performance[item.algorithm]) {
-                performance[item.algorithm] = {
-                    count: 0,
-                    category: item.category
-                };
-            }
-            performance[item.algorithm].count++;
-        });
-
-        return performance;
-    }
-
-    // 유틸리티 메서드들
-    formatNumber(num) {
-        return num.toString().padStart(2, '0');
-    }
-
-    formatDate(dateString) {
-        return new Date(dateString).toLocaleDateString('ko-KR');
-    }
-
     exportPredictions() {
         if (!this.algorithms) return;
 
@@ -680,25 +818,5 @@ if ('serviceWorker' in navigator) {
         } catch (error) {
             console.log('ℹ️ Service Worker 등록을 건너뜁니다:', error.message);
         }
-    });
-}btn';
-    exportBtn.onclick = () => window.lottoApp.exportPredictions();
-    
-    const controlsContainer = document.querySelector('.main-controls');
-    if (controlsContainer) {
-        controlsContainer.appendChild(exportBtn);
-    }
-});
-
-// 서비스 워커 등록 (PWA 지원)
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/static/js/sw.js')
-            .then(registration => {
-                console.log('SW registered: ', registration);
-            })
-            .catch(registrationError => {
-                console.log('SW registration failed: ', registrationError);
-            });
     });
 }
