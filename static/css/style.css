@@ -1,4 +1,4 @@
-/* LottoPro AI v2.0 - 고급 에러 처리 및 사용자 경험 개선 스타일시트 */
+/* LottoPro AI v2.1 - 완전한 스타일시트 (main.js 호환) */
 
 /* ===== 1. CSS Variables (색상 시스템) ===== */
 :root {
@@ -369,19 +369,26 @@ body {
 .number-input {
   transition: all var(--transition-normal);
   position: relative;
+  font-size: 1.1rem;
+  font-weight: bold;
+  text-align: center;
 }
 
 .number-input:focus {
   transform: scale(1.05);
-  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+  box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
 }
 
 .number-input.is-invalid {
   background-color: rgba(220, 53, 69, 0.1);
+  border-color: #dc3545;
+  box-shadow: 0 0 5px rgba(220, 53, 69, 0.3);
 }
 
 .number-input.is-valid {
   background-color: rgba(40, 167, 69, 0.1);
+  border-color: #28a745;
+  box-shadow: 0 0 5px rgba(40, 167, 69, 0.3);
 }
 
 /* 입력 도움말 */
@@ -392,32 +399,35 @@ body {
 /* ===== 6. 진행 상태 표시 ===== */
 .progress-container {
   animation: fadeInDown var(--transition-normal);
+  margin: 20px 0;
 }
 
 .prediction-steps {
   display: flex;
-  justify-content: center;
+  justify-content: space-around;
   align-items: center;
-  gap: var(--spacing-lg);
-  margin-bottom: var(--spacing-md);
+  margin-bottom: 20px;
 }
 
 .step {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  text-align: center;
   opacity: 0.5;
   transition: all var(--transition-normal);
+  flex-direction: column;
+  display: flex;
+  align-items: center;
 }
 
 .step.active {
   opacity: 1;
+  color: #007bff;
   transform: scale(1.1);
 }
 
 .step i {
+  display: block;
   font-size: 1.5rem;
-  margin-bottom: var(--spacing-sm);
+  margin-bottom: 5px;
   color: var(--secondary-color);
 }
 
@@ -446,6 +456,11 @@ body {
 
 .progress-bar-animated {
   animation: progress-bar-stripes 1s linear infinite;
+}
+
+.progress-bar-striped {
+  background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);
+  background-size: 1rem 1rem;
 }
 
 /* ===== 7. 서비스 상태 카드 ===== */
@@ -533,6 +548,7 @@ a:hover {
   padding: var(--spacing-xxl);
   position: relative;
   overflow: hidden;
+  text-align: center;
 }
 
 .hero-section::before {
@@ -739,6 +755,7 @@ a:hover {
 .btn-outline-primary:hover {
   background: var(--secondary-color);
   color: var(--text-light);
+  transform: scale(1.05);
 }
 
 .btn-outline-secondary {
@@ -750,6 +767,11 @@ a:hover {
 .btn-outline-secondary:hover {
   background: var(--text-secondary);
   color: var(--text-light);
+}
+
+.btn-outline-info:hover,
+.btn-outline-light:hover {
+  transform: scale(1.05);
 }
 
 .btn-lg {
@@ -777,11 +799,11 @@ a:hover {
   display: inline-block;
   width: 40px;
   height: 40px;
+  line-height: 40px;
+  text-align: center;
+  border-radius: var(--border-radius-round);
   background: var(--gradient-secondary);
   color: var(--text-light);
-  border-radius: var(--border-radius-round);
-  text-align: center;
-  line-height: 40px;
   font-weight: bold;
   margin: 2px;
   box-shadow: var(--shadow-sm);
@@ -791,8 +813,22 @@ a:hover {
 }
 
 .number-ball:hover {
-  transform: scale(1.1) rotate(5deg);
+  transform: scale(1.1);
   box-shadow: var(--shadow-md);
+}
+
+.number-ball-sm {
+  width: 30px;
+  height: 30px;
+  line-height: 30px;
+  font-size: 0.9rem;
+}
+
+.number-ball-xs {
+  width: 24px;
+  height: 24px;
+  line-height: 24px;
+  font-size: 0.8rem;
 }
 
 .number-ball-large {
@@ -800,6 +836,17 @@ a:hover {
   height: 60px;
   line-height: 60px;
   font-size: 1.25rem;
+}
+
+/* 핫/콜드 넘버 스타일 */
+.hot-number {
+  background: var(--gradient-danger) !important;
+  animation: pulse-hot 2s infinite;
+}
+
+.cold-number {
+  background: var(--gradient-info) !important;
+  animation: pulse-cold 2s infinite;
 }
 
 .number-ball-hot {
@@ -812,23 +859,67 @@ a:hover {
   animation: pulse-cold 2s infinite;
 }
 
-.number-display {
+/* 번호 그리드 및 디스플레이 */
+.numbers-grid {
   display: flex;
   flex-wrap: wrap;
+  gap: 8px;
   justify-content: center;
-  align-items: center;
-  gap: var(--spacing-sm);
-  margin: var(--spacing-md) 0;
+}
+
+.number-display {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.number-display-small {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 5px 0;
 }
 
 .number-input-grid {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: var(--spacing-sm);
-  margin-bottom: var(--spacing-md);
+  grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+  gap: 10px;
+  margin: 15px 0;
 }
 
 /* ===== 15. Prediction Results ===== */
+.predictions-result {
+  margin-top: 20px;
+}
+
+.predictions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 15px;
+}
+
+.prediction-set {
+  margin-bottom: 15px;
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.prediction-set.highlight {
+  background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+  border: 2px solid #ffc107;
+}
+
+.set-label {
+  font-size: 0.9rem;
+  color: #666;
+  display: block;
+  margin-bottom: 5px;
+}
+
 .prediction-result {
   background: var(--bg-primary);
   border-radius: var(--border-radius-lg);
@@ -873,7 +964,56 @@ a:hover {
   transition: width var(--transition-slow);
 }
 
-/* ===== 16. Tools & Utilities ===== */
+.model-predictions {
+  margin-bottom: 20px;
+}
+
+.model-stats {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  font-size: 0.9rem;
+}
+
+.accuracy {
+  color: var(--success-color);
+  font-weight: bold;
+}
+
+.confidence {
+  color: var(--info-color);
+  font-weight: bold;
+}
+
+/* ===== 16. 분석 관련 스타일 ===== */
+.analysis-list {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.analysis-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  margin-bottom: 4px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border-left: 3px solid #007bff;
+}
+
+.pattern-stats {
+  font-size: 0.9rem;
+}
+
+.stat-item {
+  margin-bottom: 8px;
+  padding: 6px;
+  background: #f8f9fa;
+  border-radius: 4px;
+}
+
+/* ===== 17. Tools & Utilities ===== */
 .tool-card {
   background: var(--bg-primary);
   border-radius: var(--border-radius-lg);
@@ -881,6 +1021,7 @@ a:hover {
   box-shadow: var(--shadow-md);
   transition: var(--transition-normal);
   height: 100%;
+  text-align: center;
 }
 
 .tool-card:hover {
@@ -903,7 +1044,7 @@ a:hover {
   border-left: 4px solid var(--success-color);
 }
 
-/* ===== 17. Saved Numbers Management ===== */
+/* ===== 18. Saved Numbers Management ===== */
 .saved-numbers-container {
   max-height: 400px;
   overflow-y: auto;
@@ -950,17 +1091,12 @@ a:hover {
   border-top: 1px solid var(--light-color);
 }
 
-.analysis-item {
-  text-align: center;
-  font-size: 0.8rem;
-}
-
 .analysis-value {
   font-weight: bold;
   color: var(--secondary-color);
 }
 
-/* ===== 18. Store Locator ===== */
+/* ===== 19. Store Locator ===== */
 .store-item {
   background: var(--bg-primary);
   border: 1px solid var(--light-color);
@@ -1011,7 +1147,7 @@ a:hover {
   overflow-y: auto;
 }
 
-/* ===== 19. Back to Top Button ===== */
+/* ===== 20. Back to Top Button ===== */
 .back-to-top {
   position: fixed;
   bottom: 30px;
@@ -1042,7 +1178,31 @@ a:hover {
   animation: back-to-top-appear var(--transition-normal);
 }
 
-/* ===== 20. Loading States ===== */
+/* ===== 21. 드롭다운 메뉴 ===== */
+.dropdown-menu {
+  border: none;
+  box-shadow: var(--shadow-lg);
+  border-radius: var(--border-radius-lg);
+  backdrop-filter: blur(10px);
+}
+
+.dropdown-item {
+  transition: var(--transition-fast);
+  border-radius: var(--border-radius-md);
+  margin: 2px 4px;
+}
+
+.dropdown-item:hover {
+  background: var(--secondary-color);
+  color: white;
+  transform: translateX(5px);
+}
+
+.dropdown-item-text {
+  padding: 0.5rem 1rem;
+}
+
+/* ===== 22. Loading States ===== */
 .loading {
   display: flex;
   flex-direction: column;
@@ -1060,7 +1220,11 @@ a:hover {
   height: 3rem;
 }
 
-/* ===== 21. Animations ===== */
+.loading-spinner {
+  margin-bottom: 20px;
+}
+
+/* ===== 23. Animations ===== */
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -1184,6 +1348,12 @@ a:hover {
   50% { transform: scale(0.95); opacity: 0.8; }
 }
 
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.7); }
+  70% { box-shadow: 0 0 0 10px rgba(255, 107, 107, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 107, 107, 0); }
+}
+
 @keyframes shine {
   0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
   100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
@@ -1221,7 +1391,29 @@ a:hover {
   100% { background-position: 0 0; }
 }
 
-/* ===== 22. Accessibility Improvements ===== */
+@keyframes glow {
+  from {
+    box-shadow: 0 0 5px var(--secondary-color);
+  }
+  to {
+    box-shadow: 0 0 20px var(--secondary-color), 0 0 30px var(--secondary-color);
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+  20%, 40%, 60%, 80% { transform: translateX(10px); }
+}
+
+@keyframes bounce {
+  0%, 20%, 53%, 80%, 100% { transform: translateY(0); }
+  40%, 43% { transform: translateY(-30px); }
+  70% { transform: translateY(-15px); }
+  90% { transform: translateY(-4px); }
+}
+
+/* ===== 24. Accessibility Improvements ===== */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -1294,7 +1486,7 @@ a:hover {
   border-radius: 0 0 8px 0;
 }
 
-/* ===== 23. Responsive Design ===== */
+/* ===== 25. Responsive Design ===== */
 @media (max-width: 1199px) {
   .container {
     max-width: 960px;
@@ -1323,6 +1515,26 @@ a:hover {
   
   .navbar-nav .nav-item {
     margin: 0.125rem 0;
+  }
+  
+  .predictions-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .prediction-steps {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .step {
+    display: flex;
+    align-items: center;
+    text-align: left;
+  }
+  
+  .step i {
+    margin-right: 10px;
+    margin-bottom: 0;
   }
 }
 
@@ -1379,21 +1591,6 @@ a:hover {
   .navbar-brand {
     font-size: 1.2rem;
   }
-  
-  .prediction-steps {
-    flex-direction: column;
-    gap: var(--spacing-md);
-  }
-  
-  .step {
-    flex-direction: row;
-    gap: var(--spacing-sm);
-  }
-  
-  .step i {
-    margin-bottom: 0;
-    margin-right: var(--spacing-sm);
-  }
 }
 
 @media (max-width: 575px) {
@@ -1424,7 +1621,7 @@ a:hover {
   }
 }
 
-/* ===== 24. Print Styles ===== */
+/* ===== 26. Print Styles ===== */
 @media print {
   .navbar,
   footer,
@@ -1456,7 +1653,7 @@ a:hover {
   }
 }
 
-/* ===== 25. Dark Mode Support ===== */
+/* ===== 27. Dark Mode Support ===== */
 @media (prefers-color-scheme: dark) {
   :root {
     --bg-primary: #1a1a1a;
@@ -1485,9 +1682,16 @@ a:hover {
     background: rgba(26, 26, 26, 0.95);
     color: var(--text-primary);
   }
+  
+  .analysis-item,
+  .stat-item,
+  .prediction-set {
+    background: #4a5568;
+    color: #e2e8f0;
+  }
 }
 
-/* ===== 26. Custom Scrollbar ===== */
+/* ===== 28. Custom Scrollbar ===== */
 ::-webkit-scrollbar {
   width: 8px;
 }
@@ -1512,42 +1716,20 @@ a:hover {
   scrollbar-color: var(--secondary-color) var(--bg-secondary);
 }
 
-/* ===== 27. Special Effects ===== */
+/* ===== 29. Special Effects ===== */
 .glow-effect {
   animation: glow 2s infinite alternate;
-}
-
-@keyframes glow {
-  from {
-    box-shadow: 0 0 5px var(--secondary-color);
-  }
-  to {
-    box-shadow: 0 0 20px var(--secondary-color), 0 0 30px var(--secondary-color);
-  }
 }
 
 .shake-effect {
   animation: shake 0.5s;
 }
 
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
-  20%, 40%, 60%, 80% { transform: translateX(10px); }
-}
-
 .bounce-effect {
   animation: bounce 1s;
 }
 
-@keyframes bounce {
-  0%, 20%, 53%, 80%, 100% { transform: translateY(0); }
-  40%, 43% { transform: translateY(-30px); }
-  70% { transform: translateY(-15px); }
-  90% { transform: translateY(-4px); }
-}
-
-/* ===== 28. Performance Optimizations ===== */
+/* ===== 30. Performance Optimizations ===== */
 .will-change-transform {
   will-change: transform;
 }
@@ -1562,7 +1744,7 @@ a:hover {
   backface-visibility: hidden;
 }
 
-/* ===== 29. Browser Compatibility ===== */
+/* ===== 31. Browser Compatibility ===== */
 /* IE11 fallbacks */
 @supports not (display: grid) {
   .number-input-grid {
@@ -1591,7 +1773,7 @@ a:hover {
   }
 }
 
-/* ===== 30. Utility Classes ===== */
+/* ===== 32. Utility Classes ===== */
 .text-gradient {
   background: var(--gradient-secondary);
   -webkit-background-clip: text;
