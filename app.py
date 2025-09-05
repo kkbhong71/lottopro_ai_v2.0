@@ -842,82 +842,57 @@ def get_stats():
         safe_log(f"통계 API 실패: {str(e)}", 'error')
         return handle_api_error(e)
 
+# 🔧 수정된 health_check 함수 (Flask context 오류 해결)
 @app.route('/api/health')
 @timeout_handler(timeout_seconds=5)
 def health_check():
     try:
+        # 기본 uptime 계산 (Flask context 불필요)
         uptime = datetime.now() - performance_metrics.get('start_time', datetime.now())
         
+        # 간단한 상태만 반환 (Flask context 문제 회피)
         status = {
             'status': 'healthy',
             'timestamp': datetime.now().isoformat(),
-            'version': '2.1',  # 🆕 버전 업데이트
-            'environment': 'production' if not app.config['DEBUG'] else 'development',
+            'version': '2.1',
             'uptime_seconds': int(uptime.total_seconds()),
+            'environment': 'production' if not app.config.get('DEBUG', False) else 'development',
             'features': {
+                'cache_enabled': CACHE_AVAILABLE,
+                'monitoring_enabled': MONITORING_AVAILABLE,
                 'pandas_available': PANDAS_AVAILABLE,
                 'qr_available': QR_AVAILABLE,
-                'ml_available': ML_AVAILABLE,
-                'monitoring_available': MONITORING_AVAILABLE,  # 🆕
-                'cache_available': CACHE_AVAILABLE  # 🆕
+                'ml_available': ML_AVAILABLE
             },
             'data': {
                 'sample_data_count': len(sample_data) if sample_data else 0,
-                'active_users': len(user_saved_numbers),
-                'lottery_stores_count': len(LOTTERY_STORES),
-                'ai_models_count': len(AI_MODELS_INFO)
+                'ai_models_count': len(AI_MODELS_INFO),
+                'lottery_stores_count': len(LOTTERY_STORES)
             },
             'performance': {
                 'total_requests': performance_metrics.get('total_requests', 0),
                 'total_errors': performance_metrics.get('total_errors', 0),
-                'error_rate': round((performance_metrics.get('total_errors', 0) / 
-                                  max(performance_metrics.get('total_requests', 1), 1)) * 100, 2),
                 'avg_response_time': round(performance_metrics.get('avg_response_time', 0), 3)
             },
-            'supported_regions': list(set([store['region'] for store in LOTTERY_STORES])),
-            'supported_features': [
-                'AI 예측', 'QR 스캔', '번호 저장', '당첨 확인', 
-                '통계 분석', '판매점 검색', '세금 계산', '시뮬레이션',
-                '빠른 저장', '랜덤 생성', '지역별 검색', 'AI 모델 정보',
-                '예측 히스토리', '패턴 분석', '이월수/궁합수 분석',
-                '성능 모니터링', '고급 캐싱'  # 🆕
-            ]
+            'message': 'Service is running normally'
         }
         
-        # 🆕 고급 시스템 상태 추가
-        if MONITORING_AVAILABLE and monitor:
-            try:
-                monitor_stats = monitor.get_current_stats()
-                status['monitoring'] = {
-                    'enabled': True,
-                    'total_requests': monitor_stats['overview']['total_requests'],
-                    'error_rate': monitor_stats['overview']['error_rate'],
-                    'avg_response_time': monitor_stats['overview']['average_response_time'],
-                    'health_status': monitor_stats['health_status']
-                }
-            except:
-                status['monitoring'] = {'enabled': True, 'status': 'unavailable'}
-        else:
-            status['monitoring'] = {'enabled': False}
+        # 안전한 추가 정보 수집
+        try:
+            if CACHE_AVAILABLE and cache_manager:
+                status['cache'] = {'enabled': True, 'status': 'available'}
+            else:
+                status['cache'] = {'enabled': False}
+        except:
+            status['cache'] = {'enabled': CACHE_AVAILABLE, 'status': 'error'}
         
-        if CACHE_AVAILABLE and cache_manager:
-            try:
-                cache_info = cache_manager.get_cache_info()
-                status['cache'] = {
-                    'enabled': True,
-                    'redis_available': cache_info.get('redis_available', False),
-                    'hit_rate': cache_info['stats']['hit_rate'] if cache_info['stats'] else 0,
-                    'total_operations': cache_info['stats']['total_operations'] if cache_info['stats'] else 0
-                }
-            except:
-                status['cache'] = {'enabled': True, 'status': 'unavailable'}
-        else:
-            status['cache'] = {'enabled': False}
-        
-        if sample_data:
-            status['data_source'] = f"실제 {len(sample_data)}회차 데이터"
-        else:
-            status['data_source'] = "샘플 데이터"
+        try:
+            if MONITORING_AVAILABLE and monitor:
+                status['monitoring'] = {'enabled': True, 'status': 'available'}
+            else:
+                status['monitoring'] = {'enabled': False}
+        except:
+            status['monitoring'] = {'enabled': MONITORING_AVAILABLE, 'status': 'error'}
         
         return jsonify(status)
         
@@ -925,8 +900,9 @@ def health_check():
         safe_log(f"health check 실패: {str(e)}", 'error')
         return jsonify({
             'status': 'error',
-            'error': str(e),
-            'timestamp': datetime.now().isoformat()
+            'message': 'Health check failed',
+            'timestamp': datetime.now().isoformat(),
+            'error': str(e)
         }), 500
 
 def initialize_app():
@@ -997,7 +973,7 @@ if __name__ == '__main__':
     debug_mode = os.environ.get('DEBUG', 'False').lower() == 'true'
     
     safe_log(f"🚀 서버 시작 - 포트: {port}, 디버그 모드: {debug_mode}")
-    safe_log("=== 🎯 LottoPro AI v2.1 - 간소화된 안정 버전 ===")
+    safe_log("=== 🎯 LottoPro AI v2.1 - 안정화 버전 ===")
     
     app.run(debug=debug_mode, host='0.0.0.0', port=port)
 else:
