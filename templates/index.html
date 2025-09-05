@@ -185,9 +185,292 @@
             </div>
         </div>
 
+        <!-- 10개 AI 알고리즘 상세 설명 -->
+        <div class="algorithm-explanations">
+            <h2><i class="fas fa-brain"></i> 10개 AI 알고리즘 상세 설명</h2>
+            <div class="explanation-tabs">
+                <button class="tab-btn active" data-tab="basic">
+                    <i class="fas fa-star"></i> 기본 AI 알고리즘 (5개)
+                </button>
+                <button class="tab-btn" data-tab="advanced">
+                    <i class="fas fa-rocket"></i> 고급 AI 알고리즘 (5개)
+                </button>
+            </div>
+
+            <!-- 기본 AI 알고리즘 설명 -->
+            <div id="basic-algorithms" class="tab-content active">
+                <div class="algorithms-explanation-grid">
+                    <div class="algo-explanation-card frequency">
+                        <div class="algo-header">
+                            <div class="algo-icon">
+                                <i class="fas fa-chart-bar"></i>
+                            </div>
+                            <div class="algo-title">
+                                <h3>빈도 분석 알고리즘</h3>
+                                <span class="algo-category">통계 기반</span>
+                            </div>
+                        </div>
+                        <div class="algo-content">
+                            <div class="algo-principle">
+                                <h4><i class="fas fa-lightbulb"></i> 원리</h4>
+                                <p>과거 모든 당첨번호의 출현 빈도를 계산하고, 자주 나온 번호가 미래에도 나올 확률이 높다는 가정하에 예측합니다.</p>
+                            </div>
+                            <div class="algo-advantages">
+                                <h4><i class="fas fa-thumbs-up"></i> 장점</h4>
+                                <p>직관적이고 이해하기 쉬우며, 장기간의 트렌드를 반영할 수 있습니다.</p>
+                            </div>
+                            <div class="algo-usage">
+                                <h4><i class="fas fa-target"></i> 활용</h4>
+                                <p>장기 트렌드 파악, 안정적인 기준선 제공</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="algo-explanation-card hot-cold">
+                        <div class="algo-header">
+                            <div class="algo-icon">
+                                <i class="fas fa-thermometer-half"></i>
+                            </div>
+                            <div class="algo-title">
+                                <h3>핫/콜드 분석 알고리즘</h3>
+                                <span class="algo-category">트렌드 기반</span>
+                            </div>
+                        </div>
+                        <div class="algo-content">
+                            <div class="algo-principle">
+                                <h4><i class="fas fa-lightbulb"></i> 원리</h4>
+                                <p>최근 20회차의 "핫" 번호(자주 나온 번호)와 오랫동안 안 나온 "콜드" 번호를 분석하여 3-4개 핫번호와 2-3개 콜드번호를 조합합니다.</p>
+                            </div>
+                            <div class="algo-advantages">
+                                <h4><i class="fas fa-thumbs-up"></i> 장점</h4>
+                                <p>최근 트렌드를 반영하고 보상 심리를 활용한 균형잡힌 접근법입니다.</p>
+                            </div>
+                            <div class="algo-usage">
+                                <h4><i class="fas fa-target"></i> 활용</h4>
+                                <p>최근 출현 패턴 기반 예측, 단기 변동성 반영</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="algo-explanation-card pattern">
+                        <div class="algo-header">
+                            <div class="algo-icon">
+                                <i class="fas fa-puzzle-piece"></i>
+                            </div>
+                            <div class="algo-title">
+                                <h3>패턴 분석 알고리즘</h3>
+                                <span class="algo-category">분포 기반</span>
+                            </div>
+                        </div>
+                        <div class="algo-content">
+                            <div class="algo-principle">
+                                <h4><i class="fas fa-lightbulb"></i> 원리</h4>
+                                <p>번호를 5개 구간(1-10, 11-20, ...)으로 분할하고 각 구간별 출현 비율을 계산하여 균등한 분포를 목표로 번호를 선택합니다.</p>
+                            </div>
+                            <div class="algo-advantages">
+                                <h4><i class="fas fa-thumbs-up"></i> 장점</h4>
+                                <p>극단적인 조합을 방지하고 번호 분포의 균형성을 추구합니다.</p>
+                            </div>
+                            <div class="algo-usage">
+                                <h4><i class="fas fa-target"></i> 활용</h4>
+                                <p>안정적인 분포 패턴, 균형잡힌 번호 조합</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="algo-explanation-card statistical">
+                        <div class="algo-header">
+                            <div class="algo-icon">
+                                <i class="fas fa-calculator"></i>
+                            </div>
+                            <div class="algo-title">
+                                <h3>통계 분석 알고리즘</h3>
+                                <span class="algo-category">수학 기반</span>
+                            </div>
+                        </div>
+                        <div class="algo-content">
+                            <div class="algo-principle">
+                                <h4><i class="fas fa-lightbulb"></i> 원리</h4>
+                                <p>각 자리별 평균과 표준편차를 계산하고 정규분포를 가정하여 통계적 모델 기반으로 번호를 생성합니다.</p>
+                            </div>
+                            <div class="algo-advantages">
+                                <h4><i class="fas fa-thumbs-up"></i> 장점</h4>
+                                <p>수학적 통계 이론에 기반한 과학적 접근법으로 신뢰성이 높습니다.</p>
+                            </div>
+                            <div class="algo-usage">
+                                <h4><i class="fas fa-target"></i> 활용</h4>
+                                <p>확률론적 예측, 수학적 모델링</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="algo-explanation-card machine-learning">
+                        <div class="algo-header">
+                            <div class="algo-icon">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div class="algo-title">
+                                <h3>머신러닝 알고리즘</h3>
+                                <span class="algo-category">AI 기반</span>
+                            </div>
+                        </div>
+                        <div class="algo-content">
+                            <div class="algo-principle">
+                                <h4><i class="fas fa-lightbulb"></i> 원리</h4>
+                                <p>과거 10회차 데이터를 특성으로 사용하여 랜덤포레스트 모델을 학습시키고 각 자리별 예측값을 생성합니다.</p>
+                            </div>
+                            <div class="algo-advantages">
+                                <h4><i class="fas fa-thumbs-up"></i> 장점</h4>
+                                <p>앙상블 학습으로 복잡한 패턴을 인식하고 과적합을 방지합니다.</p>
+                            </div>
+                            <div class="algo-usage">
+                                <h4><i class="fas fa-target"></i> 활용</h4>
+                                <p>다차원 패턴 분석, 비선형 관계 모델링</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 고급 AI 알고리즘 설명 -->
+            <div id="advanced-algorithms" class="tab-content">
+                <div class="algorithms-explanation-grid">
+                    <div class="algo-explanation-card neural-network">
+                        <div class="algo-header">
+                            <div class="algo-icon">
+                                <i class="fas fa-brain"></i>
+                            </div>
+                            <div class="algo-title">
+                                <h3>신경망 분석 알고리즘</h3>
+                                <span class="algo-category advanced">딥러닝</span>
+                            </div>
+                        </div>
+                        <div class="algo-content">
+                            <div class="algo-principle">
+                                <h4><i class="fas fa-lightbulb"></i> 원리</h4>
+                                <p>다층 퍼셉트론(MLP) 신경망을 구축하여 100-50-25 노드 구조로 딥러닝 기반 패턴을 학습합니다.</p>
+                            </div>
+                            <div class="algo-advantages">
+                                <h4><i class="fas fa-thumbs-up"></i> 장점</h4>
+                                <p>인공 신경망의 비선형 패턴 학습으로 복잡한 상관관계를 발견할 수 있습니다.</p>
+                            </div>
+                            <div class="algo-usage">
+                                <h4><i class="fas fa-target"></i> 활용</h4>
+                                <p>딥러닝 기반 고급 예측, 복합 패턴 인식</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="algo-explanation-card markov-chain">
+                        <div class="algo-header">
+                            <div class="algo-icon">
+                                <i class="fas fa-project-diagram"></i>
+                            </div>
+                            <div class="algo-title">
+                                <h3>마르코프 체인 알고리즘</h3>
+                                <span class="algo-category advanced">확률 모델</span>
+                            </div>
+                        </div>
+                        <div class="algo-content">
+                            <div class="algo-principle">
+                                <h4><i class="fas fa-lightbulb"></i> 원리</h4>
+                                <p>상태 전이 매트릭스를 구축하고 현재 상태에서 다음 상태로의 확률을 계산하여 확률적 체인 반응으로 번호를 생성합니다.</p>
+                            </div>
+                            <div class="algo-advantages">
+                                <h4><i class="fas fa-thumbs-up"></i> 장점</h4>
+                                <p>현재 상태가 다음 상태에 영향을 준다는 이론으로 순차적 패턴을 모델링합니다.</p>
+                            </div>
+                            <div class="algo-usage">
+                                <h4><i class="fas fa-target"></i> 활용</h4>
+                                <p>연속성 있는 예측, 상태 전이 분석</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="algo-explanation-card genetic">
+                        <div class="algo-header">
+                            <div class="algo-icon">
+                                <i class="fas fa-dna"></i>
+                            </div>
+                            <div class="algo-title">
+                                <h3>유전자 알고리즘</h3>
+                                <span class="algo-category advanced">진화 계산</span>
+                            </div>
+                        </div>
+                        <div class="algo-content">
+                            <div class="algo-principle">
+                                <h4><i class="fas fa-lightbulb"></i> 원리</h4>
+                                <p>초기 개체군(50개)을 생성하고 적합도 함수로 평가한 후, 교배, 변이, 선택 과정을 30세대 반복합니다.</p>
+                            </div>
+                            <div class="algo-advantages">
+                                <h4><i class="fas fa-thumbs-up"></i> 장점</h4>
+                                <p>생물학적 진화 과정을 모방하여 전역 최적해를 탐색할 수 있습니다.</p>
+                            </div>
+                            <div class="algo-usage">
+                                <h4><i class="fas fa-target"></i> 활용</h4>
+                                <p>최적화 문제 해결, 진화적 탐색</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="algo-explanation-card co-occurrence">
+                        <div class="algo-header">
+                            <div class="algo-icon">
+                                <i class="fas fa-link"></i>
+                            </div>
+                            <div class="algo-title">
+                                <h3>동반출현 분석 알고리즘</h3>
+                                <span class="algo-category advanced">관계 분석</span>
+                            </div>
+                        </div>
+                        <div class="algo-content">
+                            <div class="algo-principle">
+                                <h4><i class="fas fa-lightbulb"></i> 원리</h4>
+                                <p>번호 간 동반출현 빈도를 계산하고 상관관계가 높은 번호 쌍을 식별하여 네트워크 기반으로 번호를 선택합니다.</p>
+                            </div>
+                            <div class="algo-advantages">
+                                <h4><i class="fas fa-thumbs-up"></i> 장점</h4>
+                                <p>번호 간 숨겨진 연관성을 발견하고 상관관계를 활용한 예측이 가능합니다.</p>
+                            </div>
+                            <div class="algo-usage">
+                                <h4><i class="fas fa-target"></i> 활용</h4>
+                                <p>관계 기반 예측, 연관성 분석</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="algo-explanation-card time-series">
+                        <div class="algo-header">
+                            <div class="algo-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div class="algo-title">
+                                <h3>시계열 분석 알고리즘</h3>
+                                <span class="algo-category advanced">시간 모델</span>
+                            </div>
+                        </div>
+                        <div class="algo-content">
+                            <div class="algo-principle">
+                                <h4><i class="fas fa-lightbulb"></i> 원리</h4>
+                                <p>각 번호의 출현 간격을 분석하고 시간 패턴을 모델링하여 다음 출현 시점을 예측합니다.</p>
+                            </div>
+                            <div class="algo-advantages">
+                                <h4><i class="fas fa-thumbs-up"></i> 장점</h4>
+                                <p>시간적 패턴과 주기성을 분석하여 시간 차원을 고려한 예측이 가능합니다.</p>
+                            </div>
+                            <div class="algo-usage">
+                                <h4><i class="fas fa-target"></i> 활용</h4>
+                                <p>주기적 패턴 예측, 시간 기반 분석</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- AI 알고리즘 상세 정보 -->
         <div class="algorithm-details">
-            <h2><i class="fas fa-info-circle"></i> AI 알고리즘 상세 정보</h2>
+            <h2><i class="fas fa-info-circle"></i> 기술 정보</h2>
             <div class="details-grid">
                 <div class="detail-card">
                     <h3><i class="fas fa-cogs"></i> 기술 스택</h3>
