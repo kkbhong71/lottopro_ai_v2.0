@@ -191,10 +191,12 @@ class CacheManager:
     def __init__(self, redis_url: Optional[str] = None, 
                  default_ttl: int = 300,
                  memory_cache_size: int = 1000,
-                 enable_compression: bool = True):
+                 enable_compression: bool = True,
+                 enable_warming: bool = True):  # 추가된 파라미터
         
         self.default_ttl = default_ttl
         self.enable_compression = enable_compression
+        self.enable_warming = enable_warming  # 속성 초기화
         self.stats = CacheStats()
         self.logger = logging.getLogger(__name__)
         
@@ -222,6 +224,7 @@ class CacheManager:
         # 캐시 레이어 결정
         self.use_redis = self.redis_client is not None
         self.logger.info(f"Cache layers: Redis={self.use_redis}, Memory=True")
+        self.logger.info(f"Cache warming enabled: {self.enable_warming}")  # 워밍 상태 로깅
     
     def _serialize_value(self, value: Any) -> bytes:
         """값 직렬화"""
@@ -456,6 +459,7 @@ class CacheManager:
             'memory_cache_size': self.memory_cache.max_size,
             'default_ttl': self.default_ttl,
             'compression_enabled': self.enable_compression,
+            'warming_enabled': self.enable_warming,  # 워밍 상태 추가
             'stats': {
                 'hit_rate': self.stats.hit_rate,
                 'hit_count': self.stats.hit_count,
@@ -527,6 +531,10 @@ class CacheManager:
     
     def warm_cache(self, warming_functions: List[Callable]) -> Dict:
         """캐시 워밍 (시작 시 자주 사용되는 데이터 미리 로드)"""
+        if not self.enable_warming:  # 워밍이 비활성화된 경우
+            self.logger.info("Cache warming is disabled, skipping warming process")
+            return {'warming_disabled': True}
+        
         results = {}
         
         for func in warming_functions:
