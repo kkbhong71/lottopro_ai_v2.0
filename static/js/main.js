@@ -78,30 +78,124 @@ class LottoApp {
         const loadingIndicator = document.getElementById('loadingIndicator');
         const predictionsContainer = document.getElementById('predictionsContainer');
         const generateBtn = document.getElementById('generateBtn');
+        const performanceSection = document.getElementById('performanceSection');
 
         try {
             loadingIndicator.style.display = 'block';
             predictionsContainer.style.display = 'none';
             generateBtn.disabled = true;
-
+            
+            // 진행 상황 표시
+            this.updateProgress(0, '10개 AI 알고리즘 초기화 중...');
+            
+            const startTime = performance.now();
+            
+            // API 호출
             const response = await fetch('/api/predictions');
             const data = await response.json();
 
             if (data.success) {
                 this.algorithms = data.data;
+                
+                // 데이터 소스 검증 정보 표시
+                if (data.data_source) {
+                    console.log('✅ CSV 데이터 검증 정보:', data.data_source);
+                    this.showDataVerification(data.data_source);
+                }
+                
+                this.updateProgress(100, '분석 완료!');
+                
+                // 성능 지표 업데이트
+                const processingTime = ((performance.now() - startTime) / 1000).toFixed(2);
+                this.updatePerformanceIndicators(processingTime, data);
+                
                 this.renderPredictions();
                 predictionsContainer.style.display = 'block';
                 
-                this.showSuccess('10개 AI 알고리즘 예측 번호가 생성되었습니다!');
+                if (performanceSection) {
+                    performanceSection.style.display = 'block';
+                }
+                
+                this.showSuccess(`✅ ${data.algorithms_count}개 AI 알고리즘이 실제 CSV 데이터를 분석하여 ${data.total_prediction_sets}개 예측 세트를 생성했습니다!`);
             } else {
                 throw new Error(data.error || '예측 생성에 실패했습니다.');
             }
         } catch (error) {
             console.error('예측 생성 실패:', error);
-            this.showError('예측 생성에 실패했습니다. 다시 시도해주세요.');
+            this.showError('예측 생성에 실패했습니다. CSV 파일이 올바르게 업로드되었는지 확인해주세요.');
         } finally {
             loadingIndicator.style.display = 'none';
             generateBtn.disabled = false;
+        }
+    }
+
+    updateProgress(percentage, message) {
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        
+        if (progressFill) {
+            progressFill.style.width = `${percentage}%`;
+        }
+        
+        if (progressText) {
+            progressText.textContent = message;
+        }
+    }
+
+    showDataVerification(dataSource) {
+        // 데이터 검증 정보를 UI에 표시
+        const verificationElement = document.createElement('div');
+        verificationElement.className = 'data-verification-info';
+        verificationElement.innerHTML = `
+            <div class="verification-card">
+                <h4><i class="fas fa-check-circle"></i> CSV 데이터 검증 완료</h4>
+                <div class="verification-details">
+                    <div class="detail-row">
+                        <span class="label">분석 파일:</span>
+                        <span class="value">${dataSource.file_name}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">분석 회차:</span>
+                        <span class="value">${dataSource.total_rounds.toLocaleString()}개</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">최신 회차:</span>
+                        <span class="value">${dataSource.last_round}회</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">기간:</span>
+                        <span class="value">${dataSource.date_range}</span>
+                    </div>
+                    <div class="verification-status">
+                        ${dataSource.verification}
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // 기존 검증 정보 제거
+        const existingVerification = document.querySelector('.data-verification-info');
+        if (existingVerification) {
+            existingVerification.remove();
+        }
+
+        // 예측 컨테이너 위에 삽입
+        const predictionsContainer = document.getElementById('predictionsContainer');
+        if (predictionsContainer) {
+            predictionsContainer.insertBefore(verificationElement, predictionsContainer.firstChild);
+        }
+    }
+
+    updatePerformanceIndicators(processingTime, data) {
+        const processingTimeElement = document.getElementById('processingTime');
+        const dataPointsElement = document.getElementById('dataPoints');
+        
+        if (processingTimeElement) {
+            processingTimeElement.textContent = `${processingTime}초`;
+        }
+        
+        if (dataPointsElement && data.data_source) {
+            dataPointsElement.textContent = `${data.data_source.total_rounds.toLocaleString()}회차`;
         }
     }
 
@@ -559,6 +653,35 @@ document.addEventListener('DOMContentLoaded', () => {
     const exportBtn = document.createElement('button');
     exportBtn.innerHTML = '<i class="fas fa-download"></i> 결과 내보내기';
     exportBtn.className = 'export-btn';
+    exportBtn.onclick = () => window.lottoApp.exportPredictions();
+    
+    const controlsContainer = document.querySelector('.main-controls');
+    if (controlsContainer) {
+        controlsContainer.appendChild(exportBtn);
+    }
+});
+
+// 서비스 워커 등록 (PWA 지원) - 조건부 실행으로 404 오류 방지
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', async () => {
+        try {
+            // sw.js 파일 존재 여부 확인
+            const swResponse = await fetch('/static/js/sw.js', { 
+                method: 'HEAD',
+                cache: 'no-cache'
+            });
+            
+            if (swResponse.ok) {
+                const registration = await navigator.serviceWorker.register('/static/js/sw.js');
+                console.log('✅ Service Worker 등록 성공:', registration);
+            } else {
+                console.log('ℹ️ Service Worker 파일이 없습니다. PWA 기능을 건너뜁니다.');
+            }
+        } catch (error) {
+            console.log('ℹ️ Service Worker 등록을 건너뜁니다:', error.message);
+        }
+    });
+}btn';
     exportBtn.onclick = () => window.lottoApp.exportPredictions();
     
     const controlsContainer = document.querySelector('.main-controls');
