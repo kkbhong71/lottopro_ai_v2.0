@@ -94,7 +94,228 @@ body {
     font-weight: 700;
 }
 
-/* 메인 컨트롤 */
+/* 최근 당첨번호 섹션 */
+.recent-winning-numbers {
+    background: var(--bg-white);
+    backdrop-filter: blur(10px);
+    border-radius: var(--border-radius-large);
+    padding: 30px;
+    margin-bottom: 30px;
+    box-shadow: var(--shadow-medium);
+    border: 2px solid rgba(255, 215, 0, 0.3);
+}
+
+.recent-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+}
+
+.recent-header h3 {
+    color: var(--text-dark);
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0;
+}
+
+.recent-header h3 i {
+    color: #FFD700;
+    font-size: 1.6rem;
+}
+
+.update-info {
+    background: linear-gradient(135deg, #4ECDC4, #44A08D);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.update-label {
+    opacity: 0.9;
+}
+
+.update-value {
+    font-weight: 700;
+}
+
+.recent-content {
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr;
+    gap: 30px;
+    align-items: center;
+}
+
+.recent-round-info {
+    text-align: center;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+}
+
+.round-text {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.round-date {
+    display: block;
+    font-size: 0.95rem;
+    opacity: 0.9;
+}
+
+.recent-numbers-display {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.recent-number {
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+    color: #333;
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.1rem;
+    box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
+    border: 2px solid white;
+    transition: transform 0.3s ease;
+    animation: goldShine 2s ease-in-out infinite;
+}
+
+.recent-number:hover {
+    transform: scale(1.1);
+}
+
+.recent-bonus {
+    background: linear-gradient(135deg, #FF6B6B, #FF8E53) !important;
+    color: white !important;
+    position: relative;
+}
+
+.recent-bonus::after {
+    content: 'B';
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #333;
+    color: white;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    font-size: 0.7rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+}
+
+@keyframes goldShine {
+    0%, 100% {
+        box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
+    }
+    50% {
+        box-shadow: 0 8px 25px rgba(255, 215, 0, 0.6);
+    }
+}
+
+.next-draw-countdown {
+    text-align: center;
+    background: linear-gradient(135deg, #96CEB4, #FFEAA7);
+    color: #333;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(150, 206, 180, 0.3);
+}
+
+.countdown-text {
+    display: block;
+    font-size: 0.95rem;
+    margin-bottom: 8px;
+    opacity: 0.8;
+}
+
+.countdown-value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+/* 반응형 - 최근 당첨번호 */
+@media (max-width: 768px) {
+    .recent-winning-numbers {
+        padding: 25px;
+    }
+    
+    .recent-header {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+    
+    .recent-content {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .recent-numbers-display {
+        order: -1;
+        margin-bottom: 10px;
+    }
+    
+    .recent-number {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+    
+    .recent-round-info, .next-draw-countdown {
+        padding: 15px;
+    }
+    
+    .round-text, .countdown-value {
+        font-size: 1.3rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .recent-numbers-display {
+        gap: 8px;
+    }
+    
+    .recent-number {
+        width: 35px;
+        height: 35px;
+        font-size: 0.9rem;
+    }
+    
+    .recent-header h3 {
+        font-size: 1.3rem;
+    }
+    
+    .update-info {
+        flex-direction: column;
+        gap: 4px;
+        text-align: center;
+    }
+}
 .main-controls {
     display: flex;
     gap: 20px;
