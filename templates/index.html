@@ -46,11 +46,35 @@
                     <span class="info-value">10개</span>
                 </div>
                 <div class="info-card">
-                    <span class="info-label">업데이트</span>
-                    <span class="info-value" id="lastUpdate">-</span>
+                    <span class="info-label">다음 추첨</span>
+                    <span class="info-value" id="nextDraw">-</span>
                 </div>
             </div>
         </header>
+
+        <!-- 최근 당첨번호 표시 섹션 -->
+        <div class="recent-winning-numbers">
+            <div class="recent-header">
+                <h3><i class="fas fa-trophy"></i> 최근 당첨번호</h3>
+                <div class="update-info">
+                    <span class="update-label">데이터 업데이트:</span>
+                    <span class="update-value" id="dataUpdateTime">-</span>
+                </div>
+            </div>
+            <div class="recent-content">
+                <div class="recent-round-info">
+                    <span class="round-text" id="recentRoundText">-회차</span>
+                    <span class="round-date" id="recentRoundDate">-</span>
+                </div>
+                <div class="recent-numbers-display" id="recentWinningNumbers">
+                    <!-- 최근 당첨번호가 여기에 표시됩니다 -->
+                </div>
+                <div class="next-draw-countdown">
+                    <span class="countdown-text">다음 추첨까지</span>
+                    <span class="countdown-value" id="daysUntilDraw">-일</span>
+                </div>
+            </div>
+        </div>
 
         <!-- 알고리즘 소개 섹션 -->
         <div class="algorithm-intro">
