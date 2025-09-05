@@ -3,37 +3,37 @@ class LottoApp {
         this.algorithms = {};
         this.statistics = {};
         this.currentModalData = null;
+        this.isLoading = false;
+        this.retryCount = 0;
+        this.maxRetries = 3;
         this.init();
     }
 
     init() {
         this.bindEvents();
-        this.loadInitialData();
-        this.checkForWeeklyUpdate(); // 주간 업데이트 체크 추가
-        console.log('🎰 로또프로 AI v2.0 초기화 완료');
+        this.loadInitialDataWithRetry();
+        this.checkForWeeklyUpdate();
+        console.log('🎰 로또프로 AI v2.0 초기화 완료 (메모리 최적화)');
     }
 
     bindEvents() {
         // 메인 버튼 이벤트
         document.getElementById('generateBtn').addEventListener('click', () => {
-            this.generatePredictions();
+            if (!this.isLoading) {
+                this.generatePredictions();
+            }
         });
 
         document.getElementById('statisticsBtn').addEventListener('click', () => {
-            this.toggleStatistics();
+            if (!this.isLoading) {
+                this.toggleStatistics();
+            }
         });
 
         // 카테고리 필터 버튼 이벤트
         document.addEventListener('click', (e) => {
             if (e.target.classList.contains('category-filter')) {
                 this.filterAlgorithms(e.target.dataset.category);
-            }
-        });
-
-        // 알고리즘 설명 탭 이벤트
-        document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('tab-btn')) {
-                this.switchTab(e.target.dataset.tab);
             }
         });
 
@@ -53,14 +53,6 @@ class LottoApp {
             this.saveNumbers();
         });
 
-        // 상세 분석 버튼 이벤트 (있는 경우)
-        const analyzeBtn = document.getElementById('analyzeNumbers');
-        if (analyzeBtn) {
-            analyzeBtn.addEventListener('click', () => {
-                this.showDetailedAnalysis();
-            });
-        }
-
         // 모달 외부 클릭시 닫기
         window.addEventListener('click', (event) => {
             const modal = document.getElementById('numbersModal');
@@ -68,67 +60,137 @@ class LottoApp {
                 this.closeModal();
             }
         });
+
+        // 네트워크 상태 모니터링
+        window.addEventListener('online', () => {
+            this.showSuccess('네트워크 연결이 복구되었습니다.');
+        });
+
+        window.addEventListener('offline', () => {
+            this.showError('네트워크 연결이 끊어졌습니다.');
+        });
     }
 
-    async loadInitialData() {
+    // 향상된 fetch 함수 (타임아웃 및 재시도 로직 포함)
+    async fetchWithTimeout(url, options = {}) {
+        const timeout = options.timeout || 30000; // 30초 타임아웃
+        
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeout);
+        
         try {
-            const statsResponse = await fetch('/api/statistics');
-            if (statsResponse.ok) {
-                const statsData = await statsResponse.json();
-                if (statsData.success) {
-                    this.updateDataInfo(statsData.data);
+            const response = await fetch(url, {
+                ...options,
+                signal: controller.signal,
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                }
+            });
+            
+            clearTimeout(timeoutId);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            return response;
+        } catch (error) {
+            clearTimeout(timeoutId);
+            
+            if (error.name === 'AbortError') {
+                throw new Error('요청 시간이 초과되었습니다. 서버가 과부하 상태일 수 있습니다.');
+            }
+            
+            throw error;
+        }
+    }
+
+    async loadInitialDataWithRetry() {
+        for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
+            try {
+                console.log(`📡 데이터 로드 시도 ${attempt}/${this.maxRetries}`);
+                
+                const response = await this.fetchWithTimeout('/api/statistics', { timeout: 20000 });
+                const data = await response.json();
+                
+                if (data.success) {
+                    this.updateDataInfo(data.data);
+                    console.log('✅ 초기 데이터 로드 성공');
+                    return;
+                } else {
+                    throw new Error(data.error || '서버에서 에러를 반환했습니다.');
+                }
+            } catch (error) {
+                console.error(`❌ 데이터 로드 시도 ${attempt} 실패:`, error.message);
+                
+                if (attempt === this.maxRetries) {
+                    this.showError(`초기 데이터 로드에 실패했습니다: ${error.message}`);
+                    this.showFallbackData();
+                } else {
+                    // 재시도 전 대기 (지수 백오프)
+                    const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
+                    console.log(`⏳ ${delay}ms 후 재시도...`);
+                    await new Promise(resolve => setTimeout(resolve, delay));
                 }
             }
-        } catch (error) {
-            console.error('초기 데이터 로드 실패:', error);
-            this.showError('데이터 로드에 실패했습니다.');
         }
+    }
+
+    showFallbackData() {
+        // 네트워크 실패 시 기본 데이터 표시
+        const fallbackData = {
+            total_draws: 1187,
+            last_draw_info: {
+                round: 1187,
+                date: '알 수 없음',
+                numbers: [1, 2, 3, 4, 5, 6],
+                bonus: 7
+            }
+        };
+        
+        this.updateDataInfo(fallbackData);
+        this.showError('서버 연결 실패로 기본 정보를 표시합니다.');
     }
 
     updateDataInfo(data) {
-        // 기본 정보 업데이트
-        document.getElementById('totalDraws').textContent = data.current_expected_round ? 
-            data.current_expected_round.toLocaleString() : data.total_draws.toLocaleString();
-        document.getElementById('lastDraw').textContent = `${data.last_draw_info.round}회`;
-        
-        // 다음 추첨 정보
-        if (data.next_draw) {
-            document.getElementById('nextDraw').textContent = `${data.next_draw.days_left}일 후`;
+        try {
+            document.getElementById('totalDraws').textContent = 
+                data.total_draws ? data.total_draws.toLocaleString() : '알 수 없음';
+            document.getElementById('lastDraw').textContent = 
+                data.last_draw_info ? `${data.last_draw_info.round}회` : '알 수 없음';
+            
+            this.displayRecentWinningNumbers(data);
+            this.displayDataUpdateInfo(data);
+        } catch (error) {
+            console.error('데이터 표시 중 오류:', error);
         }
-        
-        // 최근 당첨번호 표시
-        this.displayRecentWinningNumbers(data);
-        
-        // 데이터 업데이트 시간 표시
-        this.displayDataUpdateInfo(data);
     }
 
     displayRecentWinningNumbers(data) {
-        const recentRoundText = document.getElementById('recentRoundText');
-        const recentRoundDate = document.getElementById('recentRoundDate');
-        const recentWinningNumbers = document.getElementById('recentWinningNumbers');
-        
-        if (data.recent_draw) {
-            const { round, date, numbers, bonus } = data.recent_draw;
+        try {
+            const recentRoundText = document.getElementById('recentRoundText');
+            const recentRoundDate = document.getElementById('recentRoundDate');
+            const recentWinningNumbers = document.getElementById('recentWinningNumbers');
             
-            // 회차 및 날짜 정보
-            if (recentRoundText) {
-                recentRoundText.textContent = `${round}회차`;
-            }
-            if (recentRoundDate) {
-                recentRoundDate.textContent = this.formatDate(date);
-            }
-            
-            // 당첨번호 표시
-            if (recentWinningNumbers) {
+            if (data.last_draw_info && recentWinningNumbers) {
+                const { round, date, numbers, bonus } = data.last_draw_info;
+                
+                if (recentRoundText) {
+                    recentRoundText.textContent = `${round}회차`;
+                }
+                if (recentRoundDate) {
+                    recentRoundDate.textContent = this.formatDate(date);
+                }
+                
+                // 당첨번호 표시 (애니메이션 간소화)
                 recentWinningNumbers.innerHTML = '';
                 
                 // 일반 번호 6개
-                numbers.forEach((num, index) => {
+                numbers.forEach((num) => {
                     const numberElement = document.createElement('span');
                     numberElement.className = 'recent-number';
                     numberElement.textContent = num;
-                    numberElement.style.animationDelay = `${index * 0.1}s`;
                     recentWinningNumbers.appendChild(numberElement);
                 });
                 
@@ -136,33 +198,22 @@ class LottoApp {
                 const bonusElement = document.createElement('span');
                 bonusElement.className = 'recent-number recent-bonus';
                 bonusElement.textContent = bonus;
-                bonusElement.style.animationDelay = '0.6s';
                 recentWinningNumbers.appendChild(bonusElement);
             }
-        }
-        
-        // 다음 추첨까지 남은 일수
-        const daysUntilDraw = document.getElementById('daysUntilDraw');
-        if (daysUntilDraw && data.next_draw) {
-            daysUntilDraw.textContent = `${data.next_draw.days_left}일`;
-            
-            // 당일이면 특별 표시
-            if (data.next_draw.days_left === 0) {
-                daysUntilDraw.textContent = '오늘!';
-                daysUntilDraw.style.color = '#FF6B6B';
-                daysUntilDraw.style.fontWeight = 'bold';
-            }
+        } catch (error) {
+            console.error('당첨번호 표시 오류:', error);
         }
     }
 
     displayDataUpdateInfo(data) {
-        const dataUpdateTime = document.getElementById('dataUpdateTime');
-        if (dataUpdateTime) {
-            if (data.last_updated) {
-                dataUpdateTime.textContent = data.last_updated;
-            } else {
-                dataUpdateTime.textContent = new Date().toLocaleDateString('ko-KR');
+        try {
+            const dataUpdateTime = document.getElementById('dataUpdateTime');
+            if (dataUpdateTime) {
+                const updateTime = data.last_updated || new Date().toLocaleDateString('ko-KR');
+                dataUpdateTime.textContent = updateTime;
             }
+        } catch (error) {
+            console.error('업데이트 시간 표시 오류:', error);
         }
     }
 
@@ -172,256 +223,220 @@ class LottoApp {
             return date.toLocaleDateString('ko-KR', {
                 year: 'numeric',
                 month: 'short',
-                day: 'numeric',
-                weekday: 'short'
+                day: 'numeric'
             });
         } catch (e) {
-            return dateString;
+            return dateString || '알 수 없음';
         }
     }
 
-    // 자동 회차 업데이트 체크 (매주 월요일)
     checkForWeeklyUpdate() {
-        const now = new Date();
-        const isMonday = now.getDay() === 1; // 월요일 = 1
-        const hour = now.getHours();
-        
-        // 월요일 오전 9시 이후에만 업데이트 체크
-        if (isMonday && hour >= 9) {
-            const lastUpdateCheck = localStorage.getItem('lastUpdateCheck');
-            const today = now.toDateString();
+        try {
+            const now = new Date();
+            const isMonday = now.getDay() === 1;
+            const hour = now.getHours();
             
-            if (lastUpdateCheck !== today) {
-                console.log('🔄 주간 업데이트 체크 실행 (월요일)');
-                this.loadInitialData(); // 데이터 새로고침
-                localStorage.setItem('lastUpdateCheck', today);
+            if (isMonday && hour >= 9) {
+                const lastUpdateCheck = localStorage.getItem('lastUpdateCheck');
+                const today = now.toDateString();
                 
-                this.showNotification('📅 주간 회차 정보가 업데이트되었습니다!', 'success');
+                if (lastUpdateCheck !== today) {
+                    console.log('🔄 주간 업데이트 체크 실행');
+                    this.loadInitialDataWithRetry();
+                    localStorage.setItem('lastUpdateCheck', today);
+                    this.showSuccess('주간 회차 정보가 업데이트되었습니다!');
+                }
             }
+        } catch (error) {
+            console.error('주간 업데이트 체크 오류:', error);
         }
     }
 
     async generatePredictions() {
+        if (this.isLoading) return;
+        
         const loadingIndicator = document.getElementById('loadingIndicator');
         const predictionsContainer = document.getElementById('predictionsContainer');
         const generateBtn = document.getElementById('generateBtn');
-        const performanceSection = document.getElementById('performanceSection');
 
         try {
+            this.isLoading = true;
             loadingIndicator.style.display = 'block';
             predictionsContainer.style.display = 'none';
             generateBtn.disabled = true;
+            generateBtn.textContent = '분석 중...';
             
-            // 진행 상황 표시
-            this.updateProgress(0, '10개 AI 알고리즘 초기화 중...');
+            this.updateProgress(0, '5개 AI 알고리즘 초기화 중...');
             
             const startTime = performance.now();
             
-            // API 호출
-            const response = await fetch('/api/predictions');
+            // 최적화된 API 호출 (타임아웃 60초)
+            const response = await this.fetchWithTimeout('/api/predictions', { timeout: 60000 });
             const data = await response.json();
 
-            if (data.success) {
+            if (data.success && data.data) {
                 this.algorithms = data.data;
                 
-                // 데이터 소스 검증 정보 표시
-                if (data.data_source) {
-                    console.log('✅ CSV 데이터 검증 정보:', data.data_source);
-                    this.showDataVerification(data.data_source);
-                }
-                
+                const algorithmCount = Object.keys(data.data).length;
                 this.updateProgress(100, '분석 완료!');
                 
-                // 성능 지표 업데이트
                 const processingTime = ((performance.now() - startTime) / 1000).toFixed(2);
                 this.updatePerformanceIndicators(processingTime, data);
                 
                 this.renderPredictions();
                 predictionsContainer.style.display = 'block';
                 
-                if (performanceSection) {
-                    performanceSection.style.display = 'block';
-                }
-                
-                this.showSuccess(`✅ ${data.algorithms_count}개 AI 알고리즘이 실제 CSV 데이터를 분석하여 ${data.total_prediction_sets}개 예측 세트를 생성했습니다!`);
+                this.showSuccess(`✅ ${algorithmCount}개 AI 알고리즘이 분석을 완료했습니다!`);
             } else {
                 throw new Error(data.error || '예측 생성에 실패했습니다.');
             }
         } catch (error) {
             console.error('예측 생성 실패:', error);
-            this.showError('예측 생성에 실패했습니다. CSV 파일이 올바르게 업로드되었는지 확인해주세요.');
+            this.showError(`예측 생성 실패: ${error.message}`);
+            this.updateProgress(0, '분석 실패');
         } finally {
+            this.isLoading = false;
             loadingIndicator.style.display = 'none';
             generateBtn.disabled = false;
+            generateBtn.textContent = '🎲 AI 예측 생성';
         }
     }
 
     updateProgress(percentage, message) {
-        const progressFill = document.getElementById('progressFill');
-        const progressText = document.getElementById('progressText');
-        
-        if (progressFill) {
-            progressFill.style.width = `${percentage}%`;
-        }
-        
-        if (progressText) {
-            progressText.textContent = message;
-        }
-    }
-
-    showDataVerification(dataSource) {
-        // 데이터 검증 정보를 UI에 표시
-        const verificationElement = document.createElement('div');
-        verificationElement.className = 'data-verification-info';
-        verificationElement.innerHTML = `
-            <div class="verification-card">
-                <h4><i class="fas fa-check-circle"></i> CSV 데이터 검증 완료</h4>
-                <div class="verification-details">
-                    <div class="detail-row">
-                        <span class="label">분석 파일:</span>
-                        <span class="value">${dataSource.file_name}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="label">분석 회차:</span>
-                        <span class="value">${dataSource.total_rounds.toLocaleString()}개</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="label">최신 회차:</span>
-                        <span class="value">${dataSource.last_round}회</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="label">기간:</span>
-                        <span class="value">${dataSource.date_range}</span>
-                    </div>
-                    <div class="verification-status">
-                        ${dataSource.verification}
-                    </div>
-                </div>
-            </div>
-        `;
-
-        // 기존 검증 정보 제거
-        const existingVerification = document.querySelector('.data-verification-info');
-        if (existingVerification) {
-            existingVerification.remove();
-        }
-
-        // 예측 컨테이너 위에 삽입
-        const predictionsContainer = document.getElementById('predictionsContainer');
-        if (predictionsContainer) {
-            predictionsContainer.insertBefore(verificationElement, predictionsContainer.firstChild);
+        try {
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            
+            if (progressFill) {
+                progressFill.style.width = `${percentage}%`;
+            }
+            
+            if (progressText) {
+                progressText.textContent = message;
+            }
+        } catch (error) {
+            console.error('진행 상황 업데이트 오류:', error);
         }
     }
 
     updatePerformanceIndicators(processingTime, data) {
-        const processingTimeElement = document.getElementById('processingTime');
-        const dataPointsElement = document.getElementById('dataPoints');
-        
-        if (processingTimeElement) {
-            processingTimeElement.textContent = `${processingTime}초`;
-        }
-        
-        if (dataPointsElement && data.data_source) {
-            dataPointsElement.textContent = `${data.data_source.total_rounds.toLocaleString()}회차`;
+        try {
+            const processingTimeElement = document.getElementById('processingTime');
+            const dataPointsElement = document.getElementById('dataPoints');
+            
+            if (processingTimeElement) {
+                processingTimeElement.textContent = `${processingTime}초`;
+            }
+            
+            if (dataPointsElement && data.total_draws) {
+                dataPointsElement.textContent = `${data.total_draws.toLocaleString()}회차`;
+            }
+        } catch (error) {
+            console.error('성능 지표 업데이트 오류:', error);
         }
     }
 
     renderPredictions() {
-        const container = document.getElementById('algorithmsGrid');
-        container.innerHTML = '';
+        try {
+            const container = document.getElementById('algorithmsGrid');
+            container.innerHTML = '';
 
-        // 카테고리 필터 버튼 추가
-        this.addCategoryFilters(container);
+            // 카테고리 필터 (5개 알고리즘으로 수정)
+            this.addCategoryFilters(container);
 
-        const algorithmColors = {
-            // 기본 알고리즘 (Basic)
-            'frequency': '#FF6B6B',
-            'hot_cold': '#4ECDC4', 
-            'pattern': '#45B7D1',
-            'statistical': '#96CEB4',
-            'machine_learning': '#FFEAA7',
-            // 고급 알고리즘 (Advanced)
-            'neural_network': '#A29BFE',
-            'markov_chain': '#FD79A8',
-            'genetic': '#00B894',
-            'co_occurrence': '#E17055',
-            'time_series': '#6C5CE7'
-        };
+            const algorithmColors = {
+                'frequency': '#FF6B6B',
+                'hot_cold': '#4ECDC4', 
+                'pattern': '#45B7D1',
+                'statistical': '#96CEB4',
+                'co_occurrence': '#E17055'
+            };
 
-        const algorithmIcons = {
-            // 기본 알고리즘
-            'frequency': 'fas fa-chart-bar',
-            'hot_cold': 'fas fa-thermometer-half',
-            'pattern': 'fas fa-puzzle-piece',
-            'statistical': 'fas fa-calculator',
-            'machine_learning': 'fas fa-robot',
-            // 고급 알고리즘
-            'neural_network': 'fas fa-brain',
-            'markov_chain': 'fas fa-project-diagram',
-            'genetic': 'fas fa-dna',
-            'co_occurrence': 'fas fa-link',
-            'time_series': 'fas fa-chart-line'
-        };
+            const algorithmIcons = {
+                'frequency': 'fas fa-chart-bar',
+                'hot_cold': 'fas fa-thermometer-half',
+                'pattern': 'fas fa-puzzle-piece',
+                'statistical': 'fas fa-calculator',
+                'co_occurrence': 'fas fa-link'
+            };
 
-        // 카테고리별로 정렬
-        const basicAlgorithms = {};
-        const advancedAlgorithms = {};
+            // 카테고리별로 정렬
+            const basicAlgorithms = {};
+            const advancedAlgorithms = {};
 
-        for (const [key, algorithm] of Object.entries(this.algorithms)) {
-            if (algorithm.category === 'basic') {
-                basicAlgorithms[key] = algorithm;
-            } else {
-                advancedAlgorithms[key] = algorithm;
+            for (const [key, algorithm] of Object.entries(this.algorithms)) {
+                if (algorithm.category === 'basic') {
+                    basicAlgorithms[key] = algorithm;
+                } else {
+                    advancedAlgorithms[key] = algorithm;
+                }
             }
-        }
 
-        // 기본 알고리즘 섹션
-        const basicSection = this.createAlgorithmSection('기본 AI 알고리즘', 'basic-algorithms');
-        container.appendChild(basicSection);
+            // 기본 알고리즘 섹션
+            if (Object.keys(basicAlgorithms).length > 0) {
+                const basicSection = this.createAlgorithmSection('기본 AI 알고리즘', 'basic-algorithms');
+                container.appendChild(basicSection);
 
-        for (const [key, algorithm] of Object.entries(basicAlgorithms)) {
-            const algorithmCard = this.createAlgorithmCard(
-                key, 
-                algorithm, 
-                algorithmColors[key], 
-                algorithmIcons[key]
-            );
-            basicSection.appendChild(algorithmCard);
-        }
+                for (const [key, algorithm] of Object.entries(basicAlgorithms)) {
+                    const algorithmCard = this.createAlgorithmCard(
+                        key, 
+                        algorithm, 
+                        algorithmColors[key] || '#999999', 
+                        algorithmIcons[key] || 'fas fa-cog'
+                    );
+                    basicSection.appendChild(algorithmCard);
+                }
+            }
 
-        // 고급 알고리즘 섹션
-        const advancedSection = this.createAlgorithmSection('고급 AI 알고리즘', 'advanced-algorithms');
-        container.appendChild(advancedSection);
+            // 고급 알고리즘 섹션
+            if (Object.keys(advancedAlgorithms).length > 0) {
+                const advancedSection = this.createAlgorithmSection('고급 AI 알고리즘', 'advanced-algorithms');
+                container.appendChild(advancedSection);
 
-        for (const [key, algorithm] of Object.entries(advancedAlgorithms)) {
-            const algorithmCard = this.createAlgorithmCard(
-                key, 
-                algorithm, 
-                algorithmColors[key], 
-                algorithmIcons[key]
-            );
-            advancedSection.appendChild(algorithmCard);
+                for (const [key, algorithm] of Object.entries(advancedAlgorithms)) {
+                    const algorithmCard = this.createAlgorithmCard(
+                        key, 
+                        algorithm, 
+                        algorithmColors[key] || '#999999', 
+                        algorithmIcons[key] || 'fas fa-cog'
+                    );
+                    advancedSection.appendChild(algorithmCard);
+                }
+            }
+        } catch (error) {
+            console.error('예측 결과 렌더링 오류:', error);
+            this.showError('예측 결과를 표시하는 중 오류가 발생했습니다.');
         }
     }
 
     addCategoryFilters(container) {
-        const filterContainer = document.createElement('div');
-        filterContainer.className = 'category-filters';
-        filterContainer.innerHTML = `
-            <h3><i class="fas fa-filter"></i> 알고리즘 필터</h3>
-            <div class="filter-buttons">
-                <button class="category-filter active" data-category="all">
-                    <i class="fas fa-th"></i> 전체 (10개)
-                </button>
-                <button class="category-filter" data-category="basic">
-                    <i class="fas fa-star"></i> 기본 (5개)
-                </button>
-                <button class="category-filter" data-category="advanced">
-                    <i class="fas fa-rocket"></i> 고급 (5개)
-                </button>
-            </div>
-        `;
-        container.appendChild(filterContainer);
+        try {
+            const totalAlgorithms = Object.keys(this.algorithms).length;
+            const basicCount = Object.values(this.algorithms).filter(alg => alg.category === 'basic').length;
+            const advancedCount = totalAlgorithms - basicCount;
+
+            const filterContainer = document.createElement('div');
+            filterContainer.className = 'category-filters';
+            filterContainer.innerHTML = `
+                <h3><i class="fas fa-filter"></i> 알고리즘 필터</h3>
+                <div class="filter-buttons">
+                    <button class="category-filter active" data-category="all">
+                        <i class="fas fa-th"></i> 전체 (${totalAlgorithms}개)
+                    </button>
+                    ${basicCount > 0 ? `
+                    <button class="category-filter" data-category="basic">
+                        <i class="fas fa-star"></i> 기본 (${basicCount}개)
+                    </button>` : ''}
+                    ${advancedCount > 0 ? `
+                    <button class="category-filter" data-category="advanced">
+                        <i class="fas fa-rocket"></i> 고급 (${advancedCount}개)
+                    </button>` : ''}
+                </div>
+            `;
+            container.appendChild(filterContainer);
+        } catch (error) {
+            console.error('필터 생성 오류:', error);
+        }
     }
 
     createAlgorithmSection(title, id) {
@@ -438,149 +453,98 @@ class LottoApp {
     }
 
     createAlgorithmCard(key, algorithm, color, icon) {
-        const card = document.createElement('div');
-        card.className = 'algorithm-card';
-        card.style.borderLeftColor = color;
-        card.dataset.category = algorithm.category;
+        try {
+            const card = document.createElement('div');
+            card.className = 'algorithm-card';
+            card.style.borderLeftColor = color;
+            card.dataset.category = algorithm.category;
 
-        const predictionsHTML = algorithm.predictions.map((prediction, index) => {
-            return `
-                <div class="number-set" data-algorithm="${key}" data-index="${index}">
-                    <div class="set-label">세트 ${index + 1}</div>
-                    <div class="numbers">
-                        ${prediction.map(num => `<span class="number">${num}</span>`).join('')}
+            const predictionsHTML = algorithm.predictions.map((prediction, index) => {
+                return `
+                    <div class="number-set" data-algorithm="${key}" data-index="${index}">
+                        <div class="set-label">세트 ${index + 1}</div>
+                        <div class="numbers">
+                            ${prediction.map(num => `<span class="number">${num}</span>`).join('')}
+                        </div>
                     </div>
+                `;
+            }).join('');
+
+            const categoryBadge = algorithm.category === 'advanced' ? 
+                `<span class="category-badge advanced">HIGH-TECH</span>` : 
+                `<span class="category-badge basic">CLASSIC</span>`;
+
+            card.innerHTML = `
+                <div class="algorithm-header">
+                    <div class="algorithm-info">
+                        <i class="${icon}" style="color: ${color}"></i>
+                        <div>
+                            <h3>${algorithm.name}</h3>
+                            <p>${algorithm.description}</p>
+                        </div>
+                    </div>
+                    <div class="algorithm-badges">
+                        ${categoryBadge}
+                        <div class="algorithm-badge" style="background-color: ${color}">
+                            ${algorithm.predictions.length}세트
+                        </div>
+                    </div>
+                </div>
+                <div class="predictions-list">
+                    ${predictionsHTML}
                 </div>
             `;
-        }).join('');
 
-        const categoryBadge = algorithm.category === 'advanced' ? 
-            `<span class="category-badge advanced">HIGH-TECH</span>` : 
-            `<span class="category-badge basic">CLASSIC</span>`;
-
-        card.innerHTML = `
-            <div class="algorithm-header">
-                <div class="algorithm-info">
-                    <i class="${icon}" style="color: ${color}"></i>
-                    <div>
-                        <h3>${algorithm.name}</h3>
-                        <p>${algorithm.description}</p>
-                    </div>
-                </div>
-                <div class="algorithm-badges">
-                    ${categoryBadge}
-                    <div class="algorithm-badge" style="background-color: ${color}">
-                        ${algorithm.predictions.length}세트
-                    </div>
-                </div>
-            </div>
-            <div class="predictions-list">
-                ${predictionsHTML}
-            </div>
-        `;
-
-        // 번호 세트 클릭 이벤트 추가
-        card.addEventListener('click', (e) => {
-            const numberSet = e.target.closest('.number-set');
-            if (numberSet) {
-                const algorithmKey = numberSet.dataset.algorithm;
-                const index = parseInt(numberSet.dataset.index);
-                this.showNumbersModal(algorithmKey, index);
-            }
-        });
-
-        return card;
-    }
-
-    filterAlgorithms(category) {
-        // 필터 버튼 활성화 상태 업데이트
-        document.querySelectorAll('.category-filter').forEach(btn => {
-            btn.classList.remove('active');
-        });
-        document.querySelector(`[data-category="${category}"]`).classList.add('active');
-
-        // 알고리즘 카드 필터링
-        const cards = document.querySelectorAll('.algorithm-card');
-        const sections = document.querySelectorAll('.algorithm-section');
-
-        if (category === 'all') {
-            cards.forEach(card => {
-                card.style.display = 'block';
-                this.animateCard(card);
-            });
-            sections.forEach(section => section.style.display = 'block');
-        } else {
-            cards.forEach(card => {
-                if (card.dataset.category === category) {
-                    card.style.display = 'block';
-                    this.animateCard(card);
-                } else {
-                    card.style.display = 'none';
+            // 번호 세트 클릭 이벤트 추가
+            card.addEventListener('click', (e) => {
+                const numberSet = e.target.closest('.number-set');
+                if (numberSet) {
+                    const algorithmKey = numberSet.dataset.algorithm;
+                    const index = parseInt(numberSet.dataset.index);
+                    this.showNumbersModal(algorithmKey, index);
                 }
             });
 
-            // 섹션 표시/숨김
-            sections.forEach(section => {
-                const visibleCards = section.querySelectorAll(`.algorithm-card[data-category="${category}"]`);
-                if (visibleCards.length > 0) {
-                    section.style.display = 'block';
-                } else {
-                    section.style.display = 'none';
-                }
-            });
+            return card;
+        } catch (error) {
+            console.error('알고리즘 카드 생성 오류:', error);
+            return document.createElement('div'); // 빈 div 반환
         }
     }
 
-    animateCard(card) {
-        card.style.opacity = '0';
-        card.style.transform = 'translateY(20px)';
-        
-        requestAnimationFrame(() => {
-            card.style.transition = 'all 0.3s ease';
-            card.style.opacity = '1';
-            card.style.transform = 'translateY(0)';
-        });
-    }
+    filterAlgorithms(category) {
+        try {
+            // 필터 버튼 활성화 상태 업데이트
+            document.querySelectorAll('.category-filter').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-category="${category}"]`).classList.add('active');
 
-    switchTab(tabName) {
-        // 모든 탭 버튼에서 active 클래스 제거
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.classList.remove('active');
-        });
+            // 알고리즘 카드 필터링 (애니메이션 간소화)
+            const cards = document.querySelectorAll('.algorithm-card');
+            const sections = document.querySelectorAll('.algorithm-section');
 
-        // 모든 탭 콘텐츠 숨기기
-        document.querySelectorAll('.tab-content').forEach(content => {
-            content.classList.remove('active');
-        });
+            if (category === 'all') {
+                cards.forEach(card => card.style.display = 'block');
+                sections.forEach(section => section.style.display = 'block');
+            } else {
+                cards.forEach(card => {
+                    card.style.display = card.dataset.category === category ? 'block' : 'none';
+                });
 
-        // 선택된 탭 버튼에 active 클래스 추가
-        document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
-
-        // 선택된 탭 콘텐츠 표시
-        const targetTab = tabName === 'basic' ? 'basic-algorithms' : 'advanced-algorithms';
-        document.getElementById(targetTab).classList.add('active');
-
-        // 애니메이션 효과
-        this.animateTabContent(targetTab);
-    }
-
-    animateTabContent(tabId) {
-        const tabContent = document.getElementById(tabId);
-        const cards = tabContent.querySelectorAll('.algo-explanation-card');
-        
-        cards.forEach((card, index) => {
-            card.style.opacity = '0';
-            card.style.transform = 'translateY(30px)';
-            
-            setTimeout(() => {
-                card.style.transition = 'all 0.5s ease';
-                card.style.opacity = '1';
-                card.style.transform = 'translateY(0)';
-            }, index * 100);
-        });
+                sections.forEach(section => {
+                    const visibleCards = section.querySelectorAll(`.algorithm-card[data-category="${category}"]`);
+                    section.style.display = visibleCards.length > 0 ? 'block' : 'none';
+                });
+            }
+        } catch (error) {
+            console.error('필터링 오류:', error);
+        }
     }
 
     async toggleStatistics() {
+        if (this.isLoading) return;
+        
         const statisticsSection = document.getElementById('statisticsSection');
         const isVisible = statisticsSection.style.display !== 'none';
 
@@ -590,7 +554,10 @@ class LottoApp {
         }
 
         try {
-            const response = await fetch('/api/statistics');
+            this.isLoading = true;
+            this.showNotification('통계 데이터 로드 중...', 'info');
+            
+            const response = await this.fetchWithTimeout('/api/statistics', { timeout: 30000 });
             const data = await response.json();
 
             if (data.success) {
@@ -602,129 +569,178 @@ class LottoApp {
                     behavior: 'smooth', 
                     block: 'start' 
                 });
+                
+                this.showSuccess('통계 데이터를 성공적으로 로드했습니다.');
             } else {
                 throw new Error(data.error || '통계 로드에 실패했습니다.');
             }
         } catch (error) {
             console.error('통계 로드 실패:', error);
-            this.showError('통계 데이터 로드에 실패했습니다.');
+            this.showError(`통계 데이터 로드 실패: ${error.message}`);
+        } finally {
+            this.isLoading = false;
         }
     }
 
     renderStatistics() {
-        // 최근 당첨 정보
-        const recentNumbers = document.getElementById('recentNumbers');
-        const recentDetails = document.getElementById('recentDetails');
-        
-        const lastDraw = this.statistics.last_draw_info;
-        recentNumbers.innerHTML = lastDraw.numbers.map(num => 
-            `<span class="number">${num}</span>`
-        ).join('') + `<span class="bonus-number">${lastDraw.bonus}</span>`;
-        
-        recentDetails.innerHTML = `
-            <div class="detail-item">
-                <span class="label">회차:</span>
-                <span class="value">${lastDraw.round}회</span>
-            </div>
-            <div class="detail-item">
-                <span class="label">추첨일:</span>
-                <span class="value">${lastDraw.date}</span>
-            </div>
-        `;
+        try {
+            // 최근 당첨 정보
+            const recentNumbers = document.getElementById('recentNumbers');
+            const recentDetails = document.getElementById('recentDetails');
+            
+            if (this.statistics.last_draw_info && recentNumbers) {
+                const lastDraw = this.statistics.last_draw_info;
+                recentNumbers.innerHTML = lastDraw.numbers.map(num => 
+                    `<span class="number">${num}</span>`
+                ).join('') + `<span class="bonus-number">${lastDraw.bonus}</span>`;
+                
+                if (recentDetails) {
+                    recentDetails.innerHTML = `
+                        <div class="detail-item">
+                            <span class="label">회차:</span>
+                            <span class="value">${lastDraw.round}회</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">추첨일:</span>
+                            <span class="value">${lastDraw.date}</span>
+                        </div>
+                    `;
+                }
+            }
 
-        // 빈도 통계 렌더링
-        this.renderFrequencyList('mostFrequent', this.statistics.most_frequent);
-        this.renderFrequencyList('leastFrequent', this.statistics.least_frequent);
-        this.renderFrequencyList('recentHot', this.statistics.recent_hot);
+            // 빈도 통계 렌더링
+            if (this.statistics.most_frequent) {
+                this.renderFrequencyList('mostFrequent', this.statistics.most_frequent);
+            }
+            if (this.statistics.least_frequent) {
+                this.renderFrequencyList('leastFrequent', this.statistics.least_frequent);
+            }
+            if (this.statistics.recent_hot) {
+                this.renderFrequencyList('recentHot', this.statistics.recent_hot);
+            }
+        } catch (error) {
+            console.error('통계 렌더링 오류:', error);
+        }
     }
 
     renderFrequencyList(containerId, data) {
-        const container = document.getElementById(containerId);
-        container.innerHTML = data.map((item, index) => `
-            <div class="frequency-item">
-                <span class="rank">${index + 1}</span>
-                <span class="number">${item.number}</span>
-                <span class="count">${item.count}회</span>
-            </div>
-        `).join('');
+        try {
+            const container = document.getElementById(containerId);
+            if (container && data) {
+                container.innerHTML = data.map((item, index) => `
+                    <div class="frequency-item">
+                        <span class="rank">${index + 1}</span>
+                        <span class="number">${item.number}</span>
+                        <span class="count">${item.count}회</span>
+                    </div>
+                `).join('');
+            }
+        } catch (error) {
+            console.error('빈도 목록 렌더링 오류:', error);
+        }
     }
 
     showNumbersModal(algorithmKey, index) {
-        const algorithm = this.algorithms[algorithmKey];
-        const numbers = algorithm.predictions[index];
-        
-        this.currentModalData = {
-            algorithm: algorithm.name,
-            numbers: numbers,
-            algorithmKey: algorithmKey,
-            index: index,
-            category: algorithm.category
-        };
+        try {
+            const algorithm = this.algorithms[algorithmKey];
+            if (!algorithm || !algorithm.predictions[index]) return;
+            
+            const numbers = algorithm.predictions[index];
+            
+            this.currentModalData = {
+                algorithm: algorithm.name,
+                numbers: numbers,
+                algorithmKey: algorithmKey,
+                index: index,
+                category: algorithm.category
+            };
 
-        const categoryText = algorithm.category === 'advanced' ? ' (고급 AI)' : ' (기본 AI)';
-        document.getElementById('modalTitle').textContent = 
-            `${algorithm.name}${categoryText} - 세트 ${index + 1}`;
-        
-        const modalNumbers = document.getElementById('modalNumbers');
-        modalNumbers.innerHTML = numbers.map(num => 
-            `<span class="modal-number">${num}</span>`
-        ).join('');
+            const categoryText = algorithm.category === 'advanced' ? ' (고급 AI)' : ' (기본 AI)';
+            document.getElementById('modalTitle').textContent = 
+                `${algorithm.name}${categoryText} - 세트 ${index + 1}`;
+            
+            const modalNumbers = document.getElementById('modalNumbers');
+            modalNumbers.innerHTML = numbers.map(num => 
+                `<span class="modal-number">${num}</span>`
+            ).join('');
 
-        document.getElementById('numbersModal').style.display = 'block';
+            document.getElementById('numbersModal').style.display = 'block';
+        } catch (error) {
+            console.error('모달 표시 오류:', error);
+        }
     }
 
     closeModal() {
-        document.getElementById('numbersModal').style.display = 'none';
-        this.currentModalData = null;
+        try {
+            document.getElementById('numbersModal').style.display = 'none';
+            this.currentModalData = null;
+        } catch (error) {
+            console.error('모달 닫기 오류:', error);
+        }
     }
 
     copyNumbers() {
         if (!this.currentModalData) return;
 
-        const numbersText = this.currentModalData.numbers.join(', ');
-        const fullText = `${this.currentModalData.algorithm} 예측번호: ${numbersText}`;
-        
-        if (navigator.clipboard) {
-            navigator.clipboard.writeText(fullText).then(() => {
-                this.showSuccess('번호가 클립보드에 복사되었습니다!');
-            }).catch(() => {
+        try {
+            const numbersText = this.currentModalData.numbers.join(', ');
+            const fullText = `${this.currentModalData.algorithm} 예측번호: ${numbersText}`;
+            
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(fullText).then(() => {
+                    this.showSuccess('번호가 클립보드에 복사되었습니다!');
+                }).catch(() => {
+                    this.fallbackCopy(fullText);
+                });
+            } else {
                 this.fallbackCopy(fullText);
-            });
-        } else {
-            this.fallbackCopy(fullText);
+            }
+        } catch (error) {
+            console.error('복사 오류:', error);
+            this.showError('복사에 실패했습니다.');
         }
     }
 
     fallbackCopy(text) {
-        const textArea = document.createElement('textarea');
-        textArea.value = text;
-        document.body.appendChild(textArea);
-        textArea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textArea);
-        this.showSuccess('번호가 복사되었습니다!');
+        try {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            this.showSuccess('번호가 복사되었습니다!');
+        } catch (error) {
+            console.error('백업 복사 실패:', error);
+            this.showError('복사 기능을 사용할 수 없습니다.');
+        }
     }
 
     saveNumbers() {
         if (!this.currentModalData) return;
 
-        const saveData = {
-            algorithm: this.currentModalData.algorithm,
-            category: this.currentModalData.category,
-            numbers: this.currentModalData.numbers,
-            timestamp: new Date().toISOString(),
-            round: this.statistics.last_draw_info?.round + 1 || '미확인'
-        };
+        try {
+            const saveData = {
+                algorithm: this.currentModalData.algorithm,
+                category: this.currentModalData.category,
+                numbers: this.currentModalData.numbers,
+                timestamp: new Date().toISOString(),
+                round: this.statistics.last_draw_info?.round + 1 || '미확인'
+            };
 
-        let savedNumbers = JSON.parse(localStorage.getItem('savedLottoNumbers') || '[]');
-        savedNumbers.push(saveData);
-        
-        if (savedNumbers.length > 50) {
-            savedNumbers = savedNumbers.slice(-50);
+            let savedNumbers = JSON.parse(localStorage.getItem('savedLottoNumbers') || '[]');
+            savedNumbers.push(saveData);
+            
+            if (savedNumbers.length > 50) {
+                savedNumbers = savedNumbers.slice(-50);
+            }
+            
+            localStorage.setItem('savedLottoNumbers', JSON.stringify(savedNumbers));
+            this.showSuccess('번호가 저장되었습니다!');
+        } catch (error) {
+            console.error('저장 오류:', error);
+            this.showError('저장에 실패했습니다.');
         }
-        
-        localStorage.setItem('savedLottoNumbers', JSON.stringify(savedNumbers));
-        this.showSuccess('번호가 저장되었습니다!');
     }
 
     showSuccess(message) {
@@ -736,74 +752,53 @@ class LottoApp {
     }
 
     showNotification(message, type) {
-        const existingNotification = document.querySelector('.notification');
-        if (existingNotification) {
-            existingNotification.remove();
-        }
+        try {
+            const existingNotification = document.querySelector('.notification');
+            if (existingNotification) {
+                existingNotification.remove();
+            }
 
-        const notification = document.createElement('div');
-        notification.className = `notification notification-${type}`;
-        notification.innerHTML = `
-            <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
-            <span>${message}</span>
-        `;
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            
+            const iconClass = type === 'success' ? 'fa-check-circle' : 
+                            type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle';
+            
+            notification.innerHTML = `
+                <i class="fas ${iconClass}"></i>
+                <span>${message}</span>
+            `;
 
-        document.body.appendChild(notification);
+            document.body.appendChild(notification);
 
-        setTimeout(() => {
-            notification.classList.add('notification-fade');
             setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.parentNode.removeChild(notification);
-                }
-            }, 300);
-        }, 3000);
-    }
-
-    exportPredictions() {
-        if (!this.algorithms) return;
-
-        const exportData = {
-            timestamp: new Date().toISOString(),
-            totalAlgorithms: Object.keys(this.algorithms).length,
-            algorithms: this.algorithms
-        };
-
-        const dataStr = JSON.stringify(exportData, null, 2);
-        const dataBlob = new Blob([dataStr], {type: 'application/json'});
-        
-        const url = URL.createObjectURL(dataBlob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `lotto_predictions_${new Date().toISOString().split('T')[0]}.json`;
-        link.click();
-        
-        URL.revokeObjectURL(url);
-        this.showSuccess('예측 결과가 다운로드되었습니다!');
+                notification.classList.add('notification-fade');
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
+        } catch (error) {
+            console.error('알림 표시 오류:', error);
+        }
     }
 }
 
-// 앱 초기화
+// 앱 초기화 (메모리 최적화)
 document.addEventListener('DOMContentLoaded', () => {
-    window.lottoApp = new LottoApp();
-    
-    // 추가 기능 버튼들
-    const exportBtn = document.createElement('button');
-    exportBtn.innerHTML = '<i class="fas fa-download"></i> 결과 내보내기';
-    exportBtn.className = 'export-btn';
-    exportBtn.onclick = () => window.lottoApp.exportPredictions();
-    
-    const controlsContainer = document.querySelector('.main-controls');
-    if (controlsContainer) {
-        controlsContainer.appendChild(exportBtn);
+    try {
+        window.lottoApp = new LottoApp();
+        console.log('✅ 로또 앱 초기화 완료');
+    } catch (error) {
+        console.error('❌ 앱 초기화 실패:', error);
     }
 });
 
-// 서비스 워커 등록 (PWA 지원) - 조건부 실행으로 404 오류 방지
+// 서비스 워커 등록 (조건부 실행으로 404 오류 방지)
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
         try {
-            // sw.js 파일 존재 여부 확인
             const swResponse = await fetch('/static/js/sw.js', { 
                 method: 'HEAD',
                 cache: 'no-cache'
@@ -811,12 +806,12 @@ if ('serviceWorker' in navigator) {
             
             if (swResponse.ok) {
                 const registration = await navigator.serviceWorker.register('/static/js/sw.js');
-                console.log('✅ Service Worker 등록 성공:', registration);
+                console.log('✅ Service Worker 등록 성공');
             } else {
-                console.log('ℹ️ Service Worker 파일이 없습니다. PWA 기능을 건너뜁니다.');
+                console.log('ℹ️ Service Worker 파일이 없습니다.');
             }
         } catch (error) {
-            console.log('ℹ️ Service Worker 등록을 건너뜁니다:', error.message);
+            console.log('ℹ️ Service Worker 등록을 건너뜁니다.');
         }
     });
 }
