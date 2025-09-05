@@ -1,880 +1,369 @@
-from flask import Flask, render_template, request, jsonify, session, send_file
-import os
-import random
+from flask import Flask, render_template, request, jsonify
+import pandas as pd
 import numpy as np
-from datetime import datetime, timedelta
+import random
+from collections import Counter
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.preprocessing import StandardScaler
+import os
 import json
-import base64
-from collections import Counter, defaultdict
-import hashlib
-import uuid
-import logging
-import traceback
-import re
-import math
-from io import BytesIO
-import time
-import concurrent.futures
-from functools import wraps
-import signal
+from datetime import datetime, timedelta
 
-# 🆕 성능 모니터링 및 캐싱 시스템 import
-try:
-    from monitoring.performance_monitor import init_monitoring, monitor_performance
-    MONITORING_AVAILABLE = True
-    print("[SYSTEM] ✅ 성능 모니터링 시스템 로드 완료")
-except ImportError as e:
-    MONITORING_AVAILABLE = False
-    print(f"[WARNING] ❌ 성능 모니터링 시스템 로드 실패: {e}")
-
-try:
-    from utils.cache_manager import init_cache_system, cached
-    CACHE_AVAILABLE = True
-    print("[SYSTEM] ✅ 캐시 시스템 로드 완료")
-except ImportError as e:
-    CACHE_AVAILABLE = False
-    print(f"[WARNING] ❌ 캐시 시스템 로드 실패: {e}")
-
-# Optional imports with fallbacks
-try:
-    import pandas as pd
-    PANDAS_AVAILABLE = True
-except ImportError:
-    PANDAS_AVAILABLE = False
-
-try:
-    import qrcode
-    from PIL import Image
-    QR_AVAILABLE = True
-except ImportError:
-    QR_AVAILABLE = False
-
-try:
-    from sklearn.ensemble import RandomForestRegressor
-    from sklearn.preprocessing import StandardScaler
-    ML_AVAILABLE = True
-except ImportError:
-    ML_AVAILABLE = False
-
-# Flask 앱 초기화
 app = Flask(__name__)
 
-# 환경변수 기반 설정 (기존 방식 유지)
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'lottopro-ai-v2-enhanced-2024')
-app.config['DEBUG'] = os.environ.get('DEBUG', 'False').lower() == 'true'
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
-
-# 보안 설정
-if not app.config['DEBUG']:
-    app.config['SESSION_COOKIE_SECURE'] = False  # HTTP에서도 작동하도록 설정
-    app.config['SESSION_COOKIE_HTTPONLY'] = True
-    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-
-# 로깅 설정
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-app.logger.setLevel(logging.INFO)
-
-# 글로벌 변수
-sample_data = None
-user_saved_numbers = {}
-cached_stats = {}
-request_counts = defaultdict(int)
-error_counts = defaultdict(int)
-performance_metrics = {
-    'total_requests': 0,
-    'total_errors': 0,
-    'avg_response_time': 0,
-    'start_time': datetime.now()
-}
-
-# 🆕 시스템 인스턴스 (초기화 후 설정됨)
-monitor = None
-cache_manager = None
-
-# 타임아웃 및 에러 처리 데코레이터
-def timeout_handler(timeout_seconds=10):
-    """요청 타임아웃 처리 데코레이터"""
-    def decorator(f):
-        @wraps(f)
-        def wrapper(*args, **kwargs):
-            start_time = time.time()
-            
-            def timeout_error(signum, frame):
-                raise TimeoutError(f"Request timed out after {timeout_seconds} seconds")
-            
-            try:
-                # 타임아웃 시그널 설정 (Unix 계열에서만 동작)
-                if hasattr(signal, 'SIGALRM'):
-                    old_handler = signal.signal(signal.SIGALRM, timeout_error)
-                    signal.alarm(timeout_seconds)
-                
-                # ThreadPoolExecutor를 사용한 타임아웃 처리
-                with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-                    future = executor.submit(f, *args, **kwargs)
-                    try:
-                        result = future.result(timeout=timeout_seconds)
-                        
-                        # 성공 시 메트릭 업데이트
-                        response_time = time.time() - start_time
-                        update_performance_metrics(response_time, success=True)
-                        
-                        return result
-                    except concurrent.futures.TimeoutError:
-                        # 타임아웃 에러 처리
-                        update_performance_metrics(time.time() - start_time, success=False)
-                        safe_log(f"Request timeout in {f.__name__}: {timeout_seconds}s")
-                        return jsonify({
-                            'success': False,
-                            'error': True,
-                            'message': '요청 처리 시간이 초과되었습니다. 잠시 후 다시 시도해주세요.',
-                            'error_type': 'timeout',
-                            'timeout_duration': timeout_seconds
-                        }), 408
-            except Exception as e:
-                # 일반 에러 처리
-                response_time = time.time() - start_time
-                update_performance_metrics(response_time, success=False)
-                safe_log(f"Error in {f.__name__}: {str(e)}")
-                return handle_api_error(e)
-            finally:
-                # 시그널 복원
-                if hasattr(signal, 'SIGALRM'):
-                    signal.alarm(0)
-                    if 'old_handler' in locals():
-                        signal.signal(signal.SIGALRM, old_handler)
-                        
-        return wrapper
-    return decorator
-
-def rate_limiter(max_requests=100, time_window=3600):
-    """요청 제한 데코레이터 (시간당 최대 요청 수)"""
-    def decorator(f):
-        @wraps(f)
-        def wrapper(*args, **kwargs):
-            client_ip = request.environ.get('REMOTE_ADDR', 'unknown')
-            current_time = time.time()
-            
-            # 클라이언트별 요청 기록 초기화
-            if not hasattr(wrapper, 'requests'):
-                wrapper.requests = defaultdict(list)
-            
-            # 시간 윈도우를 벗어난 요청 기록 제거
-            wrapper.requests[client_ip] = [
-                req_time for req_time in wrapper.requests[client_ip]
-                if current_time - req_time < time_window
-            ]
-            
-            # 요청 제한 확인
-            if len(wrapper.requests[client_ip]) >= max_requests:
-                safe_log(f"Rate limit exceeded for IP: {client_ip}")
-                return jsonify({
-                    'success': False,
-                    'error': True,
-                    'message': f'요청 한도를 초과했습니다. {time_window/3600:.1f}시간 후 다시 시도해주세요.',
-                    'error_type': 'rate_limit',
-                    'retry_after': time_window
-                }), 429
-            
-            # 현재 요청 기록
-            wrapper.requests[client_ip].append(current_time)
-            
-            return f(*args, **kwargs)
-            
-        return wrapper
-    return decorator
-
-def handle_api_error(error):
-    """API 에러 통합 처리"""
-    error_id = str(uuid.uuid4())[:8]
+class LottoPredictor:
+    def __init__(self, csv_file_path='new_1187.csv'):
+        self.csv_file_path = csv_file_path
+        self.data = None
+        self.load_data()
     
-    if isinstance(error, TimeoutError):
-        return jsonify({
-            'success': False,
-            'error': True,
-            'message': '요청 처리 시간이 초과되었습니다.',
-            'error_type': 'timeout',
-            'error_id': error_id
-        }), 408
-    elif isinstance(error, ValueError):
-        return jsonify({
-            'success': False,
-            'error': True,
-            'message': '잘못된 입력 값입니다.',
-            'error_type': 'validation',
-            'error_id': error_id
-        }), 400
-    elif isinstance(error, ConnectionError):
-        return jsonify({
-            'success': False,
-            'error': True,
-            'message': '외부 서비스 연결에 실패했습니다.',
-            'error_type': 'connection',
-            'error_id': error_id
-        }), 503
-    else:
-        # 일반적인 서버 에러
-        safe_log(f"Unhandled error [{error_id}]: {str(error)}")
-        return jsonify({
-            'success': False,
-            'error': True,
-            'message': '서버 내부 오류가 발생했습니다.',
-            'error_type': 'internal',
-            'error_id': error_id
-        }), 500
-
-def update_performance_metrics(response_time, success=True):
-    """성능 메트릭 업데이트"""
-    performance_metrics['total_requests'] += 1
-    
-    if not success:
-        performance_metrics['total_errors'] += 1
-    
-    # 평균 응답 시간 업데이트
-    total_requests = performance_metrics['total_requests']
-    current_avg = performance_metrics['avg_response_time']
-    performance_metrics['avg_response_time'] = (
-        (current_avg * (total_requests - 1) + response_time) / total_requests
-    )
-
-def validate_lotto_numbers(numbers):
-    """로또 번호 유효성 검사"""
-    if not isinstance(numbers, list):
-        return False, "번호는 리스트 형태여야 합니다."
-    
-    if len(numbers) > 6:
-        return False, "번호는 최대 6개까지 입력 가능합니다."
-    
-    for num in numbers:
+    def load_data(self):
+        """CSV 파일에서 당첨번호 데이터 로드"""
         try:
-            n = int(num)
-            if n < 1 or n > 45:
-                return False, f"번호는 1-45 범위여야 합니다. (입력: {n})"
-        except (ValueError, TypeError):
-            return False, f"올바른 숫자를 입력해주세요. (입력: {num})"
+            self.data = pd.read_csv(self.csv_file_path)
+            # 컬럼명 정규화
+            self.data.columns = ['round', 'draw_date', 'num1', 'num2', 'num3', 'num4', 'num5', 'num6', 'bonus_num']
+            # 번호 컬럼들만 추출
+            self.numbers = self.data[['num1', 'num2', 'num3', 'num4', 'num5', 'num6']].values
+            print(f"✅ 데이터 로드 완료: {len(self.data)}개 회차")
+        except Exception as e:
+            print(f"❌ 데이터 로드 실패: {e}")
     
-    if len(set(numbers)) != len(numbers):
-        return False, "중복된 번호가 있습니다."
-    
-    return True, "유효한 번호입니다."
-
-def safe_log(message, level='info'):
-    """안전한 로깅 (에러 방지)"""
-    try:
-        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        log_message = f"[{timestamp}] [LottoPro-AI] {message}"
-        
-        if level == 'error':
-            app.logger.error(log_message)
-        elif level == 'warning':
-            app.logger.warning(log_message)
-        else:
-            app.logger.info(log_message)
+    def frequency_analysis_algorithm(self):
+        """빈도 분석 알고리즘 - 자주 나온 번호 기반"""
+        try:
+            # 모든 번호의 빈도 계산
+            all_numbers = self.numbers.flatten()
+            frequency = Counter(all_numbers)
             
-        print(log_message)
-    except Exception as e:
-        print(f"[LottoPro-AI] Logging error: {str(e)} | Original message: {message}")
-
-@app.after_request
-def add_security_headers(response):
-    """보안 헤더 및 성능 헤더 추가"""
-    # 보안 헤더
-    response.headers['X-Content-Type-Options'] = 'nosniff'
-    response.headers['X-Frame-Options'] = 'DENY'
-    response.headers['X-XSS-Protection'] = '1; mode=block'
-    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
-    
-    # 성능 헤더
-    response.headers['Cache-Control'] = 'public, max-age=300' if request.endpoint != 'predict' else 'no-cache'
-    
-    # CORS 헤더 (필요시)
-    response.headers['Access-Control-Allow-Origin'] = '*'
-    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
-    response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
-    
-    return response
-
-# 에러 핸들러들 (기존과 동일)
-@app.errorhandler(404)
-def not_found(error):
-    """404 에러 처리"""
-    try:
-        if request.is_json or '/api/' in request.path:
-            return jsonify({
-                'success': False,
-                'error': True,
-                'message': 'API 엔드포인트를 찾을 수 없습니다.',
-                'error_type': 'not_found'
-            }), 404
-        else:
-            return render_template('index.html'), 404
-    except Exception as e:
-        safe_log(f"404 handler error: {str(e)}", 'error')
-        return jsonify({'error': 'Not Found'}), 404
-
-@app.errorhandler(500)
-def internal_error(error):
-    """500 에러 처리"""
-    error_id = str(uuid.uuid4())[:8]
-    safe_log(f"500 에러 발생 [{error_id}]: {error}", 'error')
-    
-    if request.is_json or '/api/' in request.path:
-        return jsonify({
-            'success': False,
-            'error': True,
-            'message': '서버 내부 오류가 발생했습니다.',
-            'error_type': 'internal',
-            'error_id': error_id
-        }), 500
-    else:
-        return render_template('error.html', error_id=error_id), 500
-
-@app.errorhandler(413)
-def request_entity_too_large(error):
-    """413 요청 크기 초과 에러 처리"""
-    return jsonify({
-        'success': False,
-        'error': True,
-        'message': '요청 크기가 너무 큽니다.',
-        'error_type': 'payload_too_large'
-    }), 413
-
-@app.errorhandler(429)
-def too_many_requests(error):
-    """429 요청 과다 에러 처리"""
-    return jsonify({
-        'success': False,
-        'error': True,
-        'message': '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.',
-        'error_type': 'too_many_requests'
-    }), 429
-
-# AI 모델 정보
-AI_MODELS_INFO = {
-    'frequency': {
-        'name': '빈도분석 모델',
-        'description': '과거 당첨번호 출현 빈도를 통계적으로 분석하여 가중 확률을 계산합니다.',
-        'algorithm': '가중 확률 분포',
-        'accuracy_rate': 19.2,
-        'data_source': '최근 200회차',
-        'update_frequency': '매주 토요일'
-    },
-    'trend': {
-        'name': '트렌드분석 모델',
-        'description': '최근 당첨 패턴과 시간적 트렌드를 분석하여 변화하는 패턴을 반영합니다.',
-        'algorithm': '이동평균 + 추세분석',
-        'accuracy_rate': 17.8,
-        'data_source': '최근 50회차',
-        'update_frequency': '매주 토요일'
-    },
-    'pattern': {
-        'name': '패턴분석 모델',
-        'description': '번호 조합 패턴과 수학적 관계를 분석하여 복합적인 예측을 수행합니다.',
-        'algorithm': '조합론 + 확률론',
-        'accuracy_rate': 16.4,
-        'data_source': '홀짝, 고저, 합계',
-        'update_frequency': '매주 토요일'
-    },
-    'statistical': {
-        'name': '통계분석 모델',
-        'description': '고급 통계 기법과 확률 이론을 적용한 수학적 예측 모델입니다.',
-        'algorithm': '베이즈 추론',
-        'accuracy_rate': 20.1,
-        'data_source': '다항분포',
-        'update_frequency': '매주 토요일'
-    },
-    'ml': {
-        'name': '머신러닝 모델',
-        'description': '딥러닝 신경망과 AI 알고리즘을 기반으로 한 고도화된 예측 시스템입니다.',
-        'algorithm': '3층 DNN',
-        'accuracy_rate': 18.9,
-        'data_source': '1185회차',
-        'update_frequency': '매주 토요일'
-    }
-}
-
-# 예측 히스토리
-PREDICTION_HISTORY = [
-    {
-        'round': 1185,
-        'date': '2025.08.17',
-        'winning_numbers': [7, 13, 21, 28, 34, 42],
-        'bonus_number': 15,
-        'ai_predictions': {
-            'combined': [7, 15, 21, 29, 34, 45],
-            'frequency': [7, 12, 21, 28, 35, 42],
-            'trend': [8, 15, 22, 29, 34, 44],
-            'pattern': [6, 13, 20, 27, 33, 45],
-            'statistical': [7, 14, 21, 30, 34, 43],
-            'ml': [9, 16, 23, 28, 36, 41]
-        },
-        'matches': {
-            'combined': 3,
-            'frequency': 4,
-            'trend': 2,
-            'pattern': 2,
-            'statistical': 3,
-            'ml': 2
-        }
-    }
-]
-
-# 로또 판매점 데이터
-LOTTERY_STORES = [
-    {"name": "동대문 복권방", "address": "서울시 동대문구 장한로 195", "region": "서울", "district": "동대문구", "lat": 37.5745, "lng": 127.0098, "phone": "02-1234-5678", "first_wins": 15, "business_hours": "06:00-24:00"},
-    {"name": "강남 로또타운", "address": "서울시 강남구 테헤란로 152", "region": "서울", "district": "강남구", "lat": 37.4979, "lng": 127.0276, "phone": "02-2345-6789", "first_wins": 23, "business_hours": "07:00-23:00"},
-    {"name": "평택역 로또센터", "address": "경기도 평택시 평택동 856-1", "region": "평택", "district": "평택시", "lat": 36.9922, "lng": 127.0890, "phone": "031-1234-5678", "first_wins": 5, "business_hours": "06:00-22:00"},
-    {"name": "안정리 행운복권", "address": "경기도 평택시 안정동 123-45", "region": "평택", "district": "평택시", "lat": 36.9856, "lng": 127.0825, "phone": "031-2345-6789", "first_wins": 3, "business_hours": "07:00-21:00"},
-    {"name": "송탄 중앙점", "address": "경기도 평택시 송탄동 789-12", "region": "평택", "district": "평택시", "lat": 36.9675, "lng": 127.0734, "phone": "031-3456-7890", "first_wins": 8, "business_hours": "08:00-20:00"}
-]
-
-def generate_sample_data():
-    """샘플 데이터 생성"""
-    try:
-        np.random.seed(42)
-        data = []
-        
-        for draw in range(1186, 986, -1):  # 200회차
-            numbers = sorted(np.random.choice(range(1, 46), 6, replace=False))
-            available = [x for x in range(1, 46) if x not in numbers]
-            bonus = np.random.choice(available) if available else 7
+            # 상위 빈도 번호들
+            most_common = [num for num, count in frequency.most_common(20)]
             
-            base_date = datetime(2025, 8, 28) - timedelta(weeks=(1186-draw))
-            
-            data.append({
-                '회차': draw,
-                '당첨번호1': int(numbers[0]),
-                '당첨번호2': int(numbers[1]),
-                '당첨번호3': int(numbers[2]),
-                '당첨번호4': int(numbers[3]),
-                '당첨번호5': int(numbers[4]),
-                '당첨번호6': int(numbers[5]),
-                '보너스번호': int(bonus),
-                '날짜': base_date.strftime('%Y-%m-%d')
-            })
-        
-        return data
-    except Exception as e:
-        safe_log(f"샘플 데이터 생성 실패: {str(e)}", 'error')
-        return []
-
-# 🆕 캐시 적용된 분석 함수들
-@cached(ttl=600, tags=['statistics']) if CACHE_AVAILABLE else lambda f: f
-def calculate_frequency_analysis():
-    """빈도 분석 (캐시 적용)"""
-    if not sample_data:
-        return {}
-    
-    try:
-        frequency = Counter()
-        for data in sample_data:
-            for i in range(1, 7):
-                number = data.get(f'당첨번호{i}')
-                if number:
-                    frequency[number] += 1
-        return dict(frequency)
-    except Exception as e:
-        safe_log(f"빈도 분석 실패: {str(e)}", 'error')
-        return {}
-
-@cached(ttl=600, tags=['statistics']) if CACHE_AVAILABLE else lambda f: f
-def calculate_carry_over_analysis():
-    """이월수 분석 (캐시 적용)"""
-    if not sample_data or len(sample_data) < 2:
-        return []
-    
-    try:
-        carry_overs = []
-        for i in range(min(len(sample_data) - 1, 20)):
-            current_numbers = set()
-            prev_numbers = set()
-            
-            for j in range(1, 7):
-                current = sample_data[i].get(f'당첨번호{j}')
-                prev = sample_data[i+1].get(f'당첨번호{j}')
-                if current: current_numbers.add(current)
-                if prev: prev_numbers.add(prev)
-            
-            carry_over = current_numbers.intersection(prev_numbers)
-            carry_overs.append({
-                'round': sample_data[i].get('회차'),
-                'carry_over_numbers': sorted(list(carry_over)),
-                'count': len(carry_over)
-            })
-        
-        return carry_overs
-    except Exception as e:
-        safe_log(f"이월수 분석 실패: {str(e)}", 'error')
-        return []
-
-@cached(ttl=600, tags=['statistics']) if CACHE_AVAILABLE else lambda f: f
-def calculate_companion_analysis():
-    """궁합수 분석 (캐시 적용)"""
-    if not sample_data:
-        return {}
-    
-    try:
-        companion_pairs = Counter()
-        for data in sample_data[:50]:  # 최근 50회차만
-            numbers = []
-            for i in range(1, 7):
-                num = data.get(f'당첨번호{i}')
-                if num: numbers.append(num)
-            
-            for i in range(len(numbers)):
-                for j in range(i+1, len(numbers)):
-                    pair = tuple(sorted([numbers[i], numbers[j]]))
-                    companion_pairs[pair] += 1
-        
-        return dict(companion_pairs.most_common(10))
-    except Exception as e:
-        safe_log(f"궁합수 분석 실패: {str(e)}", 'error')
-        return {}
-
-@cached(ttl=600, tags=['statistics']) if CACHE_AVAILABLE else lambda f: f
-def calculate_pattern_analysis():
-    """패턴 분석 (캐시 적용)"""
-    if not sample_data:
-        return {}
-    
-    try:
-        patterns = {
-            'consecutive_count': [],
-            'odd_even_ratio': [],
-            'sum_distribution': [],
-            'range_distribution': []
-        }
-        
-        for data in sample_data[:30]:
-            numbers = []
-            for i in range(1, 7):
-                num = data.get(f'당첨번호{i}')
-                if num: numbers.append(num)
-            
-            if len(numbers) == 6:
-                numbers.sort()
+            predictions = []
+            for _ in range(5):
+                # 상위 빈도 번호에서 가중치를 두고 선택
+                selected = []
+                weights = [frequency[num] for num in most_common]
                 
-                consecutive = sum(1 for i in range(len(numbers)-1) if numbers[i+1] - numbers[i] == 1)
-                odd_count = sum(1 for n in numbers if n % 2 == 1)
-                total_sum = sum(numbers)
-                number_range = max(numbers) - min(numbers)
+                while len(selected) < 6:
+                    chosen = np.random.choice(most_common, p=np.array(weights)/sum(weights))
+                    if chosen not in selected:
+                        selected.append(int(chosen))
                 
-                patterns['consecutive_count'].append(consecutive)
-                patterns['odd_even_ratio'].append(f"{odd_count}:{6-odd_count}")
-                patterns['sum_distribution'].append(total_sum)
-                patterns['range_distribution'].append(number_range)
-        
-        return patterns
-    except Exception as e:
-        safe_log(f"패턴 분석 실패: {str(e)}", 'error')
-        return {}
-
-def generate_ai_prediction(user_numbers=None, model_type="frequency"):
-    """AI 예측 생성 (캐시 적용 개선된 에러 처리)"""
-    try:
-        if user_numbers is None:
-            user_numbers = []
-        
-        # 🆕 캐시에서 먼저 확인
-        if CACHE_AVAILABLE and cache_manager:
-            cached_result = cache_manager.get_cached_prediction(user_numbers, model_type)
-            if cached_result:
-                safe_log(f"캐시 히트: {model_type} 예측", 'info')
-                return cached_result
-        
-        # 입력 번호 유효성 검사
-        safe_numbers = []
-        if isinstance(user_numbers, list):
-            for num in user_numbers:
-                try:
-                    n = int(num)
-                    if 1 <= n <= 45 and n not in safe_numbers:
-                        safe_numbers.append(n)
-                except (ValueError, TypeError):
-                    continue
-        
-        # 중복 제거 및 최대 6개 제한
-        safe_numbers = list(set(safe_numbers))[:6]
-        
-        if model_type == "frequency":
-            frequency = calculate_frequency_analysis()
-            weights = np.ones(45)
-            for num, freq in frequency.items():
-                if 1 <= num <= 45:
-                    weights[num-1] = freq + 1
-        elif model_type == "trend":
-            weights = np.ones(45)
-            for i, data in enumerate(sample_data[:10]):
-                weight_factor = (10 - i) / 10
-                for j in range(1, 7):
-                    num = data.get(f'당첨번호{j}')
-                    if num and 1 <= num <= 45:
-                        weights[num-1] += weight_factor
-        else:
-            weights = np.ones(45)
-        
-        numbers = safe_numbers.copy()
-        available_numbers = [i for i in range(1, 46) if i not in numbers]
-        
-        if len(available_numbers) > 0:
-            needed_count = 6 - len(numbers)
-            if needed_count > 0:
-                available_weights = [weights[i-1] for i in available_numbers]
-                if sum(available_weights) > 0:
-                    available_weights = np.array(available_weights)
-                    available_weights = available_weights / available_weights.sum()
+                predictions.append(sorted(selected))
+            
+            return predictions
+        except Exception as e:
+            print(f"빈도분석 알고리즘 오류: {e}")
+            return self.generate_random_numbers(5)
+    
+    def hot_cold_algorithm(self):
+        """핫/콜드 번호 알고리즘 - 최근 출현 패턴 기반"""
+        try:
+            recent_draws = 20  # 최근 20회차
+            recent_data = self.numbers[-recent_draws:]
+            recent_numbers = recent_data.flatten()
+            
+            # 핫 번호 (최근 자주 나온 번호)
+            hot_counter = Counter(recent_numbers)
+            hot_numbers = [num for num, count in hot_counter.most_common(15)]
+            
+            # 콜드 번호 (오랫동안 안 나온 번호)
+            all_numbers_set = set(range(1, 46))
+            recent_numbers_set = set(recent_numbers)
+            cold_numbers = list(all_numbers_set - recent_numbers_set)
+            
+            if len(cold_numbers) < 10:
+                # 콜드 번호가 부족하면 덜 자주 나온 번호로 보완
+                all_counter = Counter(self.numbers.flatten())
+                least_common = [num for num, count in all_counter.most_common()[:-11:-1]]
+                cold_numbers.extend(least_common)
+            
+            predictions = []
+            for _ in range(5):
+                selected = []
+                # 핫 번호 3-4개, 콜드 번호 2-3개 조합
+                hot_count = random.randint(3, 4)
+                
+                hot_selected = random.sample(hot_numbers[:12], min(hot_count, len(hot_numbers[:12])))
+                cold_selected = random.sample(cold_numbers[:10], 6 - len(hot_selected))
+                
+                selected = hot_selected + cold_selected
+                while len(selected) < 6:
+                    selected.append(random.randint(1, 45))
+                
+                predictions.append(sorted(list(set(selected))[:6]))
+            
+            return predictions
+        except Exception as e:
+            print(f"핫콜드 알고리즘 오류: {e}")
+            return self.generate_random_numbers(5)
+    
+    def pattern_analysis_algorithm(self):
+        """패턴 분석 알고리즘 - 번호 간격과 분포 패턴 분석"""
+        try:
+            predictions = []
+            
+            # 최근 30회차의 패턴 분석
+            recent_data = self.numbers[-30:]
+            
+            # 구간별 분포 분석 (1-10, 11-20, 21-30, 31-40, 41-45)
+            zones = [0, 0, 0, 0, 0]  # 각 구간별 선택 가중치
+            
+            for draw in recent_data:
+                for num in draw:
+                    if 1 <= num <= 10: zones[0] += 1
+                    elif 11 <= num <= 20: zones[1] += 1
+                    elif 21 <= num <= 30: zones[2] += 1
+                    elif 31 <= num <= 40: zones[3] += 1
+                    elif 41 <= num <= 45: zones[4] += 1
+            
+            # 정규화
+            total = sum(zones)
+            zone_probs = [z/total for z in zones] if total > 0 else [0.2] * 5
+            
+            for _ in range(5):
+                selected = []
+                
+                # 각 구간에서 번호 선택
+                for i, prob in enumerate(zone_probs):
+                    zone_count = max(1, int(prob * 6))
+                    if i == 0: zone_range = list(range(1, 11))
+                    elif i == 1: zone_range = list(range(11, 21))
+                    elif i == 2: zone_range = list(range(21, 31))
+                    elif i == 3: zone_range = list(range(31, 41))
+                    else: zone_range = list(range(41, 46))
                     
-                    selected = np.random.choice(
-                        available_numbers, 
-                        size=min(needed_count, len(available_numbers)), 
-                        replace=False, 
-                        p=available_weights
-                    )
-                    numbers.extend(selected.tolist())
+                    available = [n for n in zone_range if n not in selected]
+                    if available:
+                        selected.extend(random.sample(available, min(zone_count, len(available))))
+                
+                # 부족한 번호 채우기
+                while len(selected) < 6:
+                    num = random.randint(1, 45)
+                    if num not in selected:
+                        selected.append(num)
+                
+                predictions.append(sorted(selected[:6]))
+            
+            return predictions
+        except Exception as e:
+            print(f"패턴분석 알고리즘 오류: {e}")
+            return self.generate_random_numbers(5)
+    
+    def statistical_algorithm(self):
+        """통계적 분석 알고리즘 - 평균, 표준편차, 상관관계 기반"""
+        try:
+            predictions = []
+            
+            # 각 자리별 통계 분석
+            position_stats = []
+            for pos in range(6):
+                pos_numbers = self.numbers[:, pos]
+                mean = np.mean(pos_numbers)
+                std = np.std(pos_numbers)
+                position_stats.append({'mean': mean, 'std': std})
+            
+            for _ in range(5):
+                selected = []
+                
+                for pos, stats in enumerate(position_stats):
+                    # 정규분포를 따른다고 가정하고 번호 생성
+                    num = int(np.random.normal(stats['mean'], stats['std']))
+                    num = max(1, min(45, num))  # 1-45 범위로 제한
+                    
+                    # 중복 방지
+                    attempts = 0
+                    while num in selected and attempts < 100:
+                        num = int(np.random.normal(stats['mean'], stats['std']))
+                        num = max(1, min(45, num))
+                        attempts += 1
+                    
+                    if num not in selected:
+                        selected.append(num)
+                
+                # 부족한 번호 채우기
+                while len(selected) < 6:
+                    num = random.randint(1, 45)
+                    if num not in selected:
+                        selected.append(num)
+                
+                predictions.append(sorted(selected[:6]))
+            
+            return predictions
+        except Exception as e:
+            print(f"통계분석 알고리즘 오류: {e}")
+            return self.generate_random_numbers(5)
+    
+    def machine_learning_algorithm(self):
+        """머신러닝 알고리즘 - 랜덤포레스트 기반 예측"""
+        try:
+            if len(self.numbers) < 50:
+                return self.generate_random_numbers(5)
+            
+            # 특성 생성: 최근 n회차의 번호들을 특성으로 사용
+            window_size = 10
+            X, y = [], []
+            
+            for i in range(window_size, len(self.numbers)):
+                # 이전 window_size개 회차의 데이터를 특성으로
+                features = self.numbers[i-window_size:i].flatten()
+                target = self.numbers[i]
+                X.append(features)
+                y.append(target)
+            
+            X = np.array(X)
+            y = np.array(y)
+            
+            predictions = []
+            
+            # 각 위치별로 모델 학습
+            for _ in range(5):
+                prediction_set = []
+                
+                for pos in range(6):
+                    try:
+                        model = RandomForestRegressor(n_estimators=50, random_state=random.randint(1, 1000))
+                        model.fit(X, y[:, pos])
+                        
+                        # 최근 데이터로 예측
+                        last_features = self.numbers[-window_size:].flatten().reshape(1, -1)
+                        pred = model.predict(last_features)[0]
+                        pred = max(1, min(45, int(round(pred))))
+                        
+                        if pred not in prediction_set:
+                            prediction_set.append(pred)
+                    except:
+                        # 모델 실패시 랜덤 선택
+                        num = random.randint(1, 45)
+                        if num not in prediction_set:
+                            prediction_set.append(num)
+                
+                # 부족한 번호 채우기
+                while len(prediction_set) < 6:
+                    num = random.randint(1, 45)
+                    if num not in prediction_set:
+                        prediction_set.append(num)
+                
+                predictions.append(sorted(prediction_set[:6]))
+            
+            return predictions
+        except Exception as e:
+            print(f"머신러닝 알고리즘 오류: {e}")
+            return self.generate_random_numbers(5)
+    
+    def generate_random_numbers(self, count):
+        """랜덤 번호 생성 (백업용)"""
+        predictions = []
+        for _ in range(count):
+            numbers = random.sample(range(1, 46), 6)
+            predictions.append(sorted(numbers))
+        return predictions
+    
+    def get_all_predictions(self):
+        """모든 알고리즘의 예측 결과 반환"""
+        algorithms = {
+            'frequency': {'name': '빈도 분석', 'description': '자주 나온 번호 기반 예측'},
+            'hot_cold': {'name': '핫/콜드 분석', 'description': '최근 출현 패턴 기반 예측'},
+            'pattern': {'name': '패턴 분석', 'description': '번호 분포 패턴 기반 예측'},
+            'statistical': {'name': '통계 분석', 'description': '통계적 모델 기반 예측'},
+            'machine_learning': {'name': '머신러닝', 'description': 'AI 모델 기반 예측'}
+        }
         
-        # 6개 미만인 경우 랜덤으로 채우기
-        while len(numbers) < 6:
-            new_num = random.randint(1, 45)
-            if new_num not in numbers:
-                numbers.append(new_num)
+        results = {}
         
-        result = sorted(numbers[:6])
+        for algo_key, algo_info in algorithms.items():
+            try:
+                if algo_key == 'frequency':
+                    predictions = self.frequency_analysis_algorithm()
+                elif algo_key == 'hot_cold':
+                    predictions = self.hot_cold_algorithm()
+                elif algo_key == 'pattern':
+                    predictions = self.pattern_analysis_algorithm()
+                elif algo_key == 'statistical':
+                    predictions = self.statistical_algorithm()
+                elif algo_key == 'machine_learning':
+                    predictions = self.machine_learning_algorithm()
+                
+                results[algo_key] = {
+                    'name': algo_info['name'],
+                    'description': algo_info['description'],
+                    'predictions': predictions
+                }
+            except Exception as e:
+                print(f"{algo_key} 알고리즘 실행 오류: {e}")
+                results[algo_key] = {
+                    'name': algo_info['name'],
+                    'description': algo_info['description'],
+                    'predictions': self.generate_random_numbers(5)
+                }
         
-        # 🆕 결과를 캐시에 저장 (5분)
-        if CACHE_AVAILABLE and cache_manager:
-            cache_manager.cache_prediction(user_numbers, model_type, result, ttl=300)
-            safe_log(f"캐시 저장: {model_type} 예측", 'info')
-        
-        return result
-        
-    except Exception as e:
-        safe_log(f"AI 예측 생성 실패: {str(e)}", 'error')
-        # 완전한 랜덤 생성으로 폴백
-        return sorted(random.sample(range(1, 46), 6))
+        return results
 
-# ===== API 엔드포인트들 =====
+# 전역 예측기 인스턴스
+predictor = LottoPredictor()
+
 @app.route('/')
 def index():
-    try:
-        context = {
-            'update_date': '2025.08.28',
-            'analysis_round': 1186,
-            'copyright_year': 2025,
-            'version': 'v2.1',
-            'features_count': 15,
-            'models_count': len(AI_MODELS_INFO),
-            'monitoring_enabled': MONITORING_AVAILABLE,
-            'cache_enabled': CACHE_AVAILABLE
-        }
-        return render_template('index.html', **context)
-    except Exception as e:
-        safe_log(f"메인 페이지 오류: {str(e)}", 'error')
-        return render_template('error.html', 
-            error_message="서비스 준비 중입니다.",
-            error_id=str(uuid.uuid4())[:8]
-        ), 503
+    return render_template('index.html')
 
-@app.route('/api/predict', methods=['POST'])
-def predict():
-    """간소화된 predict API - 복잡한 기능들 제거"""
+@app.route('/api/predictions')
+def get_predictions():
+    """모든 알고리즘의 예측 결과 API"""
     try:
-        # 기본 응답 구조
-        response = {
+        results = predictor.get_all_predictions()
+        return jsonify({
             'success': True,
-            'user_numbers': [],
-            'models': {
-                '빈도분석 모델': {
-                    'description': '과거 당첨번호 출현 빈도를 분석합니다.',
-                    'predictions': [
-                        [7, 13, 21, 28, 34, 42],
-                        [5, 12, 19, 25, 33, 41],
-                        [3, 9, 16, 22, 29, 38],
-                        [1, 8, 15, 23, 31, 44],
-                        [4, 11, 18, 26, 35, 43]
-                    ],
-                    'accuracy': 19.2,
-                    'confidence': 87,
-                    'algorithm': '가중 확률 분포'
-                },
-                '트렌드분석 모델': {
-                    'description': '최근 당첨 패턴과 트렌드를 분석합니다.',
-                    'predictions': [
-                        [6, 14, 20, 27, 36, 45],
-                        [2, 10, 17, 24, 32, 39],
-                        [8, 15, 22, 30, 37, 44],
-                        [4, 11, 18, 25, 33, 40],
-                        [1, 9, 16, 23, 31, 42]
-                    ],
-                    'accuracy': 17.8,
-                    'confidence': 84,
-                    'algorithm': '이동평균 + 추세분석'
-                }
-            },
-            'top_recommendations': [
-                [7, 13, 21, 28, 34, 42],
-                [6, 14, 20, 27, 36, 45],
-                [5, 12, 19, 25, 33, 41],
-                [3, 9, 16, 22, 29, 38],
-                [1, 8, 15, 23, 31, 44]
-            ],
-            'total_combinations': 10,
-            'data_source': '200회차 샘플 데이터',
-            'analysis_timestamp': datetime.now().isoformat(),
-            'processing_time': 0.1,
-            'version': '2.1',
-            'request_id': str(uuid.uuid4())[:8],
-            'cached': False
-        }
-        
-        return jsonify(response)
-        
+            'data': results,
+            'total_draws': len(predictor.data) if predictor.data is not None else 0,
+            'last_draw': predictor.data.iloc[-1]['round'] if predictor.data is not None else None
+        })
     except Exception as e:
-        safe_log(f"Predict API 오류: {str(e)}", 'error')
         return jsonify({
             'success': False,
-            'error': True,
-            'message': '예측 서비스 준비 중입니다.',
-            'error_type': 'service_unavailable'
-        }), 503
+            'error': str(e)
+        }), 500
 
-@app.route('/api/stats')
-@monitor_performance if MONITORING_AVAILABLE else lambda f: f  # 🆕 성능 모니터링
-@timeout_handler(timeout_seconds=10)
-def get_stats():
+@app.route('/api/statistics')
+def get_statistics():
+    """통계 정보 API"""
     try:
-        # 🆕 캐시에서 먼저 확인
-        if CACHE_AVAILABLE and cache_manager:
-            cached_stats = cache_manager.get_cached_statistics('main')
-            if cached_stats:
-                return jsonify({
-                    'success': True,
-                    'cached': True,
-                    'cache_timestamp': time.time(),
-                    **cached_stats
-                })
+        if predictor.data is None:
+            return jsonify({'success': False, 'error': 'No data available'})
         
-        frequency = calculate_frequency_analysis()
+        all_numbers = predictor.numbers.flatten()
+        frequency = Counter(all_numbers)
         
-        if frequency:
-            sorted_freq = sorted(frequency.items(), key=lambda x: x[1], reverse=True)
-            hot_numbers = sorted_freq[:8]
-            cold_numbers = sorted_freq[-8:]
-        else:
-            # 기본값 제공
-            hot_numbers = [[7, 15], [13, 14], [22, 13], [31, 12], [42, 11], [1, 10], [25, 9], [33, 8]]
-            cold_numbers = [[45, 5], [44, 6], [43, 7], [2, 8], [3, 9], [4, 10], [5, 11], [6, 12]]
+        # 최고 빈도 번호들
+        most_common = frequency.most_common(10)
+        least_common = frequency.most_common()[:-11:-1]
         
-        stats_data = {
-            'frequency': frequency,
-            'hot_numbers': hot_numbers,
-            'cold_numbers': cold_numbers,
-            'carry_over_analysis': calculate_carry_over_analysis(),
-            'companion_analysis': list(calculate_companion_analysis().items()),
-            'pattern_analysis': calculate_pattern_analysis(),
-            'total_draws': len(sample_data) if sample_data else 200,
-            'data_source': f"{len(sample_data)}회차 데이터" if sample_data else "샘플 데이터",
-            'last_updated': datetime.now().isoformat(),
-            'cache_status': 'fresh'
+        # 최근 출현 분석
+        recent_numbers = predictor.numbers[-20:].flatten()
+        recent_frequency = Counter(recent_numbers)
+        
+        stats = {
+            'total_draws': len(predictor.data),
+            'most_frequent': [{'number': num, 'count': count} for num, count in most_common],
+            'least_frequent': [{'number': num, 'count': count} for num, count in least_common],
+            'recent_hot': [{'number': num, 'count': count} for num, count in recent_frequency.most_common(10)],
+            'last_draw_info': {
+                'round': int(predictor.data.iloc[-1]['round']),
+                'date': predictor.data.iloc[-1]['draw_date'],
+                'numbers': predictor.numbers[-1].tolist(),
+                'bonus': int(predictor.data.iloc[-1]['bonus_num'])
+            }
         }
-        
-        # 🆕 결과를 캐시에 저장 (10분)
-        if CACHE_AVAILABLE and cache_manager:
-            cache_manager.cache_statistics('main', stats_data, ttl=600)
-            safe_log("통계 데이터 캐시 저장", 'info')
         
         return jsonify({
             'success': True,
-            'cached': False,
-            **stats_data
+            'data': stats
         })
-        
     except Exception as e:
-        safe_log(f"통계 API 실패: {str(e)}", 'error')
-        return handle_api_error(e)
-
-# 🔧 초간단 health_check 함수 (모든 복잡한 기능 제거)
-@app.route('/api/health')
-def health_check():
-    """초간단 health check - 모든 복잡한 기능 제거"""
-    return jsonify({
-        'status': 'healthy',
-        'timestamp': datetime.now().isoformat(),
-        'version': '2.1',
-        'message': 'OK'
-    })
-
-def initialize_app():
-    """애플리케이션 초기화 (간소화된 버전)"""
-    global sample_data, monitor, cache_manager
-    try:
-        safe_log("=== 🚀 LottoPro-AI v2.1 초기화 시작 ===")
-        
-        # 샘플 데이터 생성
-        sample_data = generate_sample_data()
-        safe_log(f"✅ 샘플 데이터 생성 완료: {len(sample_data)}회차")
-        
-        # 성능 메트릭 초기화
-        performance_metrics['start_time'] = datetime.now()
-        
-        # 🆕 성능 모니터링 시스템 초기화
-        if MONITORING_AVAILABLE:
-            try:
-                monitor = init_monitoring(
-                    app=app, 
-                    auto_start=True,
-                    custom_thresholds={
-                        'response_time': 10.0,    # 10초
-                        'error_rate': 0.05,       # 5%
-                        'cpu_usage': 80.0,        # 80%
-                        'memory_usage': 85.0      # 85%
-                    }
-                )
-                app.monitor = monitor
-                safe_log("✅ 성능 모니터링 시스템 활성화 완료")
-                
-            except Exception as e:
-                safe_log(f"❌ 성능 모니터링 시스템 초기화 실패: {str(e)}", 'error')
-        
-        # 🆕 캐시 시스템 초기화 (핵심 수정 부분)
-        if CACHE_AVAILABLE:
-            try:
-                cache_manager = init_cache_system(
-                    app=app,
-                    redis_url=os.getenv('REDIS_URL'),  # 환경변수에서 Redis URL
-                    default_ttl=300,  # 5분 기본 TTL
-                    memory_cache_size=1000,
-                    enable_compression=True,
-                    enable_warming=os.getenv('CACHE_WARMING', 'true').lower() == 'true'  # 🔧 핵심 수정!
-                )
-                app.cache = cache_manager
-                safe_log("✅ 캐시 시스템 초기화 완료")
-                
-            except Exception as e:
-                safe_log(f"❌ 캐시 시스템 초기화 실패: {str(e)}", 'error')
-        
-        safe_log(f"✅ 15가지 기능 로드 완료")
-        safe_log(f"✅ AI 모델 {len(AI_MODELS_INFO)}개 준비 완료")
-        safe_log(f"✅ 판매점 데이터 {len(LOTTERY_STORES)}개 로드 완료")
-        safe_log("✅ 타임아웃 처리 및 에러 핸들링 시스템 활성화")
-        safe_log("=== 🎉 초기화 완료 ===")
-        
-    except Exception as e:
-        safe_log(f"❌ 초기화 실패: {str(e)}", 'error')
-        # 초기화 실패 시에도 기본 서비스는 제공
-        if not sample_data:
-            sample_data = []
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 if __name__ == '__main__':
-    initialize_app()
-    
-    port = int(os.environ.get('PORT', 5000))
-    debug_mode = os.environ.get('DEBUG', 'False').lower() == 'true'
-    
-    safe_log(f"🚀 서버 시작 - 포트: {port}, 디버그 모드: {debug_mode}")
-    safe_log("=== 🎯 LottoPro AI v2.1 - 안정화 버전 ===")
-    
-    app.run(debug=debug_mode, host='0.0.0.0', port=port)
-else:
-    initialize_app()
+    app.run(debug=True, host='0.0.0.0', port=5000)
