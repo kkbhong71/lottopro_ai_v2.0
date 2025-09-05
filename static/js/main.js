@@ -190,7 +190,7 @@ class LottoApp {
         
         this.setLoadingState('aiPrediction', true);
         this.showPredictionProgress(true);
-        this.updateUI('prediction-status', '🤖 AI가 분석 중입니다...');
+        this.updateUI('prediction-status', 'AI가 분석 중입니다...');
         
         try {
             // 사용자 입력 번호 수집
@@ -199,21 +199,32 @@ class LottoApp {
             // 진행률 업데이트
             this.updateProgress(33, 'AI 모델 분석 중...');
             
-            const result = await this.fetchWithTimeout('/api/predict', {
-                method: 'POST',
-                body: JSON.stringify({ user_numbers: userNumbers })
-            });
-            
-            if (result.error) {
-                throw new Error(result.message);
+            try {
+                const result = await this.fetchWithTimeout('/api/predict', {
+                    method: 'POST',
+                    body: JSON.stringify({ user_numbers: userNumbers })
+                });
+                
+                if (result.error) {
+                    throw new Error(result.message);
+                }
+                
+                this.updateProgress(66, '결과 생성 중...');
+                this.displayPredictions(result);
+                
+            } catch (apiError) {
+                console.warn('API 호출 실패, 오프라인 모드로 전환:', apiError.message);
+                
+                // 오프라인 모드: 클라이언트에서 간단한 예측 생성
+                const offlineResult = this.generateOfflinePrediction(userNumbers);
+                this.updateProgress(66, '오프라인 모드로 결과 생성 중...');
+                this.displayPredictions(offlineResult);
+                
+                // 사용자에게 오프라인 모드임을 알림
+                this.showToast('서버 연결 문제로 오프라인 모드로 동작합니다.', 'warning');
             }
             
-            this.updateProgress(66, '결과 생성 중...');
-            
-            // 결과 표시
-            this.displayPredictions(result);
             this.retryCount = 0;
-            
             this.updateProgress(100, '완료!');
             setTimeout(() => this.showPredictionProgress(false), 1000);
             
@@ -222,6 +233,78 @@ class LottoApp {
             this.showPredictionProgress(false);
         } finally {
             this.setLoadingState('aiPrediction', false);
+        }
+    }
+    
+    // 오프라인 예측 생성 (API 실패 시 백업)
+    generateOfflinePrediction(userNumbers = []) {
+        const predictions = [];
+        
+        // 5개 세트 생성
+        for (let i = 0; i < 5; i++) {
+            const numbers = [...userNumbers];
+            
+            // 부족한 번호를 랜덤으로 채움
+            while (numbers.length < 6) {
+                const randomNum = Math.floor(Math.random() * 45) + 1;
+                if (!numbers.includes(randomNum)) {
+                    numbers.push(randomNum);
+                }
+            }
+            
+            predictions.push(numbers.sort((a, b) => a - b));
+        }
+        
+        return {
+            success: true,
+            models: {
+                '오프라인 모드': {
+                    description: '서버 연결 문제로 클라이언트에서 생성된 번호입니다.',
+                    predictions: predictions,
+                    accuracy: '연결 복구 후 정확한 AI 분석을 받으세요',
+                    confidence: 'N/A',
+                    algorithm: '로컬 랜덤 생성'
+                }
+            },
+            top_recommendations: predictions.slice(0, 3),
+            total_combinations: predictions.length,
+            data_source: '오프라인 모드',
+            analysis_timestamp: new Date().toISOString(),
+            processing_time: 0.1,
+            version: '2.1-offline',
+            request_id: Math.random().toString(36).substr(2, 8),
+            cached: false,
+            offline_mode: true
+        };
+    }
+    
+    // 토스트 메시지 표시
+    showToast(message, type = 'info') {
+        console.log(`[${type.toUpperCase()}] ${message}`);
+        
+        // 간단한 알림 표시 (토스트 라이브러리가 없는 경우)
+        if (typeof bootstrap !== 'undefined') {
+            // Bootstrap 토스트 사용
+            const toastContainer = document.getElementById('global-notifications');
+            if (toastContainer) {
+                const toastId = 'toast-' + Date.now();
+                const toastHTML = `
+                    <div id="${toastId}" class="toast align-items-center text-bg-${type} border-0" role="alert">
+                        <div class="d-flex">
+                            <div class="toast-body">${message}</div>
+                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                        </div>
+                    </div>
+                `;
+                toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+                
+                const toastElement = document.getElementById(toastId);
+                const toast = new bootstrap.Toast(toastElement);
+                toast.show();
+            }
+        } else {
+            // 기본 브라우저 알림
+            alert(message);
         }
     }
     
