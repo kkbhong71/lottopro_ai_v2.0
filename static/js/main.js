@@ -6,6 +6,8 @@ class LottoApp {
         this.init();
     }
 
+    // 유틸리티 메서드들
+
     init() {
         this.bindEvents();
         this.loadInitialData();
