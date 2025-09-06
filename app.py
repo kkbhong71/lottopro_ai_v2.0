@@ -26,7 +26,7 @@ def safe_int_list(lst):
     return [safe_int(x) for x in lst]
 
 class AdvancedLottoPredictor:
-    def __init__(self, csv_file_path='new_1187.csv'):
+    def __init__(self, csv_file_path='new_1188.csv'):
         self.csv_file_path = csv_file_path
         self.data = None
         self.numbers = None
@@ -688,7 +688,7 @@ def get_statistics():
                     'least_frequent': [{'number': safe_int(num), 'count': safe_int(count)} for num, count in least_common],
                     'recent_hot': [{'number': safe_int(num), 'count': safe_int(count)} for num, count in most_common[:10]],
                     'last_draw_info': {
-                        'round': safe_int(last_row.get('round', 1187)),
+                        'round': safe_int(last_row.get('round', 1188)),
                         'date': str(last_row.get('draw_date', '2024-01-01')),
                         'numbers': safe_int_list(pred.numbers[-1].tolist()),
                         'bonus': safe_int(last_row.get('bonus_num', 7)) if 'bonus_num' in last_row else 7
