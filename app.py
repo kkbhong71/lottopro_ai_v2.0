@@ -14,6 +14,17 @@ warnings.filterwarnings('ignore')
 app = Flask(__name__)
 app.config['JSON_SORT_KEYS'] = False
 
+def safe_int(value):
+    """numpy.int64를 Python int로 안전하게 변환"""
+    try:
+        return int(value)
+    except (ValueError, TypeError):
+        return value
+
+def safe_int_list(lst):
+    """리스트의 모든 요소를 안전하게 int로 변환"""
+    return [safe_int(x) for x in lst]
+
 class AdvancedLottoPredictor:
     def __init__(self, csv_file_path='new_1187.csv'):
         self.csv_file_path = csv_file_path
@@ -72,7 +83,7 @@ class AdvancedLottoPredictor:
             frequency = Counter(all_numbers)
             
             # 상위 15개 번호 중에서 가중 랜덤 선택
-            top_numbers = [num for num, count in frequency.most_common(15)]
+            top_numbers = [safe_int(num) for num, count in frequency.most_common(15)]
             weights = [count for num, count in frequency.most_common(15)]
             
             selected = []
@@ -94,7 +105,7 @@ class AdvancedLottoPredictor:
                 'description': '과거 당첨번호 출현 빈도를 분석하여 가중 확률로 예측',
                 'category': 'basic',
                 'algorithm_id': 1,
-                'priority_numbers': sorted(list(set(selected)))[:6],
+                'priority_numbers': safe_int_list(sorted(list(set(selected)))[:6]),
                 'confidence': 85
             }
         except Exception as e:
@@ -120,7 +131,7 @@ class AdvancedLottoPredictor:
                 expected_count = total_freq.get(num, 0) * (20 / len(self.numbers))
                 
                 if recent_count > expected_count:
-                    hot_numbers.append((num, recent_count - expected_count))
+                    hot_numbers.append((safe_int(num), recent_count - expected_count))
             
             # 핫 넘버 우선 선택
             hot_numbers.sort(key=lambda x: x[1], reverse=True)
@@ -138,7 +149,7 @@ class AdvancedLottoPredictor:
                 'description': '최근 출현 패턴 기반 핫넘버와 콜드넘버 조합 예측',
                 'category': 'basic',
                 'algorithm_id': 2,
-                'priority_numbers': sorted(list(set(selected)))[:6],
+                'priority_numbers': safe_int_list(sorted(list(set(selected)))[:6]),
                 'confidence': 78
             }
         except Exception as e:
@@ -156,18 +167,18 @@ class AdvancedLottoPredictor:
             for row in self.numbers:
                 for num in row:
                     if 1 <= num <= 15:
-                        sections['low'].append(num)
+                        sections['low'].append(safe_int(num))
                     elif 16 <= num <= 30:
-                        sections['mid'].append(num)
+                        sections['mid'].append(safe_int(num))
                     elif 31 <= num <= 45:
-                        sections['high'].append(num)
+                        sections['high'].append(safe_int(num))
             
             # 각 구간에서 빈도 높은 번호 선택
             selected = []
             for section_name, section_numbers in sections.items():
                 if section_numbers:
                     freq = Counter(section_numbers)
-                    top_nums = [num for num, _ in freq.most_common(3)]
+                    top_nums = [safe_int(num) for num, _ in freq.most_common(3)]
                     selected.extend(random.sample(top_nums, min(2, len(top_nums))))
             
             while len(selected) < 6:
@@ -178,7 +189,7 @@ class AdvancedLottoPredictor:
                 'description': '번호 구간별 출현 패턴과 수학적 관계 분석 예측',
                 'category': 'basic',
                 'algorithm_id': 3,
-                'priority_numbers': sorted(list(set(selected)))[:6],
+                'priority_numbers': safe_int_list(sorted(list(set(selected)))[:6]),
                 'confidence': 73
             }
         except Exception as e:
@@ -193,8 +204,8 @@ class AdvancedLottoPredictor:
             all_numbers = self.numbers.flatten()
             
             # 정규분포 기반 예측
-            mean_val = np.mean(all_numbers)
-            std_val = np.std(all_numbers)
+            mean_val = float(np.mean(all_numbers))
+            std_val = float(np.std(all_numbers))
             
             # 표준점수 기반 선택
             candidates = []
@@ -219,7 +230,7 @@ class AdvancedLottoPredictor:
                 'description': '정규분포와 확률 이론을 적용한 수학적 예측',
                 'category': 'basic',
                 'algorithm_id': 4,
-                'priority_numbers': sorted(list(set(selected)))[:6],
+                'priority_numbers': safe_int_list(sorted(list(set(selected)))[:6]),
                 'confidence': 81
             }
         except Exception as e:
@@ -238,7 +249,7 @@ class AdvancedLottoPredictor:
             # 각 위치별 평균 계산
             position_averages = []
             for pos in range(6):
-                pos_numbers = [row[pos] for row in recent_data]
+                pos_numbers = [safe_int(row[pos]) for row in recent_data]
                 avg = sum(pos_numbers) / len(pos_numbers)
                 position_averages.append(int(round(avg)))
             
@@ -260,7 +271,7 @@ class AdvancedLottoPredictor:
                 'description': '패턴 학습 기반 위치별 평균 예측',
                 'category': 'basic',
                 'algorithm_id': 5,
-                'priority_numbers': sorted(list(set(selected)))[:6],
+                'priority_numbers': safe_int_list(sorted(list(set(selected)))[:6]),
                 'confidence': 76
             }
         except Exception as e:
@@ -280,11 +291,11 @@ class AdvancedLottoPredictor:
             weighted_numbers = []
             for i, row in enumerate(self.numbers):
                 for num in row:
-                    weighted_numbers.extend([num] * int(weights[i] * 100))
+                    weighted_numbers.extend([safe_int(num)] * int(weights[i] * 100))
             
             # 빈도 기반 선택
             freq = Counter(weighted_numbers)
-            top_numbers = [num for num, _ in freq.most_common(15)]
+            top_numbers = [safe_int(num) for num, _ in freq.most_common(15)]
             selected = random.sample(top_numbers, min(6, len(top_numbers)))
             
             while len(selected) < 6:
@@ -295,7 +306,7 @@ class AdvancedLottoPredictor:
                 'description': '가중치 네트워크를 통한 복합 패턴 학습 예측',
                 'category': 'advanced',
                 'algorithm_id': 6,
-                'priority_numbers': sorted(list(set(selected)))[:6],
+                'priority_numbers': safe_int_list(sorted(list(set(selected)))[:6]),
                 'confidence': 79
             }
         except Exception as e:
@@ -312,15 +323,15 @@ class AdvancedLottoPredictor:
             
             # 연속된 회차 간 번호 전이 패턴 분석
             for i in range(len(self.numbers) - 1):
-                current_set = set(self.numbers[i])
-                next_set = set(self.numbers[i + 1])
+                current_set = set(safe_int(x) for x in self.numbers[i])
+                next_set = set(safe_int(x) for x in self.numbers[i + 1])
                 
                 for curr_num in current_set:
                     for next_num in next_set:
                         transition_matrix[curr_num][next_num] += 1
             
             # 마지막 회차 기반 예측
-            last_numbers = set(self.numbers[-1])
+            last_numbers = set(safe_int(x) for x in self.numbers[-1])
             predictions = []
             
             for curr_num in last_numbers:
@@ -330,7 +341,7 @@ class AdvancedLottoPredictor:
                         total = sum(transitions.values())
                         probs = [(next_num, count/total) for next_num, count in transitions.items()]
                         probs.sort(key=lambda x: x[1], reverse=True)
-                        predictions.extend([num for num, prob in probs[:2]])
+                        predictions.extend([safe_int(num) for num, prob in probs[:2]])
             
             # 중복 제거 및 부족한 수 채우기
             selected = list(set(predictions))[:6]
@@ -342,7 +353,7 @@ class AdvancedLottoPredictor:
                 'description': '상태 전이 확률을 이용한 연속성 패턴 예측',
                 'category': 'advanced',
                 'algorithm_id': 7,
-                'priority_numbers': sorted(list(set(selected)))[:6],
+                'priority_numbers': safe_int_list(sorted(list(set(selected)))[:6]),
                 'confidence': 74
             }
         except Exception as e:
@@ -358,7 +369,7 @@ class AdvancedLottoPredictor:
             def fitness(individual):
                 score = 0
                 for past_draw in self.numbers[-10:]:  # 최근 10회차
-                    common = len(set(individual) & set(past_draw))
+                    common = len(set(individual) & set(safe_int(x) for x in past_draw))
                     score += common * common  # 공통 번호 수의 제곱
                 return score
             
@@ -404,7 +415,7 @@ class AdvancedLottoPredictor:
                 'description': '진화론적 최적화를 통한 적응형 번호 조합 예측',
                 'category': 'advanced',
                 'algorithm_id': 8,
-                'priority_numbers': sorted(list(set(best_individual)))[:6],
+                'priority_numbers': safe_int_list(sorted(list(set(best_individual)))[:6]),
                 'confidence': 77
             }
         except Exception as e:
@@ -422,7 +433,7 @@ class AdvancedLottoPredictor:
             for draw in self.numbers:
                 for i in range(len(draw)):
                     for j in range(i + 1, len(draw)):
-                        pair = tuple(sorted([draw[i], draw[j]]))
+                        pair = tuple(sorted([safe_int(draw[i]), safe_int(draw[j])]))
                         co_occurrence[pair] += 1
             
             # 강한 상관관계 페어 찾기
@@ -455,7 +466,7 @@ class AdvancedLottoPredictor:
                 'description': '번호 간 동반 출현 상관관계를 분석한 조합 예측',
                 'category': 'advanced',
                 'algorithm_id': 9,
-                'priority_numbers': sorted(list(set(selected)))[:6],
+                'priority_numbers': safe_int_list(sorted(list(set(selected)))[:6]),
                 'confidence': 75
             }
         except Exception as e:
@@ -497,7 +508,7 @@ class AdvancedLottoPredictor:
             sorted_patterns = sorted(time_patterns.items(), key=lambda x: x[1], reverse=True)
             
             # 상위 10개 중에서 6개 선택
-            candidates = [num for num, prob in sorted_patterns[:15]]
+            candidates = [safe_int(num) for num, prob in sorted_patterns[:15]]
             if len(candidates) < 6:
                 candidates.extend(random.sample(range(1, 46), 6 - len(candidates)))
             
@@ -508,7 +519,7 @@ class AdvancedLottoPredictor:
                 'description': '시간 흐름에 따른 출현 패턴 예측',
                 'category': 'advanced',
                 'algorithm_id': 10,
-                'priority_numbers': sorted(list(set(selected)))[:6],
+                'priority_numbers': safe_int_list(sorted(list(set(selected)))[:6]),
                 'confidence': 72
             }
         except Exception as e:
@@ -629,7 +640,7 @@ def get_predictions():
             'success': True,
             'data': results,
             'total_algorithms': len(results),
-            'total_draws': len(pred.data) if pred.data is not None else 0,
+            'total_draws': safe_int(len(pred.data)) if pred.data is not None else 0,
             'message': '10가지 AI 알고리즘이 각각 1개씩의 우선 번호를 생성했습니다.'
         })
         
@@ -647,10 +658,10 @@ def get_statistics():
         pred = get_predictor()
         
         default_stats = {
-            'total_draws': 1187,
+            'total_draws': 1188,
             'algorithms_count': 10,
             'last_draw_info': {
-                'round': 1187,
+                'round': 1188,
                 'date': '2024-01-01',
                 'numbers': [1, 7, 13, 19, 25, 31],
                 'bonus': 7
@@ -671,16 +682,16 @@ def get_statistics():
                 last_row = pred.data.iloc[-1]
                 
                 stats = {
-                    'total_draws': len(pred.data),
+                    'total_draws': safe_int(len(pred.data)),
                     'algorithms_count': 10,
-                    'most_frequent': [{'number': int(num), 'count': int(count)} for num, count in most_common],
-                    'least_frequent': [{'number': int(num), 'count': int(count)} for num, count in least_common],
-                    'recent_hot': [{'number': int(num), 'count': int(count)} for num, count in most_common[:10]],
+                    'most_frequent': [{'number': safe_int(num), 'count': safe_int(count)} for num, count in most_common],
+                    'least_frequent': [{'number': safe_int(num), 'count': safe_int(count)} for num, count in least_common],
+                    'recent_hot': [{'number': safe_int(num), 'count': safe_int(count)} for num, count in most_common[:10]],
                     'last_draw_info': {
-                        'round': int(last_row.get('round', 1187)),
+                        'round': safe_int(last_row.get('round', 1187)),
                         'date': str(last_row.get('draw_date', '2024-01-01')),
-                        'numbers': pred.numbers[-1].tolist(),
-                        'bonus': int(last_row.get('bonus_num', 7)) if 'bonus_num' in last_row else 7
+                        'numbers': safe_int_list(pred.numbers[-1].tolist()),
+                        'bonus': safe_int(last_row.get('bonus_num', 7)) if 'bonus_num' in last_row else 7
                     }
                 }
             except:
