@@ -6,6 +6,7 @@ class LottoApp {
         this.isLoading = false;
         this.retryCount = 0;
         this.maxRetries = 3;
+        this.algorithmProgress = {};
         this.init();
     }
 
@@ -13,7 +14,7 @@ class LottoApp {
         this.bindEvents();
         this.loadInitialDataWithRetry();
         this.checkForWeeklyUpdate();
-        console.log('🎰 로또프로 AI v2.0 초기화 완료 (메모리 최적화)');
+        console.log('🎰 로또프로 AI v2.0 초기화 완료 (10개 알고리즘 지원)');
     }
 
     bindEvents() {
@@ -37,6 +38,13 @@ class LottoApp {
             }
         });
 
+        // 탭 버튼 이벤트
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('tab-btn')) {
+                this.switchTab(e.target.dataset.tab);
+            }
+        });
+
         // 모달 이벤트
         const closeButtons = document.querySelectorAll('.close');
         closeButtons.forEach(btn => {
@@ -53,11 +61,19 @@ class LottoApp {
             this.saveNumbers();
         });
 
+        document.getElementById('analyzeNumbers').addEventListener('click', () => {
+            this.analyzeNumbers();
+        });
+
         // 모달 외부 클릭시 닫기
         window.addEventListener('click', (event) => {
             const modal = document.getElementById('numbersModal');
+            const analysisModal = document.getElementById('analysisModal');
             if (event.target === modal) {
                 this.closeModal();
+            }
+            if (event.target === analysisModal) {
+                this.closeAnalysisModal();
             }
         });
 
@@ -69,6 +85,25 @@ class LottoApp {
         window.addEventListener('offline', () => {
             this.showError('네트워크 연결이 끊어졌습니다.');
         });
+    }
+
+    // 탭 전환 기능
+    switchTab(tabName) {
+        try {
+            // 탭 버튼 활성화 상태 변경
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+
+            // 탭 콘텐츠 표시/숨김
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(`${tabName}-algorithms`).classList.add('active');
+        } catch (error) {
+            console.error('탭 전환 오류:', error);
+        }
     }
 
     // 향상된 fetch 함수 (타임아웃 및 재시도 로직 포함)
@@ -141,6 +176,7 @@ class LottoApp {
         // 네트워크 실패 시 기본 데이터 표시
         const fallbackData = {
             total_draws: 1187,
+            algorithms_count: 10,
             last_draw_info: {
                 round: 1187,
                 date: '알 수 없음',
@@ -162,6 +198,7 @@ class LottoApp {
             
             this.displayRecentWinningNumbers(data);
             this.displayDataUpdateInfo(data);
+            this.calculateNextDrawDate();
         } catch (error) {
             console.error('데이터 표시 중 오류:', error);
         }
@@ -183,7 +220,7 @@ class LottoApp {
                     recentRoundDate.textContent = this.formatDate(date);
                 }
                 
-                // 당첨번호 표시 (애니메이션 간소화)
+                // 당첨번호 표시
                 recentWinningNumbers.innerHTML = '';
                 
                 // 일반 번호 6개
@@ -214,6 +251,23 @@ class LottoApp {
             }
         } catch (error) {
             console.error('업데이트 시간 표시 오류:', error);
+        }
+    }
+
+    calculateNextDrawDate() {
+        try {
+            const today = new Date();
+            const dayOfWeek = today.getDay(); // 0: 일요일, 6: 토요일
+            
+            // 다음 토요일까지의 일수 계산
+            const daysUntilSaturday = (6 - dayOfWeek) % 7;
+            const nextDrawDays = daysUntilSaturday === 0 ? 7 : daysUntilSaturday;
+            
+            document.getElementById('daysUntilDraw').textContent = `${nextDrawDays}일`;
+            document.getElementById('nextDraw').textContent = 
+                nextDrawDays === 0 ? '오늘' : `${nextDrawDays}일 후`;
+        } catch (error) {
+            console.error('다음 추첨일 계산 오류:', error);
         }
     }
 
@@ -257,20 +311,25 @@ class LottoApp {
         
         const loadingIndicator = document.getElementById('loadingIndicator');
         const predictionsContainer = document.getElementById('predictionsContainer');
+        const performanceSection = document.getElementById('performanceSection');
         const generateBtn = document.getElementById('generateBtn');
 
         try {
             this.isLoading = true;
             loadingIndicator.style.display = 'block';
             predictionsContainer.style.display = 'none';
+            performanceSection.style.display = 'none';
             generateBtn.disabled = true;
-            generateBtn.textContent = '분석 중...';
+            generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>분석 중...</span>';
             
-            this.updateProgress(0, '5개 AI 알고리즘 초기화 중...');
+            this.updateProgress(0, '10개 AI 알고리즘 초기화 중...');
             
             const startTime = performance.now();
             
-            // 최적화된 API 호출 (타임아웃 60초)
+            // 진행률 시뮬레이션
+            this.simulateAlgorithmProgress();
+            
+            // API 호출 (타임아웃 60초)
             const response = await this.fetchWithTimeout('/api/predictions', { timeout: 60000 });
             const data = await response.json();
 
@@ -278,13 +337,14 @@ class LottoApp {
                 this.algorithms = data.data;
                 
                 const algorithmCount = Object.keys(data.data).length;
-                this.updateProgress(100, '분석 완료!');
+                this.updateProgress(100, '모든 알고리즘 분석 완료!');
                 
                 const processingTime = ((performance.now() - startTime) / 1000).toFixed(2);
                 this.updatePerformanceIndicators(processingTime, data);
                 
                 this.renderPredictions();
                 predictionsContainer.style.display = 'block';
+                performanceSection.style.display = 'block';
                 
                 this.showSuccess(`✅ ${algorithmCount}개 AI 알고리즘이 분석을 완료했습니다!`);
             } else {
@@ -298,7 +358,21 @@ class LottoApp {
             this.isLoading = false;
             loadingIndicator.style.display = 'none';
             generateBtn.disabled = false;
-            generateBtn.textContent = '🎲 AI 예측 생성';
+            generateBtn.innerHTML = '<i class="fas fa-magic"></i> <span>10개 AI 알고리즘 실행</span>';
+        }
+    }
+
+    // 알고리즘 진행률 시뮬레이션
+    async simulateAlgorithmProgress() {
+        const algorithmNames = [
+            '빈도 분석', '핫/콜드 분석', '패턴 분석', '통계 분석', '머신러닝',
+            '신경망 분석', '마르코프 체인', '유전자 알고리즘', '동반출현 분석', '시계열 분석'
+        ];
+
+        for (let i = 0; i < algorithmNames.length; i++) {
+            const progress = ((i + 1) / algorithmNames.length) * 90; // 90%까지만
+            this.updateProgress(progress, `${algorithmNames[i]} 실행 중...`);
+            await new Promise(resolve => setTimeout(resolve, 200));
         }
     }
 
@@ -336,29 +410,31 @@ class LottoApp {
         }
     }
 
+    // 10개 알고리즘에 대한 색상과 아이콘 정의
+    getAlgorithmVisuals() {
+        return {
+            'algorithm_01': { color: '#FF6B6B', icon: 'fas fa-chart-bar' },      // 빈도 분석
+            'algorithm_02': { color: '#4ECDC4', icon: 'fas fa-thermometer-half' }, // 핫/콜드 분석
+            'algorithm_03': { color: '#45B7D1', icon: 'fas fa-puzzle-piece' },    // 패턴 분석
+            'algorithm_04': { color: '#96CEB4', icon: 'fas fa-calculator' },      // 통계 분석
+            'algorithm_05': { color: '#FECA57', icon: 'fas fa-robot' },           // 머신러닝
+            'algorithm_06': { color: '#FF9FF3', icon: 'fas fa-brain' },           // 신경망 분석
+            'algorithm_07': { color: '#54A0FF', icon: 'fas fa-project-diagram' }, // 마르코프 체인
+            'algorithm_08': { color: '#5F27CD', icon: 'fas fa-dna' },             // 유전자 알고리즘
+            'algorithm_09': { color: '#00D2D3', icon: 'fas fa-link' },            // 동반출현 분석
+            'algorithm_10': { color: '#FF6348', icon: 'fas fa-chart-line' }       // 시계열 분석
+        };
+    }
+
     renderPredictions() {
         try {
             const container = document.getElementById('algorithmsGrid');
             container.innerHTML = '';
 
-            // 카테고리 필터 (5개 알고리즘으로 수정)
+            // 카테고리 필터 추가
             this.addCategoryFilters(container);
 
-            const algorithmColors = {
-                'frequency': '#FF6B6B',
-                'hot_cold': '#4ECDC4', 
-                'pattern': '#45B7D1',
-                'statistical': '#96CEB4',
-                'co_occurrence': '#E17055'
-            };
-
-            const algorithmIcons = {
-                'frequency': 'fas fa-chart-bar',
-                'hot_cold': 'fas fa-thermometer-half',
-                'pattern': 'fas fa-puzzle-piece',
-                'statistical': 'fas fa-calculator',
-                'co_occurrence': 'fas fa-link'
-            };
+            const algorithmVisuals = this.getAlgorithmVisuals();
 
             // 카테고리별로 정렬
             const basicAlgorithms = {};
@@ -378,12 +454,8 @@ class LottoApp {
                 container.appendChild(basicSection);
 
                 for (const [key, algorithm] of Object.entries(basicAlgorithms)) {
-                    const algorithmCard = this.createAlgorithmCard(
-                        key, 
-                        algorithm, 
-                        algorithmColors[key] || '#999999', 
-                        algorithmIcons[key] || 'fas fa-cog'
-                    );
+                    const visual = algorithmVisuals[key] || { color: '#999999', icon: 'fas fa-cog' };
+                    const algorithmCard = this.createAlgorithmCard(key, algorithm, visual.color, visual.icon);
                     basicSection.appendChild(algorithmCard);
                 }
             }
@@ -394,12 +466,8 @@ class LottoApp {
                 container.appendChild(advancedSection);
 
                 for (const [key, algorithm] of Object.entries(advancedAlgorithms)) {
-                    const algorithmCard = this.createAlgorithmCard(
-                        key, 
-                        algorithm, 
-                        algorithmColors[key] || '#999999', 
-                        algorithmIcons[key] || 'fas fa-cog'
-                    );
+                    const visual = algorithmVisuals[key] || { color: '#999999', icon: 'fas fa-cog' };
+                    const algorithmCard = this.createAlgorithmCard(key, algorithm, visual.color, visual.icon);
                     advancedSection.appendChild(algorithmCard);
                 }
             }
@@ -459,16 +527,24 @@ class LottoApp {
             card.style.borderLeftColor = color;
             card.dataset.category = algorithm.category;
 
-            const predictionsHTML = algorithm.predictions.map((prediction, index) => {
-                return `
-                    <div class="number-set" data-algorithm="${key}" data-index="${index}">
-                        <div class="set-label">세트 ${index + 1}</div>
-                        <div class="numbers">
-                            ${prediction.map(num => `<span class="number">${num}</span>`).join('')}
-                        </div>
+            // 우선 번호 1개만 표시 (새로운 API 구조 반영)
+            const priorityNumbers = algorithm.priority_numbers || [1, 2, 3, 4, 5, 6];
+            const confidence = algorithm.confidence || 50;
+            
+            const numbersHTML = `
+                <div class="priority-number-set" data-algorithm="${key}">
+                    <div class="set-label">우선 번호</div>
+                    <div class="numbers">
+                        ${priorityNumbers.map(num => `<span class="number">${num}</span>`).join('')}
                     </div>
-                `;
-            }).join('');
+                    <div class="confidence-indicator">
+                        <div class="confidence-bar">
+                            <div class="confidence-fill" style="width: ${confidence}%; background-color: ${color}"></div>
+                        </div>
+                        <span class="confidence-text">신뢰도 ${confidence}%</span>
+                    </div>
+                </div>
+            `;
 
             const categoryBadge = algorithm.category === 'advanced' ? 
                 `<span class="category-badge advanced">HIGH-TECH</span>` : 
@@ -486,22 +562,21 @@ class LottoApp {
                     <div class="algorithm-badges">
                         ${categoryBadge}
                         <div class="algorithm-badge" style="background-color: ${color}">
-                            ${algorithm.predictions.length}세트
+                            ID: ${algorithm.algorithm_id || 0}
                         </div>
                     </div>
                 </div>
                 <div class="predictions-list">
-                    ${predictionsHTML}
+                    ${numbersHTML}
                 </div>
             `;
 
             // 번호 세트 클릭 이벤트 추가
             card.addEventListener('click', (e) => {
-                const numberSet = e.target.closest('.number-set');
+                const numberSet = e.target.closest('.priority-number-set');
                 if (numberSet) {
                     const algorithmKey = numberSet.dataset.algorithm;
-                    const index = parseInt(numberSet.dataset.index);
-                    this.showNumbersModal(algorithmKey, index);
+                    this.showNumbersModal(algorithmKey);
                 }
             });
 
@@ -520,7 +595,7 @@ class LottoApp {
             });
             document.querySelector(`[data-category="${category}"]`).classList.add('active');
 
-            // 알고리즘 카드 필터링 (애니메이션 간소화)
+            // 알고리즘 카드 필터링
             const cards = document.querySelectorAll('.algorithm-card');
             const sections = document.querySelectorAll('.algorithm-section');
 
@@ -640,24 +715,51 @@ class LottoApp {
         }
     }
 
-    showNumbersModal(algorithmKey, index) {
+    showNumbersModal(algorithmKey) {
         try {
             const algorithm = this.algorithms[algorithmKey];
-            if (!algorithm || !algorithm.predictions[index]) return;
+            if (!algorithm || !algorithm.priority_numbers) return;
             
-            const numbers = algorithm.predictions[index];
+            const numbers = algorithm.priority_numbers;
+            const confidence = algorithm.confidence || 50;
             
             this.currentModalData = {
                 algorithm: algorithm.name,
                 numbers: numbers,
                 algorithmKey: algorithmKey,
-                index: index,
-                category: algorithm.category
+                category: algorithm.category,
+                confidence: confidence,
+                algorithmId: algorithm.algorithm_id || 0
             };
 
             const categoryText = algorithm.category === 'advanced' ? ' (고급 AI)' : ' (기본 AI)';
             document.getElementById('modalTitle').textContent = 
-                `${algorithm.name}${categoryText} - 세트 ${index + 1}`;
+                `${algorithm.name}${categoryText} - 우선 번호`;
+            
+            // 알고리즘 배지 업데이트
+            const modalBadge = document.getElementById('modalAlgorithmBadge');
+            if (modalBadge) {
+                modalBadge.className = `algorithm-badge-modal ${algorithm.category}`;
+                modalBadge.textContent = algorithm.category === 'advanced' ? 'HIGH-TECH' : 'CLASSIC';
+            }
+
+            // 신뢰도 업데이트
+            const modalConfidence = document.getElementById('modalConfidence');
+            if (modalConfidence) {
+                const confidenceLevel = confidence >= 80 ? '매우 높음' : 
+                                      confidence >= 70 ? '높음' : 
+                                      confidence >= 60 ? '보통' : '낮음';
+                modalConfidence.innerHTML = `
+                    <i class="fas fa-star"></i>
+                    <span>신뢰도: ${confidenceLevel} (${confidence}%)</span>
+                `;
+            }
+
+            // 알고리즘 타입 업데이트
+            const modalAlgoType = document.getElementById('modalAlgoType');
+            if (modalAlgoType) {
+                modalAlgoType.textContent = algorithm.category === 'advanced' ? '고급 AI 알고리즘' : '기본 AI 알고리즘';
+            }
             
             const modalNumbers = document.getElementById('modalNumbers');
             modalNumbers.innerHTML = numbers.map(num => 
@@ -670,6 +772,147 @@ class LottoApp {
         }
     }
 
+    analyzeNumbers() {
+        if (!this.currentModalData) return;
+
+        try {
+            const { numbers, algorithm, category, confidence } = this.currentModalData;
+            
+            // 번호 분석 수행
+            const analysis = this.performNumberAnalysis(numbers);
+            
+            // 분석 결과 표시
+            const analysisContent = document.getElementById('analysisContent');
+            analysisContent.innerHTML = `
+                <div class="analysis-header">
+                    <h4>${algorithm} 분석 결과</h4>
+                    <div class="analysis-meta">
+                        <span class="meta-item">카테고리: ${category === 'advanced' ? '고급 AI' : '기본 AI'}</span>
+                        <span class="meta-item">신뢰도: ${confidence}%</span>
+                    </div>
+                </div>
+                
+                <div class="analysis-sections">
+                    <div class="analysis-section">
+                        <h5><i class="fas fa-chart-bar"></i> 번호 분포 분석</h5>
+                        <div class="analysis-grid">
+                            <div class="analysis-item">
+                                <span class="label">구간별 분포:</span>
+                                <span class="value">${analysis.distribution}</span>
+                            </div>
+                            <div class="analysis-item">
+                                <span class="label">홀짝 비율:</span>
+                                <span class="value">${analysis.oddEven}</span>
+                            </div>
+                            <div class="analysis-item">
+                                <span class="label">연속 번호:</span>
+                                <span class="value">${analysis.consecutive}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="analysis-section">
+                        <h5><i class="fas fa-calculator"></i> 수학적 분석</h5>
+                        <div class="analysis-grid">
+                            <div class="analysis-item">
+                                <span class="label">합계:</span>
+                                <span class="value">${analysis.sum}</span>
+                            </div>
+                            <div class="analysis-item">
+                                <span class="label">평균:</span>
+                                <span class="value">${analysis.average}</span>
+                            </div>
+                            <div class="analysis-item">
+                                <span class="label">편차:</span>
+                                <span class="value">${analysis.deviation}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="analysis-section">
+                        <h5><i class="fas fa-star"></i> 특성 분석</h5>
+                        <div class="characteristics">
+                            ${analysis.characteristics.map(char => `
+                                <div class="characteristic-item">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>${char}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('analysisModal').style.display = 'block';
+        } catch (error) {
+            console.error('번호 분석 오류:', error);
+            this.showError('번호 분석 중 오류가 발생했습니다.');
+        }
+    }
+
+    performNumberAnalysis(numbers) {
+        try {
+            const sortedNumbers = [...numbers].sort((a, b) => a - b);
+            
+            // 구간별 분포 (1-15, 16-30, 31-45)
+            const sections = [0, 0, 0];
+            sortedNumbers.forEach(num => {
+                if (num <= 15) sections[0]++;
+                else if (num <= 30) sections[1]++;
+                else sections[2]++;
+            });
+            
+            // 홀짝 분석
+            const oddCount = sortedNumbers.filter(num => num % 2 === 1).length;
+            const evenCount = 6 - oddCount;
+            
+            // 연속 번호 체크
+            let consecutiveCount = 0;
+            for (let i = 0; i < sortedNumbers.length - 1; i++) {
+                if (sortedNumbers[i + 1] - sortedNumbers[i] === 1) {
+                    consecutiveCount++;
+                }
+            }
+            
+            // 수학적 계산
+            const sum = sortedNumbers.reduce((a, b) => a + b, 0);
+            const average = (sum / 6).toFixed(1);
+            const mean = parseFloat(average);
+            const variance = sortedNumbers.reduce((acc, num) => acc + Math.pow(num - mean, 2), 0) / 6;
+            const deviation = Math.sqrt(variance).toFixed(1);
+            
+            // 특성 분석
+            const characteristics = [];
+            if (sections[0] >= 3) characteristics.push("저구간 집중 패턴");
+            if (sections[2] >= 3) characteristics.push("고구간 집중 패턴");
+            if (oddCount === evenCount) characteristics.push("완벽한 홀짝 균형");
+            if (consecutiveCount >= 2) characteristics.push("연속 번호 다수 포함");
+            if (sum >= 120 && sum <= 150) characteristics.push("이상적인 합계 범위");
+            if (characteristics.length === 0) characteristics.push("균형잡힌 일반적 패턴");
+            
+            return {
+                distribution: `${sections[0]}-${sections[1]}-${sections[2]}`,
+                oddEven: `홀수 ${oddCount}개, 짝수 ${evenCount}개`,
+                consecutive: consecutiveCount > 0 ? `${consecutiveCount}쌍` : '없음',
+                sum: sum,
+                average: average,
+                deviation: deviation,
+                characteristics: characteristics
+            };
+        } catch (error) {
+            console.error('분석 계산 오류:', error);
+            return {
+                distribution: '분석 실패',
+                oddEven: '분석 실패',
+                consecutive: '분석 실패',
+                sum: 0,
+                average: 0,
+                deviation: 0,
+                characteristics: ['분석을 수행할 수 없습니다.']
+            };
+        }
+    }
+
     closeModal() {
         try {
             document.getElementById('numbersModal').style.display = 'none';
@@ -679,12 +922,20 @@ class LottoApp {
         }
     }
 
+    closeAnalysisModal() {
+        try {
+            document.getElementById('analysisModal').style.display = 'none';
+        } catch (error) {
+            console.error('분석 모달 닫기 오류:', error);
+        }
+    }
+
     copyNumbers() {
         if (!this.currentModalData) return;
 
         try {
             const numbersText = this.currentModalData.numbers.join(', ');
-            const fullText = `${this.currentModalData.algorithm} 예측번호: ${numbersText}`;
+            const fullText = `${this.currentModalData.algorithm} 우선번호: ${numbersText} (신뢰도: ${this.currentModalData.confidence}%)`;
             
             if (navigator.clipboard) {
                 navigator.clipboard.writeText(fullText).then(() => {
@@ -724,6 +975,8 @@ class LottoApp {
                 algorithm: this.currentModalData.algorithm,
                 category: this.currentModalData.category,
                 numbers: this.currentModalData.numbers,
+                confidence: this.currentModalData.confidence,
+                algorithmId: this.currentModalData.algorithmId,
                 timestamp: new Date().toISOString(),
                 round: this.statistics.last_draw_info?.round + 1 || '미확인'
             };
@@ -731,8 +984,9 @@ class LottoApp {
             let savedNumbers = JSON.parse(localStorage.getItem('savedLottoNumbers') || '[]');
             savedNumbers.push(saveData);
             
-            if (savedNumbers.length > 50) {
-                savedNumbers = savedNumbers.slice(-50);
+            // 최대 100개까지만 저장
+            if (savedNumbers.length > 100) {
+                savedNumbers = savedNumbers.slice(-100);
             }
             
             localStorage.setItem('savedLottoNumbers', JSON.stringify(savedNumbers));
@@ -785,11 +1039,11 @@ class LottoApp {
     }
 }
 
-// 앱 초기화 (메모리 최적화)
+// 앱 초기화
 document.addEventListener('DOMContentLoaded', () => {
     try {
         window.lottoApp = new LottoApp();
-        console.log('✅ 로또 앱 초기화 완료');
+        console.log('✅ 로또 앱 초기화 완료 (10개 알고리즘 지원)');
     } catch (error) {
         console.error('❌ 앱 초기화 실패:', error);
     }
