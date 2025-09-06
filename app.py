@@ -25,6 +25,30 @@ def safe_int_list(lst):
     """리스트의 모든 요소를 안전하게 int로 변환"""
     return [safe_int(x) for x in lst]
 
+def ensure_six_numbers(selected, exclude_set=None):
+    """6개 번호 보장 함수 - 중복 제거 후 부족한 번호 채우기"""
+    if exclude_set is None:
+        exclude_set = set()
+    
+    # 중복 제거
+    unique_selected = list(set(selected))
+    
+    # 6개가 안 되면 추가 생성
+    available_numbers = [n for n in range(1, 46) if n not in unique_selected and n not in exclude_set]
+    random.shuffle(available_numbers)  # 랜덤하게 섞기
+    
+    while len(unique_selected) < 6 and available_numbers:
+        unique_selected.append(available_numbers.pop(0))
+    
+    # 여전히 6개가 안 되면 강제로 채움 (극단적 상황)
+    while len(unique_selected) < 6:
+        for num in range(1, 46):
+            if num not in unique_selected:
+                unique_selected.append(num)
+                break
+    
+    return sorted(unique_selected[:6])
+
 class AdvancedLottoPredictor:
     def __init__(self, csv_file_path='new_1188.csv'):
         self.csv_file_path = csv_file_path
@@ -74,7 +98,7 @@ class AdvancedLottoPredictor:
             return False
 
     def algorithm_1_frequency_analysis(self):
-        """1. 빈도 분석 - 과거 당첨번호 출현 빈도 기반"""
+        """1. 빈도 분석 - 수정된 버전"""
         try:
             if self.numbers is None:
                 return self._generate_fallback_numbers("빈도 분석")
@@ -82,37 +106,48 @@ class AdvancedLottoPredictor:
             all_numbers = self.numbers.flatten()
             frequency = Counter(all_numbers)
             
-            # 상위 15개 번호 중에서 가중 랜덤 선택
-            top_numbers = [safe_int(num) for num, count in frequency.most_common(15)]
-            weights = [count for num, count in frequency.most_common(15)]
+            # 상위 20개 번호 중에서 선택 (더 많은 후보로 중복 위험 감소)
+            top_numbers = [safe_int(num) for num, count in frequency.most_common(20)]
+            weights = [count for num, count in frequency.most_common(20)]
             
             selected = []
-            temp_numbers = top_numbers.copy()
-            temp_weights = weights.copy()
+            used_numbers = set()
             
+            # 중복 없이 6개 선택
             for _ in range(6):
-                if not temp_numbers:
+                if not top_numbers:
                     break
-                idx = random.choices(range(len(temp_numbers)), weights=temp_weights)[0]
-                selected.append(temp_numbers.pop(idx))
-                temp_weights.pop(idx)
+                
+                # 사용되지 않은 번호만 필터링
+                available_indices = [i for i, num in enumerate(top_numbers) if num not in used_numbers]
+                if not available_indices:
+                    break
+                    
+                # 가중치 기반 선택
+                available_weights = [weights[i] for i in available_indices]
+                chosen_idx = random.choices(available_indices, weights=available_weights)[0]
+                chosen_number = top_numbers[chosen_idx]
+                
+                selected.append(chosen_number)
+                used_numbers.add(chosen_number)
             
-            while len(selected) < 6:
-                selected.append(random.randint(1, 45))
+            # 6개 번호 보장
+            final_numbers = ensure_six_numbers(selected)
             
             return {
                 'name': '빈도 분석',
                 'description': '과거 당첨번호 출현 빈도를 분석하여 가중 확률로 예측',
                 'category': 'basic',
                 'algorithm_id': 1,
-                'priority_numbers': safe_int_list(sorted(list(set(selected)))[:6]),
+                'priority_numbers': safe_int_list(final_numbers),
                 'confidence': 85
             }
         except Exception as e:
+            print(f"빈도 분석 알고리즘 오류: {e}")
             return self._generate_fallback_numbers("빈도 분석")
 
     def algorithm_2_hot_cold_analysis(self):
-        """2. 핫/콜드 분석 - 최근 출현 패턴 분석"""
+        """2. 핫/콜드 분석 - 수정된 버전"""
         try:
             if self.numbers is None or len(self.numbers) < 20:
                 return self._generate_fallback_numbers("핫/콜드 분석")
@@ -135,28 +170,34 @@ class AdvancedLottoPredictor:
             
             # 핫 넘버 우선 선택
             hot_numbers.sort(key=lambda x: x[1], reverse=True)
-            selected = [num for num, _ in hot_numbers[:4]]
+            selected = []
+            
+            # 핫 넘버에서 4개 선택
+            for num, _ in hot_numbers[:4]:
+                selected.append(num)
             
             # 나머지는 콜드 넘버에서 선택
             cold_candidates = [num for num in range(1, 46) if num not in selected]
-            selected.extend(random.sample(cold_candidates, min(2, len(cold_candidates))))
+            random.shuffle(cold_candidates)
+            selected.extend(cold_candidates[:2])
             
-            while len(selected) < 6:
-                selected.append(random.randint(1, 45))
+            # 6개 번호 보장
+            final_numbers = ensure_six_numbers(selected)
             
             return {
                 'name': '핫/콜드 분석',
                 'description': '최근 출현 패턴 기반 핫넘버와 콜드넘버 조합 예측',
                 'category': 'basic',
                 'algorithm_id': 2,
-                'priority_numbers': safe_int_list(sorted(list(set(selected)))[:6]),
+                'priority_numbers': safe_int_list(final_numbers),
                 'confidence': 78
             }
         except Exception as e:
+            print(f"핫/콜드 분석 알고리즘 오류: {e}")
             return self._generate_fallback_numbers("핫/콜드 분석")
 
     def algorithm_3_pattern_analysis(self):
-        """3. 패턴 분석 - 번호 구간별 패턴 분석"""
+        """3. 패턴 분석 - 수정된 버전"""
         try:
             if self.numbers is None:
                 return self._generate_fallback_numbers("패턴 분석")
@@ -178,25 +219,31 @@ class AdvancedLottoPredictor:
             for section_name, section_numbers in sections.items():
                 if section_numbers:
                     freq = Counter(section_numbers)
-                    top_nums = [safe_int(num) for num, _ in freq.most_common(3)]
-                    selected.extend(random.sample(top_nums, min(2, len(top_nums))))
+                    top_nums = [safe_int(num) for num, _ in freq.most_common(5)]
+                    # 각 구간에서 2개씩 선택하되 중복 방지
+                    section_selected = 0
+                    for num in top_nums:
+                        if num not in selected and section_selected < 2:
+                            selected.append(num)
+                            section_selected += 1
             
-            while len(selected) < 6:
-                selected.append(random.randint(1, 45))
+            # 6개 번호 보장
+            final_numbers = ensure_six_numbers(selected)
             
             return {
                 'name': '패턴 분석',
                 'description': '번호 구간별 출현 패턴과 수학적 관계 분석 예측',
                 'category': 'basic',
                 'algorithm_id': 3,
-                'priority_numbers': safe_int_list(sorted(list(set(selected)))[:6]),
+                'priority_numbers': safe_int_list(final_numbers),
                 'confidence': 73
             }
         except Exception as e:
+            print(f"패턴 분석 알고리즘 오류: {e}")
             return self._generate_fallback_numbers("패턴 분석")
 
     def algorithm_4_statistical_analysis(self):
-        """4. 통계 분석 - 고급 통계 기법 적용"""
+        """4. 통계 분석 - 수정된 버전"""
         try:
             if self.numbers is None:
                 return self._generate_fallback_numbers("통계 분석")
@@ -223,21 +270,36 @@ class AdvancedLottoPredictor:
                 weight = math.exp(-0.5 * ((num - mean_val) / std_val) ** 2)
                 weights.append(weight)
             
-            selected = random.choices(candidates, weights=weights, k=6)
+            # 중복 없이 6개 선택
+            selected = []
+            remaining_candidates = candidates.copy()
+            remaining_weights = weights.copy()
+            
+            for _ in range(6):
+                if not remaining_candidates:
+                    break
+                    
+                chosen_idx = random.choices(range(len(remaining_candidates)), weights=remaining_weights)[0]
+                selected.append(remaining_candidates.pop(chosen_idx))
+                remaining_weights.pop(chosen_idx)
+            
+            # 6개 번호 보장
+            final_numbers = ensure_six_numbers(selected)
             
             return {
                 'name': '통계 분석',
                 'description': '정규분포와 확률 이론을 적용한 수학적 예측',
                 'category': 'basic',
                 'algorithm_id': 4,
-                'priority_numbers': safe_int_list(sorted(list(set(selected)))[:6]),
+                'priority_numbers': safe_int_list(final_numbers),
                 'confidence': 81
             }
         except Exception as e:
+            print(f"통계 분석 알고리즘 오류: {e}")
             return self._generate_fallback_numbers("통계 분석")
 
     def algorithm_5_machine_learning(self):
-        """5. 머신러닝 - 간단한 패턴 학습 기반 예측"""
+        """5. 머신러닝 - 수정된 버전"""
         try:
             if self.numbers is None or len(self.numbers) < 50:
                 return self._generate_fallback_numbers("머신러닝")
@@ -255,30 +317,39 @@ class AdvancedLottoPredictor:
             
             # 평균 주변의 번호들로 조정
             selected = []
+            used_numbers = set()
+            
             for avg in position_averages:
                 # 평균 ±5 범위에서 선택
                 range_start = max(1, avg - 5)
                 range_end = min(45, avg + 5)
-                selected.append(random.randint(range_start, range_end))
+                
+                attempts = 0
+                while attempts < 20:  # 무한 루프 방지
+                    candidate = random.randint(range_start, range_end)
+                    if candidate not in used_numbers:
+                        selected.append(candidate)
+                        used_numbers.add(candidate)
+                        break
+                    attempts += 1
             
-            # 중복 제거 및 보정
-            selected = list(set(selected))
-            while len(selected) < 6:
-                selected.append(random.randint(1, 45))
+            # 6개 번호 보장
+            final_numbers = ensure_six_numbers(selected)
             
             return {
                 'name': '머신러닝',
                 'description': '패턴 학습 기반 위치별 평균 예측',
                 'category': 'basic',
                 'algorithm_id': 5,
-                'priority_numbers': safe_int_list(sorted(list(set(selected)))[:6]),
+                'priority_numbers': safe_int_list(final_numbers),
                 'confidence': 76
             }
         except Exception as e:
+            print(f"머신러닝 알고리즘 오류: {e}")
             return self._generate_fallback_numbers("머신러닝")
 
     def algorithm_6_neural_network(self):
-        """6. 신경망 분석 - 가중치 기반 예측"""
+        """6. 신경망 분석 - 수정된 버전"""
         try:
             if self.numbers is None or len(self.numbers) < 30:
                 return self._generate_fallback_numbers("신경망 분석")
@@ -291,29 +362,40 @@ class AdvancedLottoPredictor:
             weighted_numbers = []
             for i, row in enumerate(self.numbers):
                 for num in row:
-                    weighted_numbers.extend([safe_int(num)] * int(weights[i] * 100))
+                    weighted_numbers.extend([safe_int(num)] * int(weights[i] * 100 + 1))
             
             # 빈도 기반 선택
             freq = Counter(weighted_numbers)
-            top_numbers = [safe_int(num) for num, _ in freq.most_common(15)]
-            selected = random.sample(top_numbers, min(6, len(top_numbers)))
+            top_numbers = [safe_int(num) for num, _ in freq.most_common(20)]
             
-            while len(selected) < 6:
-                selected.append(random.randint(1, 45))
+            # 중복 없이 6개 선택
+            selected = []
+            used_numbers = set()
+            
+            for num in top_numbers:
+                if len(selected) >= 6:
+                    break
+                if num not in used_numbers:
+                    selected.append(num)
+                    used_numbers.add(num)
+            
+            # 6개 번호 보장
+            final_numbers = ensure_six_numbers(selected)
             
             return {
                 'name': '신경망 분석',
                 'description': '가중치 네트워크를 통한 복합 패턴 학습 예측',
                 'category': 'advanced',
                 'algorithm_id': 6,
-                'priority_numbers': safe_int_list(sorted(list(set(selected)))[:6]),
+                'priority_numbers': safe_int_list(final_numbers),
                 'confidence': 79
             }
         except Exception as e:
+            print(f"신경망 분석 알고리즘 오류: {e}")
             return self._generate_fallback_numbers("신경망 분석")
 
     def algorithm_7_markov_chain(self):
-        """7. 마르코프 체인 - 상태 전이 확률 모델"""
+        """7. 마르코프 체인 - 수정된 버전"""
         try:
             if self.numbers is None or len(self.numbers) < 20:
                 return self._generate_fallback_numbers("마르코프 체인")
@@ -333,6 +415,7 @@ class AdvancedLottoPredictor:
             # 마지막 회차 기반 예측
             last_numbers = set(safe_int(x) for x in self.numbers[-1])
             predictions = []
+            used_predictions = set()
             
             for curr_num in last_numbers:
                 if curr_num in transition_matrix:
@@ -341,26 +424,30 @@ class AdvancedLottoPredictor:
                         total = sum(transitions.values())
                         probs = [(next_num, count/total) for next_num, count in transitions.items()]
                         probs.sort(key=lambda x: x[1], reverse=True)
-                        predictions.extend([safe_int(num) for num, prob in probs[:2]])
+                        
+                        # 중복 방지하며 예측 추가
+                        for num, prob in probs[:3]:
+                            if safe_int(num) not in used_predictions and len(predictions) < 6:
+                                predictions.append(safe_int(num))
+                                used_predictions.add(safe_int(num))
             
-            # 중복 제거 및 부족한 수 채우기
-            selected = list(set(predictions))[:6]
-            while len(selected) < 6:
-                selected.append(random.randint(1, 45))
+            # 6개 번호 보장
+            final_numbers = ensure_six_numbers(predictions)
             
             return {
                 'name': '마르코프 체인',
                 'description': '상태 전이 확률을 이용한 연속성 패턴 예측',
                 'category': 'advanced',
                 'algorithm_id': 7,
-                'priority_numbers': safe_int_list(sorted(list(set(selected)))[:6]),
+                'priority_numbers': safe_int_list(final_numbers),
                 'confidence': 74
             }
         except Exception as e:
+            print(f"마르코프 체인 알고리즘 오류: {e}")
             return self._generate_fallback_numbers("마르코프 체인")
 
     def algorithm_8_genetic_algorithm(self):
-        """8. 유전자 알고리즘 - 진화론적 최적화"""
+        """8. 유전자 알고리즘 - 수정된 버전"""
         try:
             if self.numbers is None:
                 return self._generate_fallback_numbers("유전자 알고리즘")
@@ -373,15 +460,15 @@ class AdvancedLottoPredictor:
                     score += common * common  # 공통 번호 수의 제곱
                 return score
             
-            # 초기 집단 생성
-            population_size = 30  # 경량화
+            # 초기 집단 생성 (중복 없는 개체들)
+            population_size = 30
             population = []
             for _ in range(population_size):
-                individual = sorted(random.sample(range(1, 46), 6))
-                population.append(individual)
+                individual = random.sample(range(1, 46), 6)
+                population.append(sorted(individual))
             
-            # 진화 과정 (간소화된 버전)
-            for generation in range(5):  # 세대 수 축소
+            # 진화 과정
+            for generation in range(5):
                 # 적합도 계산
                 fitness_scores = [(ind, fitness(ind)) for ind in population]
                 fitness_scores.sort(key=lambda x: x[1], reverse=True)
@@ -393,16 +480,20 @@ class AdvancedLottoPredictor:
                 new_population = selected.copy()
                 while len(new_population) < population_size:
                     parent1, parent2 = random.sample(selected, 2)
-                    # 교차
-                    child = list(set(parent1[:3] + parent2[3:]))
-                    # 돌연변이
-                    if random.random() < 0.1:
-                        if len(child) > 0:
-                            child[random.randint(0, len(child)-1)] = random.randint(1, 45)
                     
-                    while len(child) < 6:
-                        child.append(random.randint(1, 45))
-                    new_population.append(sorted(list(set(child))[:6]))
+                    # 교차 (중복 없이)
+                    child = list(set(parent1[:3] + parent2[3:]))
+                    
+                    # 돌연변이
+                    if random.random() < 0.1 and len(child) > 0:
+                        mutation_idx = random.randint(0, len(child)-1)
+                        new_number = random.randint(1, 45)
+                        if new_number not in child:
+                            child[mutation_idx] = new_number
+                    
+                    # 6개 번호 보장
+                    final_child = ensure_six_numbers(child)
+                    new_population.append(final_child)
                 
                 population = new_population
             
@@ -415,14 +506,15 @@ class AdvancedLottoPredictor:
                 'description': '진화론적 최적화를 통한 적응형 번호 조합 예측',
                 'category': 'advanced',
                 'algorithm_id': 8,
-                'priority_numbers': safe_int_list(sorted(list(set(best_individual)))[:6]),
+                'priority_numbers': safe_int_list(best_individual),
                 'confidence': 77
             }
         except Exception as e:
+            print(f"유전자 알고리즘 오류: {e}")
             return self._generate_fallback_numbers("유전자 알고리즘")
 
     def algorithm_9_correlation_analysis(self):
-        """9. 동반출현 분석 - 번호 간 상관관계"""
+        """9. 동반출현 분석 - 수정된 버전"""
         try:
             if self.numbers is None or len(self.numbers) < 30:
                 return self._generate_fallback_numbers("동반출현 분석")
@@ -446,34 +538,34 @@ class AdvancedLottoPredictor:
             for (num1, num2), count in strong_pairs:
                 if len(selected) >= 6:
                     break
+                    
                 if num1 not in used_numbers and num2 not in used_numbers:
                     selected.extend([num1, num2])
                     used_numbers.update([num1, num2])
-                elif num1 not in used_numbers:
+                elif num1 not in used_numbers and len(selected) < 6:
                     selected.append(num1)
                     used_numbers.add(num1)
-                elif num2 not in used_numbers:
+                elif num2 not in used_numbers and len(selected) < 6:
                     selected.append(num2)
                     used_numbers.add(num2)
             
-            # 부족한 수 채우기
-            available = [n for n in range(1, 46) if n not in used_numbers]
-            while len(selected) < 6 and available:
-                selected.append(available.pop(random.randint(0, len(available)-1)))
+            # 6개 번호 보장
+            final_numbers = ensure_six_numbers(selected)
             
             return {
                 'name': '동반출현 분석',
                 'description': '번호 간 동반 출현 상관관계를 분석한 조합 예측',
                 'category': 'advanced',
                 'algorithm_id': 9,
-                'priority_numbers': safe_int_list(sorted(list(set(selected)))[:6]),
+                'priority_numbers': safe_int_list(final_numbers),
                 'confidence': 75
             }
         except Exception as e:
+            print(f"동반출현 분석 알고리즘 오류: {e}")
             return self._generate_fallback_numbers("동반출현 분석")
 
     def algorithm_10_time_series(self):
-        """10. 시계열 분석 - 시간 패턴 예측"""
+        """10. 시계열 분석 - 수정된 버전"""
         try:
             if self.numbers is None or len(self.numbers) < 20:
                 return self._generate_fallback_numbers("시계열 분석")
@@ -507,26 +599,30 @@ class AdvancedLottoPredictor:
             # 확률 높은 순으로 정렬
             sorted_patterns = sorted(time_patterns.items(), key=lambda x: x[1], reverse=True)
             
-            # 상위 10개 중에서 6개 선택
-            candidates = [safe_int(num) for num, prob in sorted_patterns[:15]]
-            if len(candidates) < 6:
-                candidates.extend(random.sample(range(1, 46), 6 - len(candidates)))
+            # 상위 번호들 중에서 6개 선택
+            selected = []
+            for num, prob in sorted_patterns:
+                if len(selected) >= 6:
+                    break
+                selected.append(safe_int(num))
             
-            selected = random.sample(candidates, 6)
+            # 6개 번호 보장
+            final_numbers = ensure_six_numbers(selected)
             
             return {
                 'name': '시계열 분석',
                 'description': '시간 흐름에 따른 출현 패턴 예측',
                 'category': 'advanced',
                 'algorithm_id': 10,
-                'priority_numbers': safe_int_list(sorted(list(set(selected)))[:6]),
+                'priority_numbers': safe_int_list(final_numbers),
                 'confidence': 72
             }
         except Exception as e:
+            print(f"시계열 분석 알고리즘 오류: {e}")
             return self._generate_fallback_numbers("시계열 분석")
 
     def _generate_fallback_numbers(self, algorithm_name):
-        """백업용 번호 생성"""
+        """백업용 번호 생성 - 항상 6개 보장"""
         return {
             'name': algorithm_name,
             'description': f'{algorithm_name} (백업 모드)',
@@ -557,11 +653,19 @@ class AdvancedLottoPredictor:
                 try:
                     result = algorithm()
                     algorithm_key = f"algorithm_{i:02d}"
+                    
+                    # 6개 번호 검증
+                    if len(result['priority_numbers']) != 6:
+                        print(f"⚠️ 알고리즘 {i}: {result['name']} - 번호 개수 오류 ({len(result['priority_numbers'])}개)")
+                        result['priority_numbers'] = ensure_six_numbers(result['priority_numbers'])
+                        print(f"✅ 알고리즘 {i}: 번호 보정 완료")
+                    
                     results[algorithm_key] = result
                     print(f"✅ 알고리즘 {i}: {result['name']} 완료")
                 except Exception as e:
                     print(f"❌ 알고리즘 {i} 실행 오류: {e}")
-                    results[f"algorithm_{i:02d}"] = self._generate_fallback_numbers(f"알고리즘 {i}")
+                    fallback = self._generate_fallback_numbers(f"알고리즘 {i}")
+                    results[f"algorithm_{i:02d}"] = fallback
             
             return results
             
@@ -635,6 +739,12 @@ def get_predictions():
         
         # 10가지 알고리즘 모두 실행
         results = pred.generate_all_predictions()
+        
+        # 최종 검증: 모든 알고리즘이 6개 번호를 반환하는지 확인
+        for key, result in results.items():
+            if len(result['priority_numbers']) != 6:
+                print(f"🔧 최종 검증: {result['name']} 번호 보정 중...")
+                result['priority_numbers'] = ensure_six_numbers(result['priority_numbers'])
         
         return jsonify({
             'success': True,
