@@ -26,11 +26,27 @@
 </head>
 <body>
     <div class="container">
+        <!-- 시스템 상태 알림 (새로 추가) -->
+        <div id="systemStatus" class="system-status" style="display: none;">
+            <div class="status-content">
+                <i class="fas fa-info-circle"></i>
+                <span id="statusMessage">시스템 점검 중입니다...</span>
+                <button id="dismissStatus" class="dismiss-status">&times;</button>
+            </div>
+        </div>
+
         <!-- 헤더 섹션 -->
         <header class="header">
             <div class="logo">
                 <h1><i class="fas fa-brain"></i> 로또프로 AI v2.0</h1>
                 <p>10가지 최첨단 AI 알고리즘으로 예측하는 프리미엄 로또 번호</p>
+                <!-- 시스템 상태 인디케이터 추가 -->
+                <div class="system-health">
+                    <span class="health-indicator" id="healthIndicator">
+                        <i class="fas fa-circle"></i>
+                        <span>시스템 상태: <span id="healthStatus">확인 중</span></span>
+                    </span>
+                </div>
             </div>
             <div class="data-info">
                 <div class="info-card">
@@ -132,7 +148,7 @@
                     <div class="indicator-label">우선 번호 세트</div>
                 </div>
                 <div class="indicator-card">
-                    <div class="indicator-value">99.9%</div>
+                    <div class="indicator-value" id="systemReliability">99.9%</div>
                     <div class="indicator-label">시스템 안정성</div>
                 </div>
             </div>
@@ -148,6 +164,51 @@
                 </div>
                 <span class="progress-text" id="progressText">초기화 중...</span>
             </div>
+            <!-- 알고리즘별 진행 상태 표시 (새로 추가) -->
+            <div class="algorithm-progress" id="algorithmProgress" style="display: none;">
+                <div class="progress-grid">
+                    <div class="progress-item" data-algorithm="1">
+                        <span class="algo-name">빈도 분석</span>
+                        <span class="algo-status">대기 중</span>
+                    </div>
+                    <div class="progress-item" data-algorithm="2">
+                        <span class="algo-name">핫/콜드 분석</span>
+                        <span class="algo-status">대기 중</span>
+                    </div>
+                    <div class="progress-item" data-algorithm="3">
+                        <span class="algo-name">패턴 분석</span>
+                        <span class="algo-status">대기 중</span>
+                    </div>
+                    <div class="progress-item" data-algorithm="4">
+                        <span class="algo-name">통계 분석</span>
+                        <span class="algo-status">대기 중</span>
+                    </div>
+                    <div class="progress-item" data-algorithm="5">
+                        <span class="algo-name">머신러닝</span>
+                        <span class="algo-status">대기 중</span>
+                    </div>
+                    <div class="progress-item" data-algorithm="6">
+                        <span class="algo-name">신경망 분석</span>
+                        <span class="algo-status">대기 중</span>
+                    </div>
+                    <div class="progress-item" data-algorithm="7">
+                        <span class="algo-name">마르코프 체인</span>
+                        <span class="algo-status">대기 중</span>
+                    </div>
+                    <div class="progress-item" data-algorithm="8">
+                        <span class="algo-name">유전자 알고리즘</span>
+                        <span class="algo-status">대기 중</span>
+                    </div>
+                    <div class="progress-item" data-algorithm="9">
+                        <span class="algo-name">동반출현 분석</span>
+                        <span class="algo-status">대기 중</span>
+                    </div>
+                    <div class="progress-item" data-algorithm="10">
+                        <span class="algo-name">시계열 분석</span>
+                        <span class="algo-status">대기 중</span>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- 알고리즘별 예측 결과 -->
@@ -157,15 +218,20 @@
                 <div class="result-summary">
                     <span class="summary-item">
                         <i class="fas fa-check-circle"></i>
-                        <span>기본 알고리즘: 5개 완료</span>
+                        <span>기본 알고리즘: <span id="basicAlgoCount">5</span>개 완료</span>
                     </span>
                     <span class="summary-item">
                         <i class="fas fa-rocket"></i>
-                        <span>고급 알고리즘: 5개 완료</span>
+                        <span>고급 알고리즘: <span id="advancedAlgoCount">5</span>개 완료</span>
                     </span>
                     <span class="summary-item">
                         <i class="fas fa-trophy"></i>
-                        <span>총 10개 우선 번호</span>
+                        <span>총 <span id="totalAlgoCount">10</span>개 우선 번호</span>
+                    </span>
+                    <!-- 번호 검증 상태 표시 (새로 추가) -->
+                    <span class="summary-item validation-status" id="validationStatus" style="display: none;">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>번호 검증: <span id="validationResult">완료</span></span>
                     </span>
                 </div>
             </div>
@@ -578,6 +644,13 @@
                         <span class="stat-label">분석 데이터:</span>
                         <span class="stat-value" id="modalDataSize">1,187회차</span>
                     </div>
+                    <!-- 번호 검증 상태 추가 -->
+                    <div class="stat-item">
+                        <span class="stat-label">번호 검증:</span>
+                        <span class="stat-value" id="modalValidation">
+                            <i class="fas fa-check-circle" style="color: #4ECDC4;"></i> 완료
+                        </span>
+                    </div>
                 </div>
                 <div class="modal-actions">
                     <button id="copyNumbers" class="copy-btn">
@@ -651,6 +724,11 @@
                 const loadTime = window.performance.timing.loadEventEnd - window.performance.timing.navigationStart;
                 console.log(`페이지 로드 시간: ${loadTime}ms`);
             }
+        });
+
+        // 시스템 상태 알림 관리
+        document.getElementById('dismissStatus')?.addEventListener('click', () => {
+            document.getElementById('systemStatus').style.display = 'none';
         });
     </script>
 </body>
