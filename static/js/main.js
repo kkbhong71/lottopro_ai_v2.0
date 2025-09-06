@@ -87,6 +87,87 @@ class LottoApp {
         });
     }
 
+    // 번호 검증 함수 추가
+    validateNumbers(numbers, algorithmName) {
+        try {
+            if (!Array.isArray(numbers)) {
+                console.error(`${algorithmName}: 번호가 배열이 아닙니다.`, numbers);
+                return false;
+            }
+
+            if (numbers.length !== 6) {
+                console.error(`${algorithmName}: 번호 개수가 6개가 아닙니다. (${numbers.length}개)`, numbers);
+                return false;
+            }
+
+            // 중복 검사
+            const uniqueNumbers = [...new Set(numbers)];
+            if (uniqueNumbers.length !== 6) {
+                console.error(`${algorithmName}: 중복 번호가 있습니다.`, numbers);
+                return false;
+            }
+
+            // 범위 검사
+            for (const num of numbers) {
+                if (!Number.isInteger(num) || num < 1 || num > 45) {
+                    console.error(`${algorithmName}: 유효하지 않은 번호입니다. (${num})`, numbers);
+                    return false;
+                }
+            }
+
+            return true;
+        } catch (error) {
+            console.error(`${algorithmName}: 번호 검증 중 오류`, error);
+            return false;
+        }
+    }
+
+    // 번호 수정 함수
+    fixNumbers(numbers, algorithmName) {
+        try {
+            let fixedNumbers = [];
+            
+            // 유효한 번호만 필터링
+            if (Array.isArray(numbers)) {
+                for (const num of numbers) {
+                    const intNum = parseInt(num);
+                    if (Number.isInteger(intNum) && intNum >= 1 && intNum <= 45) {
+                        fixedNumbers.push(intNum);
+                    }
+                }
+            }
+
+            // 중복 제거
+            fixedNumbers = [...new Set(fixedNumbers)];
+
+            // 부족한 번호 채우기
+            while (fixedNumbers.length < 6) {
+                let randomNum;
+                do {
+                    randomNum = Math.floor(Math.random() * 45) + 1;
+                } while (fixedNumbers.includes(randomNum));
+                fixedNumbers.push(randomNum);
+            }
+
+            // 6개로 제한
+            fixedNumbers = fixedNumbers.slice(0, 6).sort((a, b) => a - b);
+
+            console.log(`${algorithmName}: 번호 수정 완료`, fixedNumbers);
+            return fixedNumbers;
+        } catch (error) {
+            console.error(`${algorithmName}: 번호 수정 중 오류`, error);
+            // 마지막 수단: 완전히 새로운 번호 생성
+            const fallbackNumbers = [];
+            while (fallbackNumbers.length < 6) {
+                const num = Math.floor(Math.random() * 45) + 1;
+                if (!fallbackNumbers.includes(num)) {
+                    fallbackNumbers.push(num);
+                }
+            }
+            return fallbackNumbers.sort((a, b) => a - b);
+        }
+    }
+
     // 탭 전환 기능
     switchTab(tabName) {
         try {
@@ -223,8 +304,12 @@ class LottoApp {
                 // 당첨번호 표시
                 recentWinningNumbers.innerHTML = '';
                 
-                // 일반 번호 6개
-                numbers.forEach((num) => {
+                // 일반 번호 6개 검증 및 표시
+                const validatedNumbers = this.validateNumbers(numbers, '최근 당첨번호') 
+                    ? numbers 
+                    : this.fixNumbers(numbers, '최근 당첨번호');
+                
+                validatedNumbers.forEach((num) => {
                     const numberElement = document.createElement('span');
                     numberElement.className = 'recent-number';
                     numberElement.textContent = num;
@@ -334,9 +419,11 @@ class LottoApp {
             const data = await response.json();
 
             if (data.success && data.data) {
-                this.algorithms = data.data;
+                // 데이터 검증 및 수정
+                const validatedData = this.validateAndFixAlgorithmData(data.data);
+                this.algorithms = validatedData;
                 
-                const algorithmCount = Object.keys(data.data).length;
+                const algorithmCount = Object.keys(validatedData).length;
                 this.updateProgress(100, '모든 알고리즘 분석 완료!');
                 
                 const processingTime = ((performance.now() - startTime) / 1000).toFixed(2);
@@ -359,6 +446,49 @@ class LottoApp {
             loadingIndicator.style.display = 'none';
             generateBtn.disabled = false;
             generateBtn.innerHTML = '<i class="fas fa-magic"></i> <span>10개 AI 알고리즘 실행</span>';
+        }
+    }
+
+    // 알고리즘 데이터 검증 및 수정 함수
+    validateAndFixAlgorithmData(algorithmData) {
+        try {
+            const validatedData = {};
+            let fixedCount = 0;
+
+            for (const [key, algorithm] of Object.entries(algorithmData)) {
+                const algorithmName = algorithm.name || `알고리즘 ${key}`;
+                
+                // 기본 구조 검증
+                if (!algorithm.priority_numbers) {
+                    console.error(`${algorithmName}: priority_numbers가 없습니다.`);
+                    algorithm.priority_numbers = this.fixNumbers([], algorithmName);
+                    fixedCount++;
+                }
+
+                // 번호 검증 및 수정
+                if (!this.validateNumbers(algorithm.priority_numbers, algorithmName)) {
+                    console.log(`${algorithmName}: 번호 검증 실패, 수정 중...`);
+                    algorithm.priority_numbers = this.fixNumbers(algorithm.priority_numbers, algorithmName);
+                    fixedCount++;
+                }
+
+                // 기타 필드 기본값 설정
+                if (!algorithm.confidence) algorithm.confidence = 50;
+                if (!algorithm.category) algorithm.category = 'basic';
+                if (!algorithm.algorithm_id) algorithm.algorithm_id = parseInt(key.replace('algorithm_', '')) || 0;
+
+                validatedData[key] = algorithm;
+            }
+
+            if (fixedCount > 0) {
+                console.log(`🔧 총 ${fixedCount}개 알고리즘의 번호를 수정했습니다.`);
+                this.showNotification(`${fixedCount}개 알고리즘의 번호를 보정했습니다.`, 'info');
+            }
+
+            return validatedData;
+        } catch (error) {
+            console.error('알고리즘 데이터 검증 오류:', error);
+            return algorithmData; // 원본 반환
         }
     }
 
@@ -527,15 +657,19 @@ class LottoApp {
             card.style.borderLeftColor = color;
             card.dataset.category = algorithm.category;
 
-            // 우선 번호 1개만 표시 (새로운 API 구조 반영)
+            // 번호 검증 및 표시
             const priorityNumbers = algorithm.priority_numbers || [1, 2, 3, 4, 5, 6];
+            const validatedNumbers = this.validateNumbers(priorityNumbers, algorithm.name) 
+                ? priorityNumbers 
+                : this.fixNumbers(priorityNumbers, algorithm.name);
+            
             const confidence = algorithm.confidence || 50;
             
             const numbersHTML = `
                 <div class="priority-number-set" data-algorithm="${key}">
-                    <div class="set-label">우선 번호</div>
+                    <div class="set-label">우선 번호 (${validatedNumbers.length}개)</div>
                     <div class="numbers">
-                        ${priorityNumbers.map(num => `<span class="number">${num}</span>`).join('')}
+                        ${validatedNumbers.map(num => `<span class="number">${num}</span>`).join('')}
                     </div>
                     <div class="confidence-indicator">
                         <div class="confidence-bar">
@@ -665,7 +799,13 @@ class LottoApp {
             
             if (this.statistics.last_draw_info && recentNumbers) {
                 const lastDraw = this.statistics.last_draw_info;
-                recentNumbers.innerHTML = lastDraw.numbers.map(num => 
+                
+                // 번호 검증 및 표시
+                const validatedNumbers = this.validateNumbers(lastDraw.numbers, '통계 - 최근 당첨번호') 
+                    ? lastDraw.numbers 
+                    : this.fixNumbers(lastDraw.numbers, '통계 - 최근 당첨번호');
+                
+                recentNumbers.innerHTML = validatedNumbers.map(num => 
                     `<span class="number">${num}</span>`
                 ).join('') + `<span class="bonus-number">${lastDraw.bonus}</span>`;
                 
@@ -720,7 +860,11 @@ class LottoApp {
             const algorithm = this.algorithms[algorithmKey];
             if (!algorithm || !algorithm.priority_numbers) return;
             
-            const numbers = algorithm.priority_numbers;
+            // 번호 검증
+            const numbers = this.validateNumbers(algorithm.priority_numbers, algorithm.name) 
+                ? algorithm.priority_numbers 
+                : this.fixNumbers(algorithm.priority_numbers, algorithm.name);
+            
             const confidence = algorithm.confidence || 50;
             
             this.currentModalData = {
@@ -762,8 +906,8 @@ class LottoApp {
             }
             
             const modalNumbers = document.getElementById('modalNumbers');
-            modalNumbers.innerHTML = numbers.map(num => 
-                `<span class="modal-number">${num}</span>`
+            modalNumbers.innerHTML = numbers.map((num, index) => 
+                `<span class="modal-number" style="--index: ${index}">${num}</span>`
             ).join('');
 
             document.getElementById('numbersModal').style.display = 'block';
@@ -789,6 +933,7 @@ class LottoApp {
                     <div class="analysis-meta">
                         <span class="meta-item">카테고리: ${category === 'advanced' ? '고급 AI' : '기본 AI'}</span>
                         <span class="meta-item">신뢰도: ${confidence}%</span>
+                        <span class="meta-item">번호 개수: ${numbers.length}개</span>
                     </div>
                 </div>
                 
@@ -888,6 +1033,7 @@ class LottoApp {
             if (oddCount === evenCount) characteristics.push("완벽한 홀짝 균형");
             if (consecutiveCount >= 2) characteristics.push("연속 번호 다수 포함");
             if (sum >= 120 && sum <= 150) characteristics.push("이상적인 합계 범위");
+            if (sortedNumbers.length === 6) characteristics.push("정확한 6개 번호");
             if (characteristics.length === 0) characteristics.push("균형잡힌 일반적 패턴");
             
             return {
@@ -1043,7 +1189,7 @@ class LottoApp {
 document.addEventListener('DOMContentLoaded', () => {
     try {
         window.lottoApp = new LottoApp();
-        console.log('✅ 로또 앱 초기화 완료 (10개 알고리즘 지원)');
+        console.log('✅ 로또 앱 초기화 완료 (10개 알고리즘 지원, 번호 검증 강화)');
     } catch (error) {
         console.error('❌ 앱 초기화 실패:', error);
     }
