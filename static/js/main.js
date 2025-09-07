@@ -46,11 +46,17 @@ class LottoApp {
             }
         });
 
-        // 모달 이벤트
+        // 모달 이벤트 - 개선된 버전
         const closeButtons = document.querySelectorAll('.close');
         closeButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                this.closeModal();
+            btn.addEventListener('click', (e) => {
+                // 클릭된 버튼이 어느 모달에 속하는지 확인
+                const modalParent = e.target.closest('.modal');
+                if (modalParent && modalParent.id === 'analysisModal') {
+                    this.closeAnalysisModal();
+                } else {
+                    this.closeModal();
+                }
             });
         });
 
