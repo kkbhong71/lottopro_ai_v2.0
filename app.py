@@ -71,36 +71,106 @@ class AdvancedLottoPredictor:
         }
     
     def load_data(self):
-        """데이터 로드 및 전처리"""
+        """데이터 로드 및 전처리 - 디버깅 강화 버전"""
         try:
-            if not os.path.exists(self.csv_file_path):
-                print(f"❌ CSV 파일을 찾을 수 없습니다: {self.csv_file_path}")
+            print(f"🚨 LottoPro Emergency Mode Started - 디버깅 모드 활성화")
+            
+            # 현재 디렉토리 정보 출력
+            current_dir = os.getcwd()
+            try:
+                files_in_dir = os.listdir('.')
+                csv_files = [f for f in files_in_dir if f.endswith('.csv')]
+                all_files = [f for f in files_in_dir if os.path.isfile(f)][:10]  # 처음 10개만
+            except Exception as e:
+                csv_files = []
+                all_files = []
+                print(f"❌ 디렉토리 읽기 오류: {e}")
+            
+            print(f"📁 현재 디렉토리: {current_dir}")
+            print(f"📂 발견된 CSV 파일들: {csv_files}")
+            print(f"📄 기타 파일들 (일부): {all_files}")
+            
+            # 여러 경로 시도
+            possible_paths = [
+                'new_1188.csv',
+                './new_1188.csv',
+                os.path.join(current_dir, 'new_1188.csv'),
+                'data/new_1188.csv',
+                '/opt/render/project/src/new_1188.csv',
+                os.path.join(os.path.dirname(__file__), 'new_1188.csv')
+            ]
+            
+            print(f"🔍 시도할 경로들: {possible_paths}")
+            
+            found_file = None
+            for i, path in enumerate(possible_paths):
+                print(f"  {i+1}. 확인 중: {path}")
+                if os.path.exists(path):
+                    print(f"    ✅ 파일 발견!")
+                    found_file = path
+                    break
+                else:
+                    print(f"    ❌ 파일 없음")
+            
+            if not found_file:
+                print(f"❌ 모든 경로에서 CSV 파일을 찾을 수 없습니다")
+                print(f"💡 해결책: GitHub의 new_1188.csv 파일이 배포 서버에 복사되지 않았을 가능성")
                 return False
             
+            # 파일 정보 확인
+            self.csv_file_path = found_file
+            file_size = os.path.getsize(self.csv_file_path)
+            print(f"📊 파일 정보:")
+            print(f"  - 경로: {self.csv_file_path}")
+            print(f"  - 크기: {file_size:,} bytes")
+            
+            # 파일 읽기 시도
+            print(f"📖 CSV 파일 읽기 시도...")
             self.data = pd.read_csv(self.csv_file_path)
+            print(f"📈 로드된 데이터 정보:")
+            print(f"  - Shape: {self.data.shape}")
+            print(f"  - 컬럼명: {list(self.data.columns)}")
+            print(f"  - 첫 5줄 미리보기:")
+            print(self.data.head().to_string())
             
+            # 컬럼명 표준화
             if len(self.data.columns) >= 7:
+                old_columns = list(self.data.columns)
                 self.data.columns = ['round', 'draw_date', 'num1', 'num2', 'num3', 'num4', 'num5', 'num6', 'bonus_num'][:len(self.data.columns)]
+                print(f"🔄 컬럼명 변경: {old_columns} -> {list(self.data.columns)}")
             
+            # 번호 데이터 추출
             number_cols = ['num1', 'num2', 'num3', 'num4', 'num5', 'num6']
             available_cols = [col for col in number_cols if col in self.data.columns]
+            print(f"🎯 사용 가능한 번호 컬럼: {available_cols}")
             
             if len(available_cols) >= 6:
                 self.numbers = self.data[available_cols].values.astype(int)
-                print(f"✅ 데이터 로드 완료: {len(self.data)}개 회차")
+                print(f"✅ 데이터 로드 완료!")
+                print(f"  - 총 회차 수: {len(self.data):,}개")
+                print(f"  - 번호 데이터 shape: {self.numbers.shape}")
+                print(f"  - 첫 번째 회차 번호: {self.numbers[0].tolist()}")
+                print(f"  - 마지막 회차 번호: {self.numbers[-1].tolist()}")
                 return True
             else:
-                print(f"❌ 필요한 컬럼이 부족합니다. 사용 가능: {available_cols}")
+                print(f"❌ 필요한 컬럼이 부족합니다.")
+                print(f"  - 필요: {number_cols}")
+                print(f"  - 사용 가능: {available_cols}")
                 return False
                 
         except Exception as e:
-            print(f"❌ 데이터 로드 실패: {e}")
+            print(f"❌ 데이터 로드 실패: {str(e)}")
+            print(f"   오류 타입: {type(e).__name__}")
+            import traceback
+            print(f"   상세 오류:")
+            traceback.print_exc()
             return False
 
     def algorithm_1_frequency_analysis(self):
         """1. 빈도 분석 - 수정된 버전"""
         try:
             if self.numbers is None:
+                print(f"⚠️ 빈도 분석: 데이터 없음 - 백업 모드")
                 return self._generate_fallback_numbers("빈도 분석")
             
             all_numbers = self.numbers.flatten()
@@ -133,6 +203,7 @@ class AdvancedLottoPredictor:
             
             # 6개 번호 보장
             final_numbers = ensure_six_numbers(selected)
+            print(f"✅ 빈도 분석 완료: {final_numbers}")
             
             return {
                 'name': '빈도 분석',
@@ -150,6 +221,7 @@ class AdvancedLottoPredictor:
         """2. 핫/콜드 분석 - 수정된 버전"""
         try:
             if self.numbers is None or len(self.numbers) < 20:
+                print(f"⚠️ 핫/콜드 분석: 데이터 부족 - 백업 모드")
                 return self._generate_fallback_numbers("핫/콜드 분석")
             
             # 최근 20회차 분석
@@ -183,6 +255,7 @@ class AdvancedLottoPredictor:
             
             # 6개 번호 보장
             final_numbers = ensure_six_numbers(selected)
+            print(f"✅ 핫/콜드 분석 완료: {final_numbers}")
             
             return {
                 'name': '핫/콜드 분석',
@@ -200,6 +273,7 @@ class AdvancedLottoPredictor:
         """3. 패턴 분석 - 수정된 버전"""
         try:
             if self.numbers is None:
+                print(f"⚠️ 패턴 분석: 데이터 없음 - 백업 모드")
                 return self._generate_fallback_numbers("패턴 분석")
             
             # 구간별 분석 (1-15, 16-30, 31-45)
@@ -229,6 +303,7 @@ class AdvancedLottoPredictor:
             
             # 6개 번호 보장
             final_numbers = ensure_six_numbers(selected)
+            print(f"✅ 패턴 분석 완료: {final_numbers}")
             
             return {
                 'name': '패턴 분석',
@@ -246,6 +321,7 @@ class AdvancedLottoPredictor:
         """4. 통계 분석 - 수정된 버전"""
         try:
             if self.numbers is None:
+                print(f"⚠️ 통계 분석: 데이터 없음 - 백업 모드")
                 return self._generate_fallback_numbers("통계 분석")
             
             all_numbers = self.numbers.flatten()
@@ -285,6 +361,7 @@ class AdvancedLottoPredictor:
             
             # 6개 번호 보장
             final_numbers = ensure_six_numbers(selected)
+            print(f"✅ 통계 분석 완료: {final_numbers}")
             
             return {
                 'name': '통계 분석',
@@ -302,6 +379,7 @@ class AdvancedLottoPredictor:
         """5. 머신러닝 - 수정된 버전"""
         try:
             if self.numbers is None or len(self.numbers) < 50:
+                print(f"⚠️ 머신러닝: 데이터 부족 - 백업 모드")
                 return self._generate_fallback_numbers("머신러닝")
             
             # 간단한 패턴 기반 예측 (ML 라이브러리 없이)
@@ -335,6 +413,7 @@ class AdvancedLottoPredictor:
             
             # 6개 번호 보장
             final_numbers = ensure_six_numbers(selected)
+            print(f"✅ 머신러닝 완료: {final_numbers}")
             
             return {
                 'name': '머신러닝',
@@ -352,6 +431,7 @@ class AdvancedLottoPredictor:
         """6. 신경망 분석 - 수정된 버전"""
         try:
             if self.numbers is None or len(self.numbers) < 30:
+                print(f"⚠️ 신경망 분석: 데이터 부족 - 백업 모드")
                 return self._generate_fallback_numbers("신경망 분석")
             
             # 간단한 가중치 네트워크 시뮬레이션
@@ -381,6 +461,7 @@ class AdvancedLottoPredictor:
             
             # 6개 번호 보장
             final_numbers = ensure_six_numbers(selected)
+            print(f"✅ 신경망 분석 완료: {final_numbers}")
             
             return {
                 'name': '신경망 분석',
@@ -398,6 +479,7 @@ class AdvancedLottoPredictor:
         """7. 마르코프 체인 - 수정된 버전"""
         try:
             if self.numbers is None or len(self.numbers) < 20:
+                print(f"⚠️ 마르코프 체인: 데이터 부족 - 백업 모드")
                 return self._generate_fallback_numbers("마르코프 체인")
             
             # 전이 확률 행렬 구성
@@ -433,6 +515,7 @@ class AdvancedLottoPredictor:
             
             # 6개 번호 보장
             final_numbers = ensure_six_numbers(predictions)
+            print(f"✅ 마르코프 체인 완료: {final_numbers}")
             
             return {
                 'name': '마르코프 체인',
@@ -450,6 +533,7 @@ class AdvancedLottoPredictor:
         """8. 유전자 알고리즘 - 수정된 버전"""
         try:
             if self.numbers is None:
+                print(f"⚠️ 유전자 알고리즘: 데이터 없음 - 백업 모드")
                 return self._generate_fallback_numbers("유전자 알고리즘")
             
             # 적합도 함수: 과거 당첨번호와의 유사성
@@ -500,6 +584,7 @@ class AdvancedLottoPredictor:
             # 최적 개체 선택
             final_fitness = [(ind, fitness(ind)) for ind in population]
             best_individual = max(final_fitness, key=lambda x: x[1])[0]
+            print(f"✅ 유전자 알고리즘 완료: {best_individual}")
             
             return {
                 'name': '유전자 알고리즘',
@@ -517,6 +602,7 @@ class AdvancedLottoPredictor:
         """9. 동반출현 분석 - 수정된 버전"""
         try:
             if self.numbers is None or len(self.numbers) < 30:
+                print(f"⚠️ 동반출현 분석: 데이터 부족 - 백업 모드")
                 return self._generate_fallback_numbers("동반출현 분석")
             
             # 번호 간 동반 출현 빈도 계산
@@ -551,6 +637,7 @@ class AdvancedLottoPredictor:
             
             # 6개 번호 보장
             final_numbers = ensure_six_numbers(selected)
+            print(f"✅ 동반출현 분석 완료: {final_numbers}")
             
             return {
                 'name': '동반출현 분석',
@@ -568,6 +655,7 @@ class AdvancedLottoPredictor:
         """10. 시계열 분석 - 수정된 버전"""
         try:
             if self.numbers is None or len(self.numbers) < 20:
+                print(f"⚠️ 시계열 분석: 데이터 부족 - 백업 모드")
                 return self._generate_fallback_numbers("시계열 분석")
             
             # 각 번호별 시간에 따른 출현 패턴 분석
@@ -608,6 +696,7 @@ class AdvancedLottoPredictor:
             
             # 6개 번호 보장
             final_numbers = ensure_six_numbers(selected)
+            print(f"✅ 시계열 분석 완료: {final_numbers}")
             
             return {
                 'name': '시계열 분석',
@@ -623,18 +712,22 @@ class AdvancedLottoPredictor:
 
     def _generate_fallback_numbers(self, algorithm_name):
         """백업용 번호 생성 - 항상 6개 보장"""
+        fallback_numbers = sorted(random.sample(range(1, 46), 6))
+        print(f"🔄 {algorithm_name} 백업 번호 생성: {fallback_numbers}")
         return {
             'name': algorithm_name,
             'description': f'{algorithm_name} (백업 모드)',
             'category': 'basic',
             'algorithm_id': 0,
-            'priority_numbers': sorted(random.sample(range(1, 46), 6)),
+            'priority_numbers': fallback_numbers,
             'confidence': 50
         }
 
     def generate_all_predictions(self):
         """10가지 알고리즘 모두 실행하여 각각 1개씩 번호 생성"""
         try:
+            print(f"🎯 10개 알고리즘 실행 시작")
+            
             algorithms = [
                 self.algorithm_1_frequency_analysis,
                 self.algorithm_2_hot_cold_analysis,
@@ -649,8 +742,12 @@ class AdvancedLottoPredictor:
             ]
             
             results = {}
+            success_count = 0
+            fallback_count = 0
+            
             for i, algorithm in enumerate(algorithms, 1):
                 try:
+                    print(f"🔄 알고리즘 {i} 실행 중...")
                     result = algorithm()
                     algorithm_key = f"algorithm_{i:02d}"
                     
@@ -658,14 +755,24 @@ class AdvancedLottoPredictor:
                     if len(result['priority_numbers']) != 6:
                         print(f"⚠️ 알고리즘 {i}: {result['name']} - 번호 개수 오류 ({len(result['priority_numbers'])}개)")
                         result['priority_numbers'] = ensure_six_numbers(result['priority_numbers'])
-                        print(f"✅ 알고리즘 {i}: 번호 보정 완료")
+                        print(f"🔧 알고리즘 {i}: 번호 보정 완료")
+                        fallback_count += 1
+                    else:
+                        success_count += 1
                     
                     results[algorithm_key] = result
-                    print(f"✅ 알고리즘 {i}: {result['name']} 완료")
+                    print(f"✅ 알고리즘 {i}: {result['name']} 완료 - {result['priority_numbers']}")
+                    
                 except Exception as e:
                     print(f"❌ 알고리즘 {i} 실행 오류: {e}")
                     fallback = self._generate_fallback_numbers(f"알고리즘 {i}")
                     results[f"algorithm_{i:02d}"] = fallback
+                    fallback_count += 1
+            
+            print(f"🎯 전체 알고리즘 실행 완료")
+            print(f"  - 성공: {success_count}개")
+            print(f"  - 백업/보정: {fallback_count}개")
+            print(f"  - 총계: {len(results)}개")
             
             return results
             
@@ -675,6 +782,8 @@ class AdvancedLottoPredictor:
 
     def _generate_emergency_backup(self):
         """긴급 백업 응답"""
+        print(f"🆘 긴급 백업 모드 활성화")
+        
         backup_algorithms = [
             "빈도 분석", "핫/콜드 분석", "패턴 분석", "통계 분석", "머신러닝",
             "신경망 분석", "마르코프 체인", "유전자 알고리즘", "동반출현 분석", "시계열 분석"
@@ -682,14 +791,16 @@ class AdvancedLottoPredictor:
         
         results = {}
         for i, name in enumerate(backup_algorithms, 1):
+            backup_numbers = sorted(random.sample(range(1, 46), 6))
             results[f"algorithm_{i:02d}"] = {
                 'name': name,
                 'description': f'{name} (긴급 백업)',
                 'category': 'advanced' if i > 5 else 'basic',
                 'algorithm_id': i,
-                'priority_numbers': sorted(random.sample(range(1, 46), 6)),
+                'priority_numbers': backup_numbers,
                 'confidence': 50
             }
+            print(f"🆘 긴급 백업 {i}: {name} - {backup_numbers}")
         
         return results
 
@@ -699,7 +810,9 @@ predictor = None
 def get_predictor():
     global predictor
     if predictor is None:
+        print(f"🔄 LottoPredictor 인스턴스 생성 중...")
         predictor = AdvancedLottoPredictor()
+        print(f"✅ LottoPredictor 인스턴스 생성 완료")
     return predictor
 
 @app.route('/')
@@ -728,34 +841,48 @@ def health():
 def get_predictions():
     """10가지 알고리즘 예측 API"""
     try:
+        print(f"📡 예측 API 호출 받음")
         pred = get_predictor()
         
         if pred.data is None:
+            print(f"⚠️ 데이터 없음 - 재로드 시도")
             if not pred.load_data():
+                print(f"❌ 데이터 재로드 실패")
                 return jsonify({
                     'success': False,
                     'error': 'CSV 데이터를 로드할 수 없습니다.'
                 }), 500
         
         # 10가지 알고리즘 모두 실행
+        print(f"🎯 10가지 알고리즘 실행 시작")
         results = pred.generate_all_predictions()
         
         # 최종 검증: 모든 알고리즘이 6개 번호를 반환하는지 확인
+        final_check_count = 0
         for key, result in results.items():
             if len(result['priority_numbers']) != 6:
                 print(f"🔧 최종 검증: {result['name']} 번호 보정 중...")
                 result['priority_numbers'] = ensure_six_numbers(result['priority_numbers'])
+                final_check_count += 1
         
-        return jsonify({
+        if final_check_count > 0:
+            print(f"🔧 최종 검증에서 {final_check_count}개 알고리즘 보정됨")
+        
+        response_data = {
             'success': True,
             'data': results,
             'total_algorithms': len(results),
             'total_draws': safe_int(len(pred.data)) if pred.data is not None else 0,
             'message': '10가지 AI 알고리즘이 각각 1개씩의 우선 번호를 생성했습니다.'
-        })
+        }
+        
+        print(f"✅ 예측 API 응답 완료 - {len(results)}개 알고리즘")
+        return jsonify(response_data)
         
     except Exception as e:
-        print(f"API 예측 에러: {e}")
+        print(f"❌ API 예측 에러: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({
             'success': False,
             'error': f'예측 생성 중 오류가 발생했습니다: {str(e)}'
@@ -765,6 +892,7 @@ def get_predictions():
 def get_statistics():
     """통계 정보 API"""
     try:
+        print(f"📊 통계 API 호출 받음")
         pred = get_predictor()
         
         default_stats = {
@@ -783,6 +911,7 @@ def get_statistics():
         
         if pred.data is not None and pred.numbers is not None:
             try:
+                print(f"📈 실제 데이터로 통계 생성")
                 all_numbers = pred.numbers.flatten()
                 frequency = Counter(all_numbers)
                 
@@ -804,9 +933,12 @@ def get_statistics():
                         'bonus': safe_int(last_row.get('bonus_num', 7)) if 'bonus_num' in last_row else 7
                     }
                 }
-            except:
+                print(f"✅ 실제 데이터 통계 생성 완료")
+            except Exception as e:
+                print(f"❌ 실제 데이터 통계 생성 실패: {e}")
                 stats = default_stats
         else:
+            print(f"⚠️ 데이터 없음 - 기본 통계 사용")
             stats = default_stats
         
         return jsonify({
@@ -815,11 +947,12 @@ def get_statistics():
         })
         
     except Exception as e:
-        print(f"API 통계 에러: {e}")
+        print(f"❌ API 통계 에러: {e}")
         return jsonify({
             'success': False,
             'error': 'Statistics temporarily unavailable'
         }), 500
 
 if __name__ == '__main__':
+    print(f"🚀 Flask 앱 시작")
     app.run(debug=False, host='0.0.0.0', port=5000)
