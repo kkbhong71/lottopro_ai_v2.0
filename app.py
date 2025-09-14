@@ -50,7 +50,7 @@ def ensure_six_numbers(selected, exclude_set=None):
     return sorted(unique_selected[:6])
 
 class AdvancedLottoPredictor:
-    def __init__(self, csv_file_path='new_1188.csv'):
+    def __init__(self, csv_file_path='new_1189.csv'):
         self.csv_file_path = csv_file_path
         self.data = None
         self.numbers = None
@@ -92,12 +92,12 @@ class AdvancedLottoPredictor:
             
             # 여러 경로 시도
             possible_paths = [
-                'new_1188.csv',
-                './new_1188.csv',
-                os.path.join(current_dir, 'new_1188.csv'),
-                'data/new_1188.csv',
-                '/opt/render/project/src/new_1188.csv',
-                os.path.join(os.path.dirname(__file__), 'new_1188.csv')
+                'new_1189.csv',
+                './new_1189.csv',
+                os.path.join(current_dir, 'new_1189.csv'),
+                'data/new_1189.csv',
+                '/opt/render/project/src/new_1189.csv',
+                os.path.join(os.path.dirname(__file__), 'new_1189.csv')
             ]
             
             print(f"🔍 시도할 경로들: {possible_paths}")
@@ -114,7 +114,7 @@ class AdvancedLottoPredictor:
             
             if not found_file:
                 print(f"❌ 모든 경로에서 CSV 파일을 찾을 수 없습니다")
-                print(f"💡 해결책: GitHub의 new_1188.csv 파일이 배포 서버에 복사되지 않았을 가능성")
+                print(f"💡 해결책: GitHub의 new_1189.csv 파일이 배포 서버에 복사되지 않았을 가능성")
                 return False
             
             # 파일 정보 확인
@@ -896,10 +896,10 @@ def get_statistics():
         pred = get_predictor()
         
         default_stats = {
-            'total_draws': 1188,
+            'total_draws': 1189,
             'algorithms_count': 10,
             'last_draw_info': {
-                'round': 1188,
+                'round': 1189,
                 'date': '2024-01-01',
                 'numbers': [1, 7, 13, 19, 25, 31],
                 'bonus': 7
@@ -927,7 +927,7 @@ def get_statistics():
                     'least_frequent': [{'number': safe_int(num), 'count': safe_int(count)} for num, count in least_common],
                     'recent_hot': [{'number': safe_int(num), 'count': safe_int(count)} for num, count in most_common[:10]],
                     'last_draw_info': {
-                        'round': safe_int(last_row.get('round', 1188)),
+                        'round': safe_int(last_row.get('round', 1189)),
                         'date': str(last_row.get('draw_date', '2024-01-01')),
                         'numbers': safe_int_list(pred.numbers[-1].tolist()),
                         'bonus': safe_int(last_row.get('bonus_num', 7)) if 'bonus_num' in last_row else 7
