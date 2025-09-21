@@ -1,5 +1,5 @@
 """
-LottoPro-AI 고급 캐시 관리 시스템
+LottoPro-AI 고급 캐시 관리 시스템 - 랜덤성 개선 버전
 Redis + 메모리 캐시 하이브리드 구조
 """
 
@@ -14,6 +14,7 @@ from collections import defaultdict
 from functools import wraps
 import uuid
 import pickle
+import random
 
 # Redis 연결 시도 (옵션)
 try:
@@ -54,9 +55,9 @@ class CacheStats:
         return self.hit_count + self.miss_count + self.set_count + self.delete_count
 
 class MemoryCache:
-    """메모리 기반 캐시 (Redis 백업용)"""
+    """메모리 기반 캐시 (Redis 백업용) - 랜덤성 개선"""
     
-    def __init__(self, max_size: int = 1000, default_ttl: int = 300):
+    def __init__(self, max_size: int = 1000, default_ttl: int = 180):  # TTL 단축
         self.max_size = max_size
         self.default_ttl = default_ttl
         self.data = {}
@@ -64,6 +65,16 @@ class MemoryCache:
         self.access_times = {}
         self.tags = defaultdict(set)
         self.lock = threading.RLock()
+        
+        # 랜덤성 개선을 위한 짧은 TTL 설정
+        self.algorithm_ttl = {
+            'hot_cold_analysis': 60,      # 1분
+            'pattern_analysis': 90,       # 1.5분
+            'neural_network': 120,        # 2분
+            'markov_chain': 150,          # 2.5분
+            'co_occurrence': 100,         # 1분 40초
+            'time_series': 80,            # 1분 20초
+        }
         
     def _cleanup_expired(self):
         """만료된 항목 정리"""
@@ -99,7 +110,7 @@ class MemoryCache:
             self._remove_key(oldest_key)
     
     def get(self, key: str) -> Optional[Any]:
-        """값 조회"""
+        """값 조회 - 랜덤성 체크"""
         with self.lock:
             self._cleanup_expired()
             
@@ -108,11 +119,18 @@ class MemoryCache:
             
             # 액세스 시간 업데이트
             self.access_times[key] = time.time()
+            
+            # 랜덤성 체크: 특정 알고리즘은 더 자주 만료
+            if any(alg in key for alg in self.algorithm_ttl.keys()):
+                if random.random() < 0.3:  # 30% 확률로 강제 만료
+                    self._remove_key(key)
+                    return None
+            
             return self.data[key]
     
     def set(self, key: str, value: Any, ttl: Optional[int] = None, 
             tags: Optional[List[str]] = None):
-        """값 저장"""
+        """값 저장 - 동적 TTL"""
         with self.lock:
             self._cleanup_expired()
             self._evict_if_needed()
@@ -121,9 +139,23 @@ class MemoryCache:
             self.data[key] = value
             self.access_times[key] = time.time()
             
-            # TTL 설정
+            # 동적 TTL 설정
             if ttl is None:
-                ttl = self.default_ttl
+                # 알고리즘별 특별 TTL 적용
+                algorithm_name = None
+                for alg in self.algorithm_ttl.keys():
+                    if alg in key:
+                        algorithm_name = alg
+                        break
+                
+                if algorithm_name:
+                    # 해당 알고리즘의 TTL + 랜덤 변화
+                    base_ttl = self.algorithm_ttl[algorithm_name]
+                    random_variation = random.randint(-20, 20)
+                    ttl = max(30, base_ttl + random_variation)
+                else:
+                    ttl = self.default_ttl
+            
             self.expiry_times[key] = time.time() + ttl
             
             # 태그 설정
@@ -186,17 +218,17 @@ class MemoryCache:
             }
 
 class CacheManager:
-    """통합 캐시 관리자"""
+    """통합 캐시 관리자 - 랜덤성 개선"""
     
     def __init__(self, redis_url: Optional[str] = None, 
-                 default_ttl: int = 300,
+                 default_ttl: int = 180,  # 기본 TTL 단축
                  memory_cache_size: int = 1000,
                  enable_compression: bool = True,
-                 enable_warming: bool = True):  # 추가된 파라미터
+                 enable_warming: bool = False):  # 워밍 비활성화로 랜덤성 증대
         
         self.default_ttl = default_ttl
         self.enable_compression = enable_compression
-        self.enable_warming = enable_warming  # 속성 초기화
+        self.enable_warming = enable_warming
         self.stats = CacheStats()
         self.logger = logging.getLogger(__name__)
         
@@ -206,7 +238,7 @@ class CacheManager:
             try:
                 self.redis_client = redis.from_url(
                     redis_url, 
-                    decode_responses=False,  # bytes로 받아서 pickle 처리
+                    decode_responses=False,
                     socket_timeout=5,
                     socket_connect_timeout=5,
                     retry_on_timeout=True
@@ -224,7 +256,48 @@ class CacheManager:
         # 캐시 레이어 결정
         self.use_redis = self.redis_client is not None
         self.logger.info(f"Cache layers: Redis={self.use_redis}, Memory=True")
-        self.logger.info(f"Cache warming enabled: {self.enable_warming}")  # 워밍 상태 로깅
+        self.logger.info(f"Cache warming enabled: {self.enable_warming}")
+        
+        # 랜덤성 개선을 위한 설정
+        self.randomness_config = {
+            'force_miss_probability': 0.05,  # 5% 확률로 강제 미스
+            'ttl_randomization': True,        # TTL 랜덤화 활성화
+            'cache_busting_enabled': True     # 캐시 버스팅 활성화
+        }
+        
+        self.logger.info(f"Randomness improvements: {self.randomness_config}")
+    
+    def _generate_cache_key(self, algorithm_name: str, params: Dict = None) -> str:
+        """동적 캐시 키 생성 - 시간 기반 랜덤성"""
+        current_time = int(time.time())
+        
+        # 알고리즘별 다른 시간 구간 사용
+        algorithm_intervals = {
+            'hot_cold_analysis': 60,      # 1분 구간
+            'pattern_analysis': 90,       # 1.5분 구간
+            'neural_network': 120,        # 2분 구간
+            'markov_chain': 150,          # 2.5분 구간
+            'co_occurrence': 100,         # 1분 40초 구간
+            'time_series': 80,            # 1분 20초 구간
+        }
+        
+        interval = algorithm_intervals.get(algorithm_name, 300)
+        time_block = current_time // interval
+        
+        # 추가 랜덤 요소
+        random_factor = random.randint(1, 5)  # 5가지 버전
+        
+        # 매개변수 해시
+        param_hash = ""
+        if params:
+            param_str = json.dumps(params, sort_keys=True, default=str)
+            param_hash = hashlib.md5(param_str.encode()).hexdigest()[:8]
+        
+        # 최종 키 생성
+        key_components = [algorithm_name, str(time_block), str(random_factor), param_hash]
+        key_string = "_".join(filter(None, key_components))
+        
+        return hashlib.md5(key_string.encode()).hexdigest()
     
     def _serialize_value(self, value: Any) -> bytes:
         """값 직렬화"""
@@ -253,15 +326,21 @@ class CacheManager:
             raise
     
     def get(self, key: str) -> Optional[Any]:
-        """값 조회 (계층적 캐시)"""
+        """값 조회 (랜덤성 개선)"""
         try:
+            # 강제 미스 확률 적용
+            if (self.randomness_config['force_miss_probability'] > 0 and 
+                random.random() < self.randomness_config['force_miss_probability']):
+                self.stats.miss_count += 1
+                return None
+            
             # Redis에서 먼저 조회
             if self.use_redis:
                 try:
                     data = self.redis_client.get(key)
                     if data is not None:
                         self.stats.hit_count += 1
-                        # 메모리 캐시에도 복사 (다음 조회 속도 향상)
+                        # 메모리 캐시에도 복사
                         value = self._deserialize_value(data)
                         self.memory_cache.set(key, value, ttl=self.default_ttl)
                         return value
@@ -285,10 +364,15 @@ class CacheManager:
     
     def set(self, key: str, value: Any, ttl: Optional[int] = None, 
             tags: Optional[List[str]] = None) -> bool:
-        """값 저장"""
+        """값 저장 (동적 TTL)"""
         try:
             if ttl is None:
                 ttl = self.default_ttl
+            
+            # TTL 랜덤화 적용
+            if self.randomness_config['ttl_randomization']:
+                random_variation = random.randint(-30, 30)
+                ttl = max(30, ttl + random_variation)
             
             # Redis에 저장
             if self.use_redis:
@@ -301,7 +385,7 @@ class CacheManager:
                         for tag in tags:
                             tag_key = f"tag:{tag}"
                             self.redis_client.sadd(tag_key, key)
-                            self.redis_client.expire(tag_key, ttl + 3600)  # 태그는 더 오래 유지
+                            self.redis_client.expire(tag_key, ttl + 3600)
                             
                 except Exception as e:
                     self.logger.warning(f"Redis set error for key {key}: {e}")
@@ -383,10 +467,9 @@ class CacheManager:
                         tag_key = f"tag:{tag}"
                         keys = self.redis_client.smembers(tag_key)
                         all_keys.update(keys)
-                        self.redis_client.delete(tag_key)  # 태그 키도 삭제
+                        self.redis_client.delete(tag_key)
                     
                     if all_keys:
-                        # bytes를 문자열로 변환
                         str_keys = [k.decode('utf-8') if isinstance(k, bytes) else k for k in all_keys]
                         total_invalidated += self.redis_client.delete(*str_keys)
                         
@@ -403,6 +486,18 @@ class CacheManager:
             self.logger.error(f"Tag invalidation error: {e}")
             return 0
     
+    def force_clear_algorithms(self, algorithm_names: List[str]) -> int:
+        """특정 알고리즘들의 캐시 강제 삭제"""
+        total_cleared = 0
+        
+        for algorithm_name in algorithm_names:
+            pattern = f"*{algorithm_name}*"
+            cleared = self.clear(pattern)
+            total_cleared += cleared
+            self.logger.info(f"Cleared {cleared} cache entries for {algorithm_name}")
+        
+        return total_cleared
+    
     def health_check(self) -> Dict:
         """캐시 시스템 건강 상태 확인"""
         health_status = {
@@ -411,6 +506,7 @@ class CacheManager:
             'memory_cache_available': True,
             'redis_connection_ok': False,
             'memory_cache_stats': {},
+            'randomness_active': True,
             'errors': []
         }
         
@@ -422,7 +518,6 @@ class CacheManager:
                     health_status['redis_available'] = True
                     health_status['redis_connection_ok'] = True
                     
-                    # Redis 정보 수집
                     redis_info = self.redis_client.info('memory')
                     health_status['redis_memory_usage'] = redis_info.get('used_memory', 0)
                     health_status['redis_memory_human'] = redis_info.get('used_memory_human', '0B')
@@ -436,7 +531,6 @@ class CacheManager:
                 memory_stats = self.memory_cache.get_stats()
                 health_status['memory_cache_stats'] = memory_stats
                 
-                # 메모리 사용률이 95% 이상이면 경고
                 if memory_stats['memory_usage_percent'] > 95:
                     health_status['errors'].append("Memory cache usage too high")
                     health_status['overall_health'] = False
@@ -444,6 +538,9 @@ class CacheManager:
             except Exception as e:
                 health_status['errors'].append(f"Memory cache health check failed: {e}")
                 health_status['overall_health'] = False
+            
+            # 랜덤성 설정 추가
+            health_status['randomness_config'] = self.randomness_config
             
             return health_status
             
@@ -459,7 +556,8 @@ class CacheManager:
             'memory_cache_size': self.memory_cache.max_size,
             'default_ttl': self.default_ttl,
             'compression_enabled': self.enable_compression,
-            'warming_enabled': self.enable_warming,  # 워밍 상태 추가
+            'warming_enabled': self.enable_warming,
+            'randomness_improvements': self.randomness_config,
             'stats': {
                 'hit_rate': self.stats.hit_rate,
                 'hit_count': self.stats.hit_count,
@@ -490,50 +588,46 @@ class CacheManager:
         
         return info
     
-    # 특화된 캐시 메소드들 (로또 앱 전용)
-    def cache_prediction(self, user_numbers: List[int], model_type: str, 
-                        result: List[int], ttl: int = 300):
-        """예측 결과 캐시"""
-        cache_key = self._generate_prediction_key(user_numbers, model_type)
-        return self.set(cache_key, result, ttl, tags=['predictions', model_type])
+    # 특화된 캐시 메소드들 (로또 앱 전용) - 랜덤성 개선
+    def cache_prediction(self, algorithm_name: str, user_numbers: List[int], 
+                        result: List[int], ttl: int = None):
+        """예측 결과 캐시 - 동적 키 생성"""
+        # 동적 캐시 키 생성
+        params = {'user_numbers': user_numbers, 'timestamp': int(time.time())}
+        cache_key = self._generate_cache_key(algorithm_name, params)
+        
+        # 알고리즘별 TTL 설정
+        if ttl is None:
+            ttl = self.memory_cache.algorithm_ttl.get(algorithm_name, self.default_ttl)
+        
+        return self.set(cache_key, result, ttl, tags=['predictions', algorithm_name])
     
-    def get_cached_prediction(self, user_numbers: List[int], 
-                             model_type: str) -> Optional[List[int]]:
-        """캐시된 예측 결과 조회"""
-        cache_key = self._generate_prediction_key(user_numbers, model_type)
+    def get_cached_prediction(self, algorithm_name: str, 
+                             user_numbers: List[int]) -> Optional[List[int]]:
+        """캐시된 예측 결과 조회 - 제한적 조회"""
+        # 랜덤성 보장을 위해 50% 확률로 캐시 무시
+        if random.random() < 0.5:
+            return None
+            
+        params = {'user_numbers': user_numbers, 'timestamp': int(time.time())}
+        cache_key = self._generate_cache_key(algorithm_name, params)
         return self.get(cache_key)
     
     def cache_statistics(self, stat_type: str, data: Dict, ttl: int = 600):
         """통계 데이터 캐시"""
-        cache_key = f"stats:{stat_type}"
+        cache_key = f"stats:{stat_type}:{int(time.time() // 300)}"  # 5분 구간
         return self.set(cache_key, data, ttl, tags=['statistics'])
     
     def get_cached_statistics(self, stat_type: str) -> Optional[Dict]:
         """캐시된 통계 데이터 조회"""
-        cache_key = f"stats:{stat_type}"
+        cache_key = f"stats:{stat_type}:{int(time.time() // 300)}"
         return self.get(cache_key)
-    
-    def cache_user_numbers(self, user_id: str, numbers_data: List[Dict], ttl: int = 3600):
-        """사용자 저장 번호 캐시"""
-        cache_key = f"user_numbers:{user_id}"
-        return self.set(cache_key, numbers_data, ttl, tags=['user_data'])
-    
-    def get_cached_user_numbers(self, user_id: str) -> Optional[List[Dict]]:
-        """캐시된 사용자 번호 조회"""
-        cache_key = f"user_numbers:{user_id}"
-        return self.get(cache_key)
-    
-    def _generate_prediction_key(self, user_numbers: List[int], model_type: str) -> str:
-        """예측 캐시 키 생성"""
-        numbers_str = ','.join(map(str, sorted(user_numbers)))
-        key_string = f"prediction:{model_type}:{numbers_str}"
-        return hashlib.md5(key_string.encode()).hexdigest()
     
     def warm_cache(self, warming_functions: List[Callable]) -> Dict:
-        """캐시 워밍 (시작 시 자주 사용되는 데이터 미리 로드)"""
-        if not self.enable_warming:  # 워밍이 비활성화된 경우
-            self.logger.info("Cache warming is disabled, skipping warming process")
-            return {'warming_disabled': True}
+        """캐시 워밍 (비활성화된 경우 스킵)"""
+        if not self.enable_warming:
+            self.logger.info("Cache warming is disabled for improved randomness")
+            return {'warming_disabled': True, 'reason': 'randomness_improvement'}
         
         results = {}
         
@@ -563,9 +657,9 @@ class CacheManager:
         
         return results
 
-# 캐시 데코레이터
-def cached(ttl: int = 300, tags: Optional[List[str]] = None):
-    """캐시 데코레이터"""
+# 캐시 데코레이터 - 랜덤성 개선
+def cached(ttl: int = 300, tags: Optional[List[str]] = None, enable_randomness: bool = True):
+    """캐시 데코레이터 - 랜덤성 옵션 추가"""
     def decorator(f):
         @wraps(f)
         def wrapper(*args, **kwargs):
@@ -573,16 +667,21 @@ def cached(ttl: int = 300, tags: Optional[List[str]] = None):
                 # Flask 앱에서 캐시 매니저 가져오기
                 from flask import current_app
                 if not (hasattr(current_app, 'extensions') and 'cache_manager' in current_app.extensions):
-                    # 캐시 매니저가 없으면 원본 함수 실행
                     return f(*args, **kwargs)
                 
                 cache_manager = current_app.extensions['cache_manager']
                 
-                # 캐시 키 생성 (함수명 + 인수들 해시)
+                # 랜덤성 활성화 시 일부 요청은 캐시 무시
+                if enable_randomness and random.random() < 0.2:  # 20% 확률로 캐시 무시
+                    result = f(*args, **kwargs)
+                    return result
+                
+                # 캐시 키 생성
                 func_name = f.__name__
                 args_str = json.dumps(args, sort_keys=True, default=str)
                 kwargs_str = json.dumps(kwargs, sort_keys=True, default=str)
-                cache_key = f"func:{func_name}:{hashlib.md5((args_str + kwargs_str).encode()).hexdigest()}"
+                timestamp_block = int(time.time() // 60)  # 1분 구간
+                cache_key = f"func:{func_name}:{timestamp_block}:{hashlib.md5((args_str + kwargs_str).encode()).hexdigest()}"
                 
                 # 캐시에서 조회
                 cached_result = cache_manager.get(cache_key)
@@ -592,8 +691,12 @@ def cached(ttl: int = 300, tags: Optional[List[str]] = None):
                 # 캐시 미스 - 함수 실행
                 result = f(*args, **kwargs)
                 
+                # 동적 TTL 적용
+                dynamic_ttl = ttl + random.randint(-60, 60) if enable_randomness else ttl
+                dynamic_ttl = max(30, dynamic_ttl)
+                
                 # 결과를 캐시에 저장
-                cache_manager.set(cache_key, result, ttl, tags)
+                cache_manager.set(cache_key, result, dynamic_ttl, tags)
                 
                 return result
                 
@@ -605,12 +708,19 @@ def cached(ttl: int = 300, tags: Optional[List[str]] = None):
     return decorator
 
 def init_cache_system(app=None, redis_url: Optional[str] = None, 
-                     default_ttl: int = 300, **kwargs) -> CacheManager:
-    """캐시 시스템 초기화"""
+                     default_ttl: int = 180, **kwargs) -> CacheManager:
+    """캐시 시스템 초기화 - 랜덤성 개선"""
+    # 랜덤성 개선을 위한 기본 설정
+    improved_kwargs = {
+        'enable_warming': False,  # 워밍 비활성화
+        'memory_cache_size': 500,  # 캐시 크기 축소
+        **kwargs
+    }
+    
     cache_manager = CacheManager(
         redis_url=redis_url,
         default_ttl=default_ttl,
-        **kwargs
+        **improved_kwargs
     )
     
     if app:
@@ -618,5 +728,9 @@ def init_cache_system(app=None, redis_url: Optional[str] = None,
         if not hasattr(app, 'extensions'):
             app.extensions = {}
         app.extensions['cache_manager'] = cache_manager
+        
+        # 랜덤성 개선 로깅
+        app.logger.info("Cache system initialized with improved randomness")
+        app.logger.info(f"Randomness config: {cache_manager.randomness_config}")
     
     return cache_manager
