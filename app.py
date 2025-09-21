@@ -50,7 +50,7 @@ def ensure_six_numbers(selected, exclude_set=None):
     return sorted(unique_selected[:6])
 
 class AdvancedLottoPredictor:
-    def __init__(self, csv_file_path='new_1189.csv'):
+    def __init__(self, csv_file_path='new_1190.csv'):
         self.csv_file_path = csv_file_path
         self.data = None
         self.numbers = None
@@ -92,12 +92,12 @@ class AdvancedLottoPredictor:
             
             # 여러 경로 시도
             possible_paths = [
-                'new_1189.csv',
-                './new_1189.csv',
-                os.path.join(current_dir, 'new_1189.csv'),
-                'data/new_1189.csv',
-                '/opt/render/project/src/new_1189.csv',
-                os.path.join(os.path.dirname(__file__), 'new_1189.csv')
+                'new_1190.csv',
+                './new_1190.csv',
+                os.path.join(current_dir, 'new_1190.csv'),
+                'data/new_1190.csv',
+                '/opt/render/project/src/new_1190.csv',
+                os.path.join(os.path.dirname(__file__), 'new_1190.csv')
             ]
             
             print(f"🔍 시도할 경로들: {possible_paths}")
@@ -114,7 +114,7 @@ class AdvancedLottoPredictor:
             
             if not found_file:
                 print(f"❌ 모든 경로에서 CSV 파일을 찾을 수 없습니다")
-                print(f"💡 해결책: GitHub의 new_1189.csv 파일이 배포 서버에 복사되지 않았을 가능성")
+                print(f"💡 해결책: GitHub의 new_1190.csv 파일이 배포 서버에 복사되지 않았을 가능성")
                 return False
             
             # 파일 정보 확인
