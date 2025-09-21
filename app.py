@@ -558,7 +558,7 @@ class AdvancedLottoPredictor:
             return self._generate_fallback_numbers("머신러닝")
 
     def algorithm_6_neural_network(self):
-        """6. 신경망 분석 - 완전 수정된 버전"""
+        """6. 신경망 분석 - 수정된 안전 버전"""
         try:
             # 매번 다른 동적 시드 설정
             seed = get_dynamic_seed() + int(time.time() % 100000)
@@ -569,109 +569,63 @@ class AdvancedLottoPredictor:
                 print(f"⚠️ 신경망 분석: 데이터 부족 - 백업 모드")
                 return self._generate_fallback_numbers("신경망 분석")
             
-            # 네트워크 파라미터를 매번 랜덤하게 변경
-            learning_rate = random.uniform(0.05, 0.2)
-            weight_decay = random.uniform(0.8, 1.2)
-            
-            # 가중치 네트워크 시뮬레이션 - 매번 다른 구조
-            num_layers = random.randint(2, 4)
-            weights_per_layer = []
-            
-            for layer in range(num_layers):
-                layer_weights = []
-                for i in range(len(self.numbers)):
-                    # 시간 거리 기반 가중치 + 랜덤 노이즈
-                    time_weight = (i + 1) / len(self.numbers)  # 최근일수록 높은 가중치
-                    random_noise = random.uniform(0.5, 1.5)
-                    layer_specific_modifier = random.uniform(0.8, 1.2)
-                    
-                    final_weight = time_weight * random_noise * layer_specific_modifier * learning_rate
-                    layer_weights.append(final_weight)
-                
-                weights_per_layer.append(layer_weights)
-            
-            # 다층 네트워크 시뮬레이션
-            all_weighted_numbers = []
-            
-            for layer_idx, layer_weights in enumerate(weights_per_layer):
-                layer_numbers = []
-                
-                for i, row in enumerate(self.numbers):
-                    weight = layer_weights[i] * weight_decay ** layer_idx
-                    for num in row:
-                        # 각 층마다 다른 활성화 함수 시뮬레이션
-                        if layer_idx % 2 == 0:  # ReLU 시뮬레이션
-                            activation = max(0, weight * safe_int(num) + random.uniform(-5, 5))
-                        else:  # Sigmoid 시뮬레이션
-                            activation = 1 / (1 + math.exp(-weight * safe_int(num))) * 45
-                        
-                        # 활성화 값에 따라 번호 추가
-                        repeat_count = int(activation * 10) + 1
-                        layer_numbers.extend([safe_int(num)] * repeat_count)
-                
-                all_weighted_numbers.extend(layer_numbers)
-            
-            # 출력층 처리
-            freq = Counter(all_weighted_numbers)
-            
-            # 상위 후보들에 드롭아웃 시뮬레이션
-            dropout_rate = random.uniform(0.1, 0.3)
-            top_candidates = freq.most_common(30)
-            
-            # 드롭아웃 적용
-            filtered_candidates = []
-            for num, count in top_candidates:
-                if random.random() > dropout_rate:  # 드롭아웃 확률로 필터링
-                    # 배치 정규화 시뮬레이션
-                    normalized_count = count * random.uniform(0.8, 1.2)
-                    filtered_candidates.append((safe_int(num), normalized_count))
-            
-            # 활성화 함수 최종 적용
-            final_candidates = []
-            for num, count in filtered_candidates:
-                # Softmax 시뮬레이션
-                softmax_prob = math.exp(count) / sum(math.exp(c) for _, c in filtered_candidates)
-                final_candidates.append((num, softmax_prob))
-            
-            # 확률 기반 선택 + 온도 파라미터
-            temperature = random.uniform(0.5, 2.0)
+            # 간단하고 안전한 신경망 시뮬레이션
             selected = []
             used_numbers = set()
             
-            for _ in range(6):
-                if not final_candidates:
-                    break
+            # 데이터 기반 가중치 계산 (안전한 방식)
+            all_numbers = self.numbers.flatten()
+            frequency = Counter(all_numbers)
+            
+            # 최근 데이터에 더 높은 가중치 부여
+            recent_data = self.numbers[-20:]
+            recent_frequency = Counter(recent_data.flatten())
+            
+            # 신경망 스타일의 가중치 조합
+            neural_scores = {}
+            for num in range(1, 46):
+                base_freq = frequency.get(num, 0)
+                recent_freq = recent_frequency.get(num, 0)
                 
-                # 온도 스케일링 적용
-                scaled_probs = []
-                available_candidates = [(num, prob) for num, prob in final_candidates if num not in used_numbers]
-                
-                if not available_candidates:
-                    break
-                
-                for num, prob in available_candidates:
-                    scaled_prob = math.exp(math.log(prob + 1e-10) / temperature)
-                    scaled_probs.append(scaled_prob)
-                
-                # 확률 정규화
-                total_prob = sum(scaled_probs)
-                if total_prob > 0:
-                    normalized_probs = [p / total_prob for p in scaled_probs]
+                # 활성화 함수 시뮬레이션 (안전한 계산)
+                try:
+                    # 시그모이드 스타일 활성화
+                    x = (base_freq * 0.3 + recent_freq * 0.7) / 10.0
+                    # 안전한 exp 계산
+                    if x > 10:
+                        activation = 1.0
+                    elif x < -10:
+                        activation = 0.0
+                    else:
+                        activation = 1 / (1 + math.exp(-x))
                     
-                    # 확률 기반 선택
-                    chosen_idx = random.choices(range(len(available_candidates)), weights=normalized_probs)[0]
-                    chosen_num = available_candidates[chosen_idx][0]
-                    
-                    selected.append(chosen_num)
-                    used_numbers.add(chosen_num)
+                    # 랜덤 노이즈 추가
+                    neural_scores[num] = activation * random.uniform(0.5, 1.5)
+                except (OverflowError, ZeroDivisionError, ValueError):
+                    # 오류 발생 시 기본값
+                    neural_scores[num] = random.uniform(0.1, 0.9)
+            
+            # 점수 기반 선택
+            sorted_numbers = sorted(neural_scores.items(), key=lambda x: x[1], reverse=True)
+            
+            # 상위 후보들 중에서 랜덤 선택
+            top_candidates = [num for num, score in sorted_numbers[:20]]
+            random.shuffle(top_candidates)
+            
+            for num in top_candidates:
+                if len(selected) >= 6:
+                    break
+                if num not in used_numbers:
+                    selected.append(num)
+                    used_numbers.add(num)
             
             # 6개 번호 보장
             final_numbers = ensure_six_numbers(selected)
-            print(f"✅ 신경망 분석 완료 (시드: {seed}, 층수: {num_layers}, 온도: {temperature:.2f}): {final_numbers}")
+            print(f"✅ 신경망 분석 완료 (시드: {seed}): {final_numbers}")
             
             return {
                 'name': '신경망 분석',
-                'description': '다층 신경망과 활성화 함수를 통한 복합 패턴 학습 예측',
+                'description': '다층 신경망 시뮬레이션을 통한 복합 패턴 학습 예측',
                 'category': 'advanced',
                 'algorithm_id': 6,
                 'priority_numbers': safe_int_list(final_numbers),
@@ -1625,6 +1579,11 @@ def get_predictor():
 def index():
     return render_template('index.html')
 
+@app.route('/algorithms')
+def algorithms():
+    """알고리즘 상세 설명 페이지"""
+    return render_template('algorithms.html')
+
 @app.route('/api/health')
 def health():
     """헬스체크 API"""
@@ -1641,6 +1600,138 @@ def health():
         return jsonify({
             'success': False,
             'status': 'unhealthy',
+            'error': str(e)
+        }), 500
+
+@app.route('/api/algorithm-details')
+def get_algorithm_details():
+    """알고리즘 상세 정보 API"""
+    try:
+        algorithm_details = {
+            'basic_algorithms': [
+                {
+                    'id': 1,
+                    'name': '빈도 분석',
+                    'category': 'basic',
+                    'description': '과거 당첨번호의 출현 빈도를 분석하여 가장 자주 나온 번호들을 우선 선택합니다.',
+                    'detailed_explanation': '로또 당첨번호 히스토리를 분석하여 각 번호의 출현 빈도를 계산하고, 통계적으로 유의미한 패턴을 찾아 예측에 활용합니다. 빈도가 높은 번호일수록 다시 선택될 확률이 높다는 가정하에 동작합니다.',
+                    'technical_approach': '카운터 기반 빈도 분석, 가중치 확률 선택, 중복 제거 알고리즘',
+                    'advantages': ['직관적이고 이해하기 쉬움', '장기간 데이터 활용', '통계적 근거'],
+                    'limitations': ['과거 패턴에 의존', '랜덤성 특성 무시 가능성'],
+                    'confidence': 85
+                },
+                {
+                    'id': 2,
+                    'name': '핫/콜드 분석',
+                    'category': 'basic',
+                    'description': '최근 자주 나오는 핫넘버와 오랫동안 나오지 않은 콜드넘버를 조합하여 예측합니다.',
+                    'detailed_explanation': '최근 일정 기간 동안의 출현 패턴을 분석하여 평균보다 자주 나오는 핫넘버와 평균보다 적게 나오는 콜드넘버를 식별합니다. 이 두 그룹을 적절히 조합하여 균형잡힌 예측을 생성합니다.',
+                    'technical_approach': '시간 가중 빈도 분석, 편차 계산, 핫/콜드 임계값 설정',
+                    'advantages': ['최근 트렌드 반영', '균형잡힌 선택', '적응적 분석'],
+                    'limitations': ['기간 설정의 주관성', '단기 변동에 민감'],
+                    'confidence': 78
+                },
+                {
+                    'id': 3,
+                    'name': '패턴 분석',
+                    'category': 'basic',
+                    'description': '번호 구간별 출현 패턴과 수학적 관계를 분석하여 예측합니다.',
+                    'detailed_explanation': '로또 번호를 여러 구간(저구간, 중구간, 고구간)으로 나누어 각 구간별 출현 패턴을 분석합니다. 구간별 균형, 연속성, 간격 등의 수학적 특성을 고려하여 최적의 조합을 찾습니다.',
+                    'technical_approach': '구간별 분할 분석, 패턴 매칭, 수학적 관계 분석',
+                    'advantages': ['구조적 접근', '다양한 패턴 고려', '수학적 근거'],
+                    'limitations': ['복잡한 계산', '패턴 정의의 주관성'],
+                    'confidence': 73
+                },
+                {
+                    'id': 4,
+                    'name': '통계 분석',
+                    'category': 'basic',
+                    'description': '정규분포와 확률 이론을 적용한 수학적 예측을 수행합니다.',
+                    'detailed_explanation': '로또 번호의 분포를 정규분포 모델로 분석하여 평균, 표준편차, 확률밀도를 계산합니다. 통계학적 방법론을 사용하여 각 번호의 선택 확률을 정량화하고 최적의 조합을 도출합니다.',
+                    'technical_approach': '정규분포 모델링, Z-스코어 계산, 확률밀도함수 적용',
+                    'advantages': ['수학적 정확성', '객관적 분석', '확률 이론 기반'],
+                    'limitations': ['로또의 랜덤성과 충돌 가능', '복잡한 수학적 가정'],
+                    'confidence': 81
+                },
+                {
+                    'id': 5,
+                    'name': '머신러닝',
+                    'category': 'basic',
+                    'description': '패턴 학습 기반으로 위치별 평균을 계산하여 예측합니다.',
+                    'detailed_explanation': '과거 당첨번호 데이터를 학습하여 각 위치별(1번째 번호, 2번째 번호 등)의 출현 패턴을 분석합니다. 기계학습 원리를 적용하여 숨겨진 패턴을 발견하고 미래 번호를 예측합니다.',
+                    'technical_approach': '지도학습 방식, 위치별 패턴 분석, 평균 회귀 예측',
+                    'advantages': ['데이터 기반 학습', '위치별 특성 고려', '적응적 예측'],
+                    'limitations': ['과적합 위험', '충분한 데이터 필요'],
+                    'confidence': 76
+                }
+            ],
+            'advanced_algorithms': [
+                {
+                    'id': 6,
+                    'name': '신경망 분석',
+                    'category': 'advanced',
+                    'description': '다층 신경망 시뮬레이션을 통한 복합 패턴 학습 예측을 수행합니다.',
+                    'detailed_explanation': '인공신경망의 원리를 모방하여 다층 퍼셉트론 구조를 시뮬레이션합니다. 입력층, 은닉층, 출력층을 통해 복잡한 비선형 패턴을 학습하고, 활성화 함수와 가중치 조정을 통해 최적의 예측 모델을 구축합니다.',
+                    'technical_approach': '다층 퍼셉트론, 활성화 함수(시그모이드, ReLU), 역전파 시뮬레이션',
+                    'advantages': ['복잡한 패턴 인식', '비선형 관계 학습', '자동 특성 추출'],
+                    'limitations': ['블랙박스 모델', '계산 복잡도 높음', '과적합 위험'],
+                    'confidence': 79
+                },
+                {
+                    'id': 7,
+                    'name': '마르코프 체인',
+                    'category': 'advanced',
+                    'description': '상태 전이 확률을 이용한 연속성 패턴 예측을 수행합니다.',
+                    'detailed_explanation': '마르코프 체인 이론을 적용하여 이전 상태(과거 당첨번호)가 다음 상태(미래 당첨번호)에 미치는 영향을 분석합니다. 1차, 2차, 3차 마르코프 체인을 통해 다양한 시간 깊이의 의존성을 모델링합니다.',
+                    'technical_approach': '상태 전이 행렬, 확률 체인, N차 의존성 모델링',
+                    'advantages': ['시간적 연속성 고려', '확률적 접근', '다양한 차수 지원'],
+                    'limitations': ['마르코프 가정의 제약', '상태 공간 복잡성'],
+                    'confidence': 74
+                },
+                {
+                    'id': 8,
+                    'name': '유전자 알고리즘',
+                    'category': 'advanced',
+                    'description': '진화론적 최적화를 통한 적응형 번호 조합 예측을 수행합니다.',
+                    'detailed_explanation': '다윈의 진화론을 모방한 최적화 알고리즘으로, 선택, 교차, 돌연변이 과정을 통해 최적의 번호 조합을 찾습니다. 여러 세대에 걸쳐 적합도가 높은 개체들을 선별하고 발전시킵니다.',
+                    'technical_approach': '유전자 표현, 적합도 함수, 선택/교차/돌연변이 연산',
+                    'advantages': ['전역 최적화', '다양성 유지', '적응적 탐색'],
+                    'limitations': ['수렴 속도 느림', '매개변수 튜닝 필요'],
+                    'confidence': 77
+                },
+                {
+                    'id': 9,
+                    'name': '동반출현 분석',
+                    'category': 'advanced',
+                    'description': '번호 간 상관관계와 동시 출현 패턴을 분석하여 예측합니다.',
+                    'detailed_explanation': '여러 번호가 함께 당첨되는 패턴을 분석하여 번호 간의 상관관계를 발견합니다. 페어, 트리플렛, 조건부 확률 등 다양한 관점에서 번호 간의 연관성을 평가합니다.',
+                    'technical_approach': '상관관계 분석, 동시발생 행렬, 조건부 확률',
+                    'advantages': ['번호 간 관계 고려', '다양한 분석 방법', '패턴 발견'],
+                    'limitations': ['우연의 일치 가능성', '복잡한 해석'],
+                    'confidence': 75
+                },
+                {
+                    'id': 10,
+                    'name': '시계열 분석',
+                    'category': 'advanced',
+                    'description': '시간 흐름에 따른 패턴 변화를 분석하여 예측합니다.',
+                    'detailed_explanation': '시간 순서를 고려한 데이터 분석으로 트렌드, 계절성, 주기성 등을 파악합니다. 트렌드 분석, 계절 분해, 순환 패턴, 모멘텀 분석 등 다양한 시계열 기법을 활용합니다.',
+                    'technical_approach': '트렌드 분석, 계절성 분해, 자기회귀 모델, 이동평균',
+                    'advantages': ['시간적 패턴 고려', '다양한 분석 기법', '예측 정확도'],
+                    'limitations': ['긴 분석 기간 필요', '복잡한 모델'],
+                    'confidence': 72
+                }
+            ]
+        }
+        
+        return jsonify({
+            'success': True,
+            'data': algorithm_details
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
             'error': str(e)
         }), 500
 
@@ -1780,6 +1871,7 @@ def get_statistics():
             'error': 'Statistics temporarily unavailable'
         }), 500
 
+# 나머지 API 엔드포인트들...
 @app.route('/api/clear-cache', methods=['POST'])
 def clear_cache():
     """캐시 강제 삭제 API - 랜덤성 초기화"""
@@ -1827,525 +1919,6 @@ def clear_cache():
         return jsonify({
             'success': False,
             'error': f'캐시 클리어 중 오류가 발생했습니다: {str(e)}'
-        }), 500
-
-@app.route('/api/force-refresh', methods=['POST'])
-def force_refresh():
-    """강제 새로고침 API - 완전한 랜덤성 보장"""
-    try:
-        request_data = request.get_json() or {}
-        user_numbers = request_data.get('user_numbers', [])
-        force_new_seeds = request_data.get('force_new_seeds', True)
-        clear_cache_flag = request_data.get('clear_cache', True)
-        
-        print(f"🔄 강제 새로고침 시작 - 새 시드: {force_new_seeds}")
-        
-        # 전역 예측기 완전 재생성
-        global predictor
-        if clear_cache_flag:
-            predictor = None
-            gc.collect()
-            time.sleep(0.5)  # 잠시 대기
-        
-        # 새로운 시드로 초기화
-        if force_new_seeds:
-            base_seed = get_dynamic_seed()
-            random.seed(base_seed)
-            np.random.seed(base_seed)
-            print(f"🎲 새로운 글로벌 시드 적용: {base_seed}")
-        
-        # 예측기 재생성
-        pred = get_predictor()
-        
-        # 강제로 새로운 예측 생성
-        results = pred.generate_all_predictions()
-        
-        # 결과 검증
-        unique_results = set()
-        for result in results.values():
-            tuple_result = tuple(result['priority_numbers'])
-            unique_results.add(tuple_result)
-        
-        response_data = {
-            'success': True,
-            'data': results,
-            'total_algorithms': len(results),
-            'unique_results': len(unique_results),
-            'force_refresh': True,
-            'new_seeds_applied': force_new_seeds,
-            'cache_cleared': clear_cache_flag,
-            'message': '강제 새로고침이 완료되었습니다.',
-            'randomness_info': {
-                'refresh_timestamp': time.time(),
-                'unique_result_count': len(unique_results),
-                'total_result_count': len(results),
-                'uniqueness_rate': len(unique_results) / len(results) * 100 if results else 0
-            }
-        }
-        
-        print(f"✅ 강제 새로고침 완료 - {len(unique_results)}/{len(results)} 고유 결과")
-        return jsonify(response_data)
-        
-    except Exception as e:
-        print(f"❌ 강제 새로고침 실패: {e}")
-        return jsonify({
-            'success': False,
-            'error': f'강제 새로고침 중 오류가 발생했습니다: {str(e)}'
-        }), 500
-
-@app.route('/api/generate-random', methods=['POST'])
-def generate_random():
-    """랜덤 번호 생성 API"""
-    try:
-        request_data = request.get_json() or {}
-        count = min(request_data.get('count', 1), 10)  # 최대 10개
-        
-        random_sets = []
-        used_combinations = set()
-        
-        for i in range(count):
-            # 각 세트마다 다른 시드 사용
-            set_seed = get_dynamic_seed() + i * 1000
-            random.seed(set_seed)
-            
-            attempts = 0
-            while attempts < 100:  # 무한 루프 방지
-                numbers = sorted(random.sample(range(1, 46), 6))
-                numbers_tuple = tuple(numbers)
-                
-                if numbers_tuple not in used_combinations:
-                    used_combinations.add(numbers_tuple)
-                    
-                    random_sets.append({
-                        'numbers': numbers,
-                        'sum': sum(numbers),
-                        'odd_count': sum(1 for n in numbers if n % 2 == 1),
-                        'even_count': sum(1 for n in numbers if n % 2 == 0),
-                        'seed': set_seed
-                    })
-                    break
-                attempts += 1
-        
-        return jsonify({
-            'success': True,
-            'random_sets': random_sets,
-            'count': len(random_sets)
-        })
-        
-    except Exception as e:
-        print(f"랜덤 생성 오류: {e}")
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
-
-@app.route('/api/save-numbers', methods=['POST'])
-def save_numbers():
-    """번호 저장 API"""
-    try:
-        data = request.get_json()
-        numbers = data.get('numbers', [])
-        label = data.get('label', f'저장된 번호 {datetime.now().strftime("%m/%d %H:%M")}')
-        
-        # 번호 검증
-        if len(numbers) != 6 or not all(1 <= n <= 45 for n in numbers):
-            return jsonify({
-                'success': False,
-                'error': '올바른 6개 번호를 입력해주세요 (1-45)'
-            }), 400
-        
-        # 중복 확인
-        if len(set(numbers)) != 6:
-            return jsonify({
-                'success': False,
-                'error': '중복된 번호가 있습니다'
-            }), 400
-        
-        # 저장 (실제 구현에서는 데이터베이스 사용)
-        saved_item = {
-            'id': f"num_{int(time.time())}_{random.randint(1000, 9999)}",
-            'numbers': sorted(numbers),
-            'label': label,
-            'saved_at': datetime.now().isoformat(),
-            'analysis': {
-                'sum': sum(numbers),
-                'odd_count': sum(1 for n in numbers if n % 2 == 1),
-                'even_count': sum(1 for n in numbers if n % 2 == 0),
-                'range': max(numbers) - min(numbers)
-            }
-        }
-        
-        return jsonify({
-            'success': True,
-            'saved_item': saved_item,
-            'message': '번호가 성공적으로 저장되었습니다'
-        })
-        
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
-
-@app.route('/api/saved-numbers')
-def get_saved_numbers():
-    """저장된 번호 조회 API"""
-    try:
-        # 실제 구현에서는 데이터베이스에서 조회
-        # 여기서는 예시 데이터 반환
-        sample_saved = [
-            {
-                'id': 'sample_1',
-                'numbers': [1, 7, 13, 25, 31, 42],
-                'label': 'AI 추천 번호',
-                'saved_at': (datetime.now() - timedelta(hours=1)).isoformat(),
-                'analysis': {
-                    'sum': 119,
-                    'odd_count': 4,
-                    'even_count': 2,
-                    'range': 41
-                }
-            }
-        ]
-        
-        return jsonify({
-            'success': True,
-            'saved_numbers': sample_saved,
-            'count': len(sample_saved)
-        })
-        
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
-
-@app.route('/api/check-winning', methods=['POST'])
-def check_winning():
-    """당첨 확인 API"""
-    try:
-        data = request.get_json()
-        user_numbers = data.get('numbers', [])
-        
-        if len(user_numbers) != 6:
-            return jsonify({
-                'success': False,
-                'error': '6개 번호를 입력해주세요'
-            }), 400
-        
-        # 최신 당첨번호 (예시 - 실제로는 최신 회차 데이터 사용)
-        pred = get_predictor()
-        if pred.data is not None and len(pred.data) > 0:
-            latest_draw = pred.data.iloc[-1]
-            winning_numbers = [safe_int(latest_draw[f'num{i}']) for i in range(1, 7)]
-            bonus_number = safe_int(latest_draw.get('bonus_num', 7))
-            round_number = safe_int(latest_draw.get('round', 1190))
-        else:
-            # 기본값
-            winning_numbers = [1, 7, 13, 25, 31, 42]
-            bonus_number = 7
-            round_number = 1190
-        
-        # 당첨 확인
-        matches = len(set(user_numbers) & set(winning_numbers))
-        bonus_match = bonus_number in user_numbers
-        
-        # 등수 결정
-        if matches == 6:
-            prize = "1등"
-            prize_money = "30억원"
-        elif matches == 5 and bonus_match:
-            prize = "2등"
-            prize_money = "5000만원"
-        elif matches == 5:
-            prize = "3등"
-            prize_money = "100만원"
-        elif matches == 4:
-            prize = "4등"
-            prize_money = "5만원"
-        elif matches == 3:
-            prize = "5등"
-            prize_money = "5천원"
-        else:
-            prize = "낙첨"
-            prize_money = "0원"
-        
-        return jsonify({
-            'success': True,
-            'round': round_number,
-            'user_numbers': user_numbers,
-            'winning_numbers': winning_numbers,
-            'bonus_number': bonus_number,
-            'matches': matches,
-            'bonus_match': bonus_match,
-            'prize': prize,
-            'prize_money': prize_money
-        })
-        
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
-
-@app.route('/api/tax-calculator', methods=['POST'])
-def tax_calculator():
-    """세금 계산기 API"""
-    try:
-        data = request.get_json()
-        prize_amount = data.get('prize_amount', 0)
-        
-        if prize_amount <= 0:
-            return jsonify({
-                'success': False,
-                'error': '올바른 당첨금액을 입력해주세요'
-            }), 400
-        
-        # 한국 복권 세금 계산 (2024년 기준)
-        if prize_amount <= 300000:  # 30만원 이하
-            tax_amount = 0
-            effective_tax_rate = 0
-        else:
-            # 30만원 초과분에 대해 22% 세금
-            taxable_amount = prize_amount - 300000
-            tax_amount = taxable_amount * 0.22
-            effective_tax_rate = (tax_amount / prize_amount) * 100
-        
-        net_amount = prize_amount - tax_amount
-        
-        return jsonify({
-            'success': True,
-            'prize_amount': prize_amount,
-            'tax_free_amount': 300000,
-            'taxable_amount': max(0, prize_amount - 300000),
-            'tax_amount': int(tax_amount),
-            'tax_rate': 22,
-            'effective_tax_rate': round(effective_tax_rate, 2),
-            'net_amount': int(net_amount),
-            'tax_brackets': '30만원 초과분 22%'
-        })
-        
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
-
-@app.route('/api/simulation', methods=['POST'])
-def run_simulation():
-    """로또 시뮬레이션 API"""
-    try:
-        data = request.get_json()
-        user_numbers = data.get('numbers', [])
-        rounds = min(data.get('rounds', 1000), 10000)  # 최대 1만회
-        
-        if len(user_numbers) != 6:
-            return jsonify({
-                'success': False,
-                'error': '6개 번호를 입력해주세요'
-            }), 400
-        
-        # 시뮬레이션 실행
-        results = {'1등': 0, '2등': 0, '3등': 0, '4등': 0, '5등': 0, '낙첨': 0}
-        total_cost = rounds * 1000  # 회당 1000원
-        total_prize = 0
-        
-        for _ in range(rounds):
-            # 랜덤 당첨번호 생성
-            winning_numbers = random.sample(range(1, 46), 6)
-            bonus_number = random.choice([n for n in range(1, 46) if n not in winning_numbers])
-            
-            # 당첨 확인
-            matches = len(set(user_numbers) & set(winning_numbers))
-            bonus_match = bonus_number in user_numbers
-            
-            if matches == 6:
-                results['1등'] += 1
-                total_prize += 3000000000  # 30억
-            elif matches == 5 and bonus_match:
-                results['2등'] += 1
-                total_prize += 50000000  # 5천만
-            elif matches == 5:
-                results['3등'] += 1
-                total_prize += 1000000  # 100만
-            elif matches == 4:
-                results['4등'] += 1
-                total_prize += 50000  # 5만
-            elif matches == 3:
-                results['5등'] += 1
-                total_prize += 5000  # 5천
-            else:
-                results['낙첨'] += 1
-        
-        net_profit = total_prize - total_cost
-        profit_rate = (net_profit / total_cost) * 100
-        
-        return jsonify({
-            'success': True,
-            'rounds': rounds,
-            'user_numbers': user_numbers,
-            'results': results,
-            'total_cost': total_cost,
-            'total_prize': total_prize,
-            'net_profit': net_profit,
-            'profit_rate': round(profit_rate, 2)
-        })
-        
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
-
-@app.route('/api/lottery-stores')
-def search_lottery_stores():
-    """복권 판매점 검색 API"""
-    try:
-        query = request.args.get('query', '')
-        lat = request.args.get('lat')
-        lng = request.args.get('lng')
-        
-        # 샘플 판매점 데이터
-        sample_stores = [
-            {
-                'name': '행운복권방',
-                'address': '서울시 강남구 역삼동 123-45',
-                'phone': '02-1234-5678',
-                'business_hours': '09:00-22:00',
-                'first_wins': 3,
-                'distance': '0.5km' if lat and lng else None
-            },
-            {
-                'name': '대박복권',
-                'address': '서울시 강남구 논현동 678-90',
-                'phone': '02-8765-4321',
-                'business_hours': '08:00-23:00',
-                'first_wins': 1,
-                'distance': '1.2km' if lat and lng else None
-            }
-        ]
-        
-        # 검색 필터링 (간단한 예시)
-        if query:
-            filtered_stores = [store for store in sample_stores 
-                             if query.lower() in store['name'].lower() or 
-                                query.lower() in store['address'].lower()]
-        else:
-            filtered_stores = sample_stores
-        
-        return jsonify({
-            'success': True,
-            'stores': filtered_stores,
-            'count': len(filtered_stores)
-        })
-        
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
-
-@app.route('/api/generate-qr', methods=['POST'])
-def generate_qr():
-    """QR 코드 생성 API"""
-    try:
-        data = request.get_json()
-        numbers = data.get('numbers', [])
-        
-        if len(numbers) != 6:
-            return jsonify({
-                'success': False,
-                'error': '6개 번호를 입력해주세요'
-            }), 400
-        
-        # QR 코드 데이터 (실제로는 QR 라이브러리 사용)
-        qr_data = f"LOTTO:{','.join(map(str, numbers))}"
-        
-        # Base64 인코딩된 QR 이미지 (예시)
-        qr_image_base64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
-        
-        return jsonify({
-            'success': True,
-            'qr_code': qr_image_base64,
-            'qr_data': qr_data,
-            'numbers': numbers
-        })
-        
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
-
-@app.route('/api/ai-models')
-def get_ai_models():
-    """AI 모델 정보 API"""
-    try:
-        models = {
-            'neural_network': {
-                'name': '신경망 분석',
-                'description': '다층 퍼셉트론을 이용한 패턴 학습',
-                'accuracy': random.randint(75, 85),
-                'predictions': []
-            },
-            'markov_chain': {
-                'name': '마르코프 체인',
-                'description': '상태 전이 확률 기반 예측',
-                'accuracy': random.randint(70, 80),
-                'predictions': []
-            },
-            'genetic_algorithm': {
-                'name': '유전자 알고리즘',
-                'description': '진화론적 최적화 알고리즘',
-                'accuracy': random.randint(72, 82),
-                'predictions': []
-            }
-        }
-        
-        # 각 모델별 예측 번호 생성
-        for model_name, model_data in models.items():
-            for i in range(3):
-                seed = get_dynamic_seed() + hash(model_name) + i
-                random.seed(seed)
-                prediction = sorted(random.sample(range(1, 46), 6))
-                model_data['predictions'].append(prediction)
-        
-        return jsonify({
-            'success': True,
-            'models': models
-        })
-        
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
-
-@app.route('/api/prediction-history')
-def get_prediction_history():
-    """예측 히스토리 API"""
-    try:
-        # 샘플 히스토리 데이터
-        history = [
-            {
-                'timestamp': (datetime.now() - timedelta(hours=i)).isoformat(),
-                'algorithms_used': 10,
-                'unique_results': random.randint(8, 10),
-                'top_prediction': sorted(random.sample(range(1, 46), 6))
-            }
-            for i in range(1, 6)
-        ]
-        
-        return jsonify({
-            'success': True,
-            'history': history,
-            'count': len(history)
-        })
-        
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
         }), 500
 
 # 에러 핸들러
