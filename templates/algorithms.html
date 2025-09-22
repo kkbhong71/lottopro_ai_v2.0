@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>10개 AI 알고리즘 상세 설명 - LottoPro AI v2.0</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .algorithm-detail-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f8f9fa;
+            min-height: 100vh;
+        }
+        
+        .page-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+        }
+        
+        .page-header h1 {
+            margin: 0 0 10px 0;
+            font-size: 2.5em;
+            font-weight: 700;
+        }
+        
+        .page-header p {
+            margin: 0;
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .category-section {
+            margin-bottom: 50px;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .category-title {
+            font-size: 2em;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            text-align: center;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 15px;
+        }
+        
+        .algorithm-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .algorithm-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border-left: 5px solid;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .algorithm-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+        }
+        
+        /* 기본 알고리즘 색상 */
+        .algorithm-card.basic {
+            border-left-color: #3498db;
+        }
+        
+        .algorithm-card.basic::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            clip-path: polygon(100% 0%, 0% 100%, 100% 100%);
+        }
+        
+        /* 고급 알고리즘 색상 */
+        .algorithm-card.advanced {
+            border-left-color: #e74c3c;
+        }
+        
+        .algorithm-card.advanced::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            clip-path: polygon(100% 0%, 0% 100%, 100% 100%);
+        }
+        
+        .algorithm-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+        
+        .algorithm-info {
+            flex: 1;
+        }
+        
+        .algorithm-name {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 0 0 5px 0;
+        }
+        
+        .algorithm-category {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+        
+        .algorithm-category.basic {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        
+        .algorithm-category.advanced {
+            background: #ffebee;
+            color: #d32f2f;
+        }
+        
+        .confidence-badge {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            color: #495057;
+            white-space: nowrap;
+        }
+        
+        .algorithm-description {
+            font-size: 1em;
+            margin-bottom: 20px;
+            line-height: 1.6;
+            color: #5a6c7d;
+        }
+        
+        .algorithm-details {
+            margin-bottom: 20px;
+        }
+        
+        .detail-section {
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .detail-section.advanced {
+            border-left-color: #e74c3c;
+        }
+        
+        .detail-title {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 1em;
+            display: flex;
+            align-items: center;
+        }
+        
+        .detail-title i {
+            margin-right: 8px;
+            width: 16px;
+        }
+        
+        .detail-content {
+            color: #5a6c7d;
+            line-height: 1.5;
+            font-size: 0.95em;
+        }
+        
+        .advantages-limitations {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .advantage-list, .limitation-list {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .advantage-list {
+            border-left: 4px solid #27ae60;
+        }
+        
+        .limitation-list {
+            border-left: 4px solid #f39c12;
+        }
+        
+        .advantage-list h5, .limitation-list h5 {
+            margin: 0 0 10px 0;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        
+        .advantage-list h5 {
+            color: #27ae60;
+        }
+        
+        .limitation-list h5 {
+            color: #f39c12;
+        }
+        
+        .advantage-item, .limitation-item {
+            font-size: 0.85em;
+            line-height: 1.4;
+            color: #5a6c7d;
+            margin-bottom: 5px;
+        }
+        
+        .technical-specs {
+            background: #e8f4f8;
+            border: 1px solid #b8daff;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        
+        .tech-spec-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            font-size: 0.9em;
+        }
+        
+        .tech-spec-label {
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .tech-spec-value {
+            color: #6c757d;
+        }
+        
+        .nav-buttons {
+            text-align: center;
+            margin: 40px 0;
+            padding: 30px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            margin: 0 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: transform 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            text-decoration: none;
+            color: white;
+        }
+        
+        .btn.secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        }
+        
+        .warning-notice {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 30px 0;
+            text-align: center;
+        }
+        
+        .warning-notice h4 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+        
+        .warning-notice p {
+            color: #856404;
+            margin: 5px 0;
+        }
+        
+        @media (max-width: 768px) {
+            .algorithm-detail-container {
+                padding: 15px;
+            }
+            
+            .algorithm-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .algorithm-card {
+                padding: 20px;
+            }
+            
+            .advantages-limitations {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            
+            .page-header h1 {
+                font-size: 2em;
+            }
+            
+            .page-header p {
+                font-size: 1em;
+            }
+            
+            .category-title {
+                font-size: 1.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="algorithm-detail-container">
+        <div class="page-header">
+            <h1>10개 AI 알고리즘 상세 분석</h1>
+            <p>LottoPro AI v2.0의 예측 모델 작동 원리와 기술적 구현 방법</p>
+        </div>
+        
+        <!-- 기본 AI 알고리즘 섹션 -->
+        <div class="category-section">
+            <h2 class="category-title">기본 AI 알고리즘 (5개)</h2>
+            
+            <div class="algorithm-grid" id="basicAlgorithmsGrid">
+                <!-- JavaScript로 동적 생성 -->
+            </div>
+        </div>
+        
+        <!-- 고급 AI 알고리즘 섹션 -->
+        <div class="category-section">
+            <h2 class="category-title">고급 AI 알고리즘 (5개)</h2>
+            
+            <div class="algorithm-grid" id="advancedAlgorithmsGrid">
+                <!-- JavaScript로 동적 생성 -->
+            </div>
+        </div>
+        
+        <!-- 중요한 경고 사항 -->
+        <div class="warning-notice">
+            <h4>중요한 안내사항</h4>
+            <p><strong>로또는 완전한 확률 게임입니다.</strong> 어떤 AI 알고리즘도 당첨을 보장할 수 없습니다.</p>
+            <p>본 서비스는 오락 및 연구 목적으로만 사용하시고, 과도한 기대나 의존은 하지 마십시오.</p>
+            <p><strong>도박 중독 예방을 위해 적정 금액 내에서만 이용해 주세요.</strong></p>
+        </div>
+        
+        <div class="nav-buttons">
+            <a href="/" class="btn">메인으로 돌아가기</a>
+            <button class="btn secondary" onclick="window.print()">페이지 인쇄</button>
+        </div>
+    </div>
+
+    <script>
+        // 알고리즘 데이터 로드 및 렌더링
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAlgorithmDetails();
+        });
+
+        async function loadAlgorithmDetails() {
+            try {
+                const response = await fetch('/api/algorithm-details');
+                const data = await response.json();
+                
+                if (data.success) {
+                    renderAlgorithms(data.data.basic_algorithms, 'basicAlgorithmsGrid', 'basic');
+                    renderAlgorithms(data.data.advanced_algorithms, 'advancedAlgorithmsGrid', 'advanced');
+                } else {
+                    console.error('알고리즘 데이터 로드 실패:', data.error);
+                    showFallbackContent();
+                }
+            } catch (error) {
+                console.error('API 호출 실패:', error);
+                showFallbackContent();
+            }
+        }
+
+        function renderAlgorithms(algorithms, containerId, category) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            
+            algorithms.forEach(algorithm => {
+                const card = createAlgorithmCard(algorithm, category);
+                container.appendChild(card);
+            });
+        }
+
+        function createAlgorithmCard(algorithm, category) {
+            const card = document.createElement('div');
+            card.className = `algorithm-card ${category}`;
+            
+            card.innerHTML = `
+                <div class="algorithm-header">
+                    <div class="algorithm-info">
+                        <h3 class="algorithm-name">${algorithm.name}</h3>
+                        <span class="algorithm-category ${category}">${category === 'basic' ? '기본' : '고급'}</span>
+                    </div>
+                    <div class="confidence-badge">
+                        신뢰도 ${algorithm.confidence}%
+                    </div>
+                </div>
+                
+                <p class="algorithm-description">${algorithm.description}</p>
+                
+                <div class="algorithm-details">
+                    <div class="detail-section ${category}">
+                        <div class="detail-title">
+                            <i class="fas fa-lightbulb"></i>
+                            작동 원리
+                        </div>
+                        <div class="detail-content">${algorithm.detailed_explanation}</div>
+                    </div>
+                    
+                    <div class="detail-section ${category}">
+                        <div class="detail-title">
+                            <i class="fas fa-cogs"></i>
+                            기술적 접근법
+                        </div>
+                        <div class="detail-content">${algorithm.technical_approach}</div>
+                    </div>
+                    
+                    <div class="advantages-limitations">
+                        <div class="advantage-list">
+                            <h5><i class="fas fa-thumbs-up"></i> 장점</h5>
+                            ${algorithm.advantages.map(item => `<div class="advantage-item">• ${item}</div>`).join('')}
+                        </div>
+                        <div class="limitation-list">
+                            <h5><i class="fas fa-exclamation-triangle"></i> 한계</h5>
+                            ${algorithm.limitations.map(item => `<div class="limitation-item">• ${item}</div>`).join('')}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="technical-specs">
+                    <div class="tech-spec-item">
+                        <span class="tech-spec-label">알고리즘 ID:</span>
+                        <span class="tech-spec-value">${algorithm.id}</span>
+                    </div>
+                    <div class="tech-spec-item">
+                        <span class="tech-spec-label">카테고리:</span>
+                        <span class="tech-spec-value">${algorithm.category}</span>
+                    </div>
+                    <div class="tech-spec-item">
+                        <span class="tech-spec-label">신뢰도:</span>
+                        <span class="tech-spec-value">${algorithm.confidence}%</span>
+                    </div>
+                </div>
+            `;
+            
+            return card;
+        }
+
+        function showFallbackContent() {
+            // API 실패 시 기본 내용 표시
+            const basicContainer = document.getElementById('basicAlgorithmsGrid');
+            const advancedContainer = document.getElementById('advancedAlgorithmsGrid');
+            
+            basicContainer.innerHTML = '<div style="text-align: center; color: #6c757d; padding: 40px;">기본 알고리즘 정보를 불러오는 중입니다...</div>';
+            advancedContainer.innerHTML = '<div style="text-align: center; color: #6c757d; padding: 40px;">고급 알고리즘 정보를 불러오는 중입니다...</div>';
+        }
+
+        // 인쇄 스타일 적용
+        function setupPrintStyles() {
+            const style = document.createElement('style');
+            style.textContent = `
+                @media print {
+                    .nav-buttons { display: none; }
+                    .algorithm-card { break-inside: avoid; }
+                    body { font-size: 12px; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        setupPrintStyles();
+    </script>
+</body>
+</html>
