@@ -227,7 +227,7 @@ class AdvancedLottoPredictor:
             }
         except Exception as e:
             print(f"빈도 분석 알고리즘 오류: {e}")
-            return self._generate_fallback_numbers("빈도 분석")
+            return self._generate_fallback_numbers("빈도 분석", "basic", 1)
 
     def algorithm_2_hot_cold_analysis(self):
         """2. 핫/콜드 분석 - 완전 수정된 버전"""
@@ -314,7 +314,7 @@ class AdvancedLottoPredictor:
             }
         except Exception as e:
             print(f"핫/콜드 분석 알고리즘 오류: {e}")
-            return self._generate_fallback_numbers("핫/콜드 분석")
+            return self._generate_fallback_numbers("핫/콜드 분석", "basic", 2)
 
     def algorithm_3_pattern_analysis(self):
         """3. 패턴 분석 - 완전 수정된 버전"""
@@ -430,7 +430,7 @@ class AdvancedLottoPredictor:
             }
         except Exception as e:
             print(f"패턴 분석 알고리즘 오류: {e}")
-            return self._generate_fallback_numbers("패턴 분석")
+            return self._generate_fallback_numbers("패턴 분석", "basic", 3)
 
     def algorithm_4_statistical_analysis(self):
         """4. 통계 분석 - 수정된 버전"""
@@ -495,7 +495,7 @@ class AdvancedLottoPredictor:
             }
         except Exception as e:
             print(f"통계 분석 알고리즘 오류: {e}")
-            return self._generate_fallback_numbers("통계 분석")
+            return self._generate_fallback_numbers("통계 분석", "basic", 4)
 
     def algorithm_5_machine_learning(self):
         """5. 머신러닝 - 수정된 버전"""
@@ -507,7 +507,7 @@ class AdvancedLottoPredictor:
             
             if self.numbers is None or len(self.numbers) < 50:
                 print(f"⚠️ 머신러닝: 데이터 부족 - 백업 모드")
-                return self._generate_fallback_numbers("머신러닝")
+                return self._generate_fallback_numbers("머신러닝", "basic", 5)
             
             # 분석할 회차 수를 랜덤하게 변경
             analysis_count = random.randint(8, 15)
@@ -555,7 +555,7 @@ class AdvancedLottoPredictor:
             }
         except Exception as e:
             print(f"머신러닝 알고리즘 오류: {e}")
-            return self._generate_fallback_numbers("머신러닝")
+            return self._generate_fallback_numbers("머신러닝", "basic", 5)
 
     def algorithm_6_neural_network(self):
         """6. 신경망 분석 - 수정된 안전 버전"""
@@ -633,7 +633,7 @@ class AdvancedLottoPredictor:
             }
         except Exception as e:
             print(f"신경망 분석 알고리즘 오류: {e}")
-            return self._generate_fallback_numbers("신경망 분석")
+            return self._generate_fallback_numbers("신경망 분석", "advanced", 6)
 
     def algorithm_7_markov_chain(self):
         """7. 마르코프 체인 - 완전 수정된 버전"""
@@ -830,7 +830,7 @@ class AdvancedLottoPredictor:
             }
         except Exception as e:
             print(f"마르코프 체인 알고리즘 오류: {e}")
-            return self._generate_fallback_numbers("마르코프 체인")
+            return self._generate_fallback_numbers("마르코프 체인", "advanced", 7)
 
     def algorithm_8_genetic_algorithm(self):
         """8. 유전자 알고리즘 - 수정된 버전"""
@@ -842,7 +842,7 @@ class AdvancedLottoPredictor:
             
             if self.numbers is None:
                 print(f"⚠️ 유전자 알고리즘: 데이터 없음 - 백업 모드")
-                return self._generate_fallback_numbers("유전자 알고리즘")
+                return self._generate_fallback_numbers("유전자 알고리즘", "advanced", 8)
             
             # 유전자 알고리즘 파라미터를 랜덤하게 변경
             population_size = random.randint(20, 40)
@@ -987,7 +987,7 @@ class AdvancedLottoPredictor:
             }
         except Exception as e:
             print(f"유전자 알고리즘 오류: {e}")
-            return self._generate_fallback_numbers("유전자 알고리즘")
+            return self._generate_fallback_numbers("유전자 알고리즘", "advanced", 8)
 
     def algorithm_9_correlation_analysis(self):
         """9. 동반출현 분석 - 완전 수정된 버전"""
@@ -999,7 +999,7 @@ class AdvancedLottoPredictor:
             
             if self.numbers is None or len(self.numbers) < 30:
                 print(f"⚠️ 동반출현 분석: 데이터 부족 - 백업 모드")
-                return self._generate_fallback_numbers("동반출현 분석")
+                return self._generate_fallback_numbers("동반출현 분석", "advanced", 9)
             
             # 분석 방법을 랜덤하게 변경
             analysis_methods = ['pairwise', 'triplet', 'conditional', 'temporal']
@@ -1210,7 +1210,7 @@ class AdvancedLottoPredictor:
             }
         except Exception as e:
             print(f"동반출현 분석 알고리즘 오류: {e}")
-            return self._generate_fallback_numbers("동반출현 분석")
+            return self._generate_fallback_numbers("동반출현 분석", "advanced", 9)
 
     def algorithm_10_time_series(self):
         """10. 시계열 분석 - 완전 수정된 버전"""
@@ -1222,7 +1222,7 @@ class AdvancedLottoPredictor:
             
             if self.numbers is None or len(self.numbers) < 20:
                 print(f"⚠️ 시계열 분석: 데이터 부족 - 백업 모드")
-                return self._generate_fallback_numbers("시계열 분석")
+                return self._generate_fallback_numbers("시계열 분석", "advanced", 10)
             
             # 시계열 분석 방법을 랜덤하게 선택
             analysis_methods = ['trend', 'seasonal', 'cyclic', 'momentum', 'regression']
@@ -1450,9 +1450,9 @@ class AdvancedLottoPredictor:
             }
         except Exception as e:
             print(f"시계열 분석 알고리즘 오류: {e}")
-            return self._generate_fallback_numbers("시계열 분석")
+            return self._generate_fallback_numbers("시계열 분석", "advanced", 10)
 
-    def _generate_fallback_numbers(self, algorithm_name):
+    def _generate_fallback_numbers(self, algorithm_name, original_category='basic', original_id=0):
         """백업용 번호 생성 - 항상 6개 보장 + 동적 시드"""
         # 백업용 번호도 동적 시드 사용
         seed = get_dynamic_seed()
@@ -1463,8 +1463,8 @@ class AdvancedLottoPredictor:
         return {
             'name': algorithm_name,
             'description': f'{algorithm_name} (백업 모드)',
-            'category': 'basic',
-            'algorithm_id': 0,
+            'category': original_category,  # 원래 카테고리 유지
+            'algorithm_id': original_id,
             'priority_numbers': fallback_numbers,
             'confidence': 50
         }
@@ -1520,7 +1520,9 @@ class AdvancedLottoPredictor:
                     
                 except Exception as e:
                     print(f"❌ 알고리즘 {i} 실행 오류: {e}")
-                    fallback = self._generate_fallback_numbers(f"알고리즘 {i}")
+                    # 알고리즘별 올바른 카테고리 설정
+                    category = 'basic' if i <= 5 else 'advanced'
+                    fallback = self._generate_fallback_numbers(f"알고리즘 {i}", category, i)
                     results[f"algorithm_{i:02d}"] = fallback
                     fallback_count += 1
             
@@ -1541,12 +1543,14 @@ class AdvancedLottoPredictor:
         print(f"🆘 긴급 백업 모드 활성화 - 동적 시드 적용")
         
         backup_algorithms = [
-            "빈도 분석", "핫/콜드 분석", "패턴 분석", "통계 분석", "머신러닝",
-            "신경망 분석", "마르코프 체인", "유전자 알고리즘", "동반출현 분석", "시계열 분석"
+            ("빈도 분석", "basic"), ("핫/콜드 분석", "basic"), ("패턴 분석", "basic"), 
+            ("통계 분석", "basic"), ("머신러닝", "basic"),
+            ("신경망 분석", "advanced"), ("마르코프 체인", "advanced"), ("유전자 알고리즘", "advanced"), 
+            ("동반출현 분석", "advanced"), ("시계열 분석", "advanced")
         ]
         
         results = {}
-        for i, name in enumerate(backup_algorithms, 1):
+        for i, (name, category) in enumerate(backup_algorithms, 1):
             # 각 백업 번호마다 다른 시드 사용
             seed = get_dynamic_seed() + i * 10000
             random.seed(seed)
@@ -1555,7 +1559,7 @@ class AdvancedLottoPredictor:
             results[f"algorithm_{i:02d}"] = {
                 'name': name,
                 'description': f'{name} (긴급 백업)',
-                'category': 'advanced' if i > 5 else 'basic',
+                'category': category,
                 'algorithm_id': i,
                 'priority_numbers': backup_numbers,
                 'confidence': 50
