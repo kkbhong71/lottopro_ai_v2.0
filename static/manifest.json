@@ -1,162 +1,167 @@
 {
-    "name": "LottoPro AI v2.0 - 무료 AI 로또 예측 서비스",
-    "short_name": "LottoPro AI",
-    "description": "5가지 독자적인 AI 모델이 과거 데이터를 분석하여 최적의 로또 예상번호를 무료로 추천하는 서비스",
-    "version": "2.0.0",
-    "start_url": "/",
-    "scope": "/",
-    "display": "standalone",
-    "orientation": "portrait-primary",
-    "theme_color": "#667eea",
-    "background_color": "#ffffff",
-    "lang": "ko",
-    "dir": "ltr",
-    "categories": ["utilities", "productivity", "entertainment"],
-    "icons": [
-        {
-            "src": "/static/images/icon-72x72.png",
-            "sizes": "72x72",
-            "type": "image/png",
-            "purpose": "any maskable"
-        },
-        {
-            "src": "/static/images/icon-96x96.png",
-            "sizes": "96x96",
-            "type": "image/png",
-            "purpose": "any maskable"
-        },
-        {
-            "src": "/static/images/icon-128x128.png",
-            "sizes": "128x128",
-            "type": "image/png",
-            "purpose": "any maskable"
-        },
-        {
-            "src": "/static/images/icon-144x144.png",
-            "sizes": "144x144",
-            "type": "image/png",
-            "purpose": "any maskable"
-        },
-        {
-            "src": "/static/images/icon-152x152.png",
-            "sizes": "152x152",
-            "type": "image/png",
-            "purpose": "any maskable"
-        },
-        {
-            "src": "/static/images/icon-192x192.png",
-            "sizes": "192x192",
-            "type": "image/png",
-            "purpose": "any maskable"
-        },
-        {
-            "src": "/static/images/icon-384x384.png",
-            "sizes": "384x384",
-            "type": "image/png",
-            "purpose": "any maskable"
-        },
-        {
-            "src": "/static/images/icon-512x512.png",
-            "sizes": "512x512",
-            "type": "image/png",
-            "purpose": "any maskable"
-        }
-    ],
-    "screenshots": [
-        {
-            "src": "/static/images/screenshot-desktop.png",
-            "sizes": "1280x720",
-            "type": "image/png",
-            "form_factor": "wide",
-            "label": "LottoPro AI 데스크톱 화면"
-        },
-        {
-            "src": "/static/images/screenshot-mobile.png",
-            "sizes": "390x844",
-            "type": "image/png",
-            "form_factor": "narrow",
-            "label": "LottoPro AI 모바일 화면"
-        }
-    ],
-    "shortcuts": [
-        {
-            "name": "AI 예측",
-            "short_name": "예측",
-            "description": "AI 모델을 사용한 로또 번호 예측",
-            "url": "/#prediction",
-            "icons": [
-                {
-                    "src": "/static/images/shortcut-predict.png",
-                    "sizes": "96x96",
-                    "type": "image/png"
-                }
-            ]
-        },
-        {
-            "name": "QR 스캔",
-            "short_name": "QR스캔",
-            "description": "QR코드로 당첨 확인",
-            "url": "/#qr-scan",
-            "icons": [
-                {
-                    "src": "/static/images/shortcut-qr.png",
-                    "sizes": "96x96",
-                    "type": "image/png"
-                }
-            ]
-        },
-        {
-            "name": "내 번호",
-            "short_name": "번호관리",
-            "description": "저장된 번호 관리",
-            "url": "/#my-numbers",
-            "icons": [
-                {
-                    "src": "/static/images/shortcut-numbers.png",
-                    "sizes": "96x96",
-                    "type": "image/png"
-                }
-            ]
-        },
-        {
-            "name": "통계 분석",
-            "short_name": "통계",
-            "description": "로또 통계 및 분석",
-            "url": "/#stats",
-            "icons": [
-                {
-                    "src": "/static/images/shortcut-stats.png",
-                    "sizes": "96x96",
-                    "type": "image/png"
-                }
-            ]
-        }
-    ],
-    "features": [
-        "5가지 AI 예측 모델",
-        "QR코드 당첨 확인",
-        "번호 저장 및 관리",
-        "실시간 통계 분석",
-        "당첨 시뮬레이션",
-        "세금 계산기",
-        "로또 판매점 찾기",
-        "이월수/궁합수 분석",
-        "패턴 분석",
-        "오프라인 지원"
-    ],
-    "related_applications": [],
-    "prefer_related_applications": false,
-    "edge_side_panel": {
-        "preferred_width": 400
+  "name": "로또프로 AI v2.0 - 10개 고급 AI 알고리즘 로또 예측 서비스",
+  "short_name": "로또프로 AI",
+  "description": "10가지 고급 AI 알고리즘(빈도분석, 머신러닝, 신경망, 마르코프체인 등)이 과거 데이터를 분석하여 로또 예상번호를 제공하는 서비스",
+  "version": "2.0.0",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#667eea",
+  "background_color": "#ffffff",
+  "lang": "ko",
+  "dir": "ltr",
+  "categories": ["utilities", "entertainment", "education"],
+  "icons": [
+    {
+      "src": "/static/images/icon-72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any maskable"
     },
-    "handle_links": "preferred",
-    "launch_handler": {
-        "client_mode": "navigate-existing"
+    {
+      "src": "/static/images/icon-96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any maskable"
     },
-    "protocol_handlers": [
+    {
+      "src": "/static/images/icon-128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/images/icon-144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/images/icon-152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/images/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/images/icon-384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/images/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/static/images/screenshot-desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "로또프로 AI 데스크톱 화면 - 10개 알고리즘 결과"
+    },
+    {
+      "src": "/static/images/screenshot-mobile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "로또프로 AI 모바일 화면 - AI 예측 결과"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "10개 AI 알고리즘 실행",
+      "short_name": "AI 예측",
+      "description": "빈도분석, 머신러닝, 신경망 등 10개 알고리즘으로 번호 예측",
+      "url": "/?action=predict",
+      "icons": [
         {
-            "protocol": "web+lottopro",
-            "url": "/?action=%s"
+          "src": "/static/images/icon-96.png",
+          "sizes": "96x96",
+          "type": "image/png"
         }
-    ]
+      ]
+    },
+    {
+      "name": "통계 분석",
+      "short_name": "통계",
+      "description": "당첨번호 빈도 및 패턴 통계 분석",
+      "url": "/?action=stats",
+      "icons": [
+        {
+          "src": "/static/images/icon-96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "백테스팅",
+      "short_name": "성능분석",
+      "description": "알고리즘 성능 백테스팅 결과",
+      "url": "/?action=backtest",
+      "icons": [
+        {
+          "src": "/static/images/icon-96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "모니터링",
+      "short_name": "시스템",
+      "description": "시스템 성능 모니터링 대시보드",
+      "url": "/?action=monitoring",
+      "icons": [
+        {
+          "src": "/static/images/icon-96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
+  "features": [
+    "10개 고급 AI 알고리즘 (빈도분석, 핫/콜드분석, 패턴분석, 통계분석, 머신러닝)",
+    "5개 첨단 AI 기술 (신경망분석, 마르코프체인, 유전자알고리즘, 동반출현분석, 시계열분석)",
+    "실시간 성능 모니터링",
+    "알고리즘 백테스팅",
+    "당첨번호 통계 분석",
+    "번호 검증 시스템",
+    "반응형 웹 디자인",
+    "오프라인 지원",
+    "성능 최적화",
+    "교육용 알고리즘 설명"
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "handle_links": "preferred",
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
+  "protocol_handlers": [
+    {
+      "protocol": "web+lottopro",
+      "url": "/?action=%s"
+    }
+  ],
+  "iarc_rating_id": "",
+  "disclaimer": {
+    "ko": "본 서비스는 교육 및 오락 목적으로 제공됩니다. 당첨을 보장하지 않으며, 책임감 있는 이용을 권장합니다.",
+    "en": "This service is provided for educational and entertainment purposes only. No guarantee of winning, responsible use is recommended."
+  }
 }
