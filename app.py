@@ -10,7 +10,8 @@ import itertools
 import math
 import time
 import hashlib
-from datetime import datetime
+import json
+from datetime import datetime, timedelta
 
 warnings.filterwarnings('ignore')
 
@@ -1568,8 +1569,42 @@ class AdvancedLottoPredictor:
         
         return results
 
+# 유틸리티 함수들 (새로운 엔드포인트에서 사용)
+def fix_invalid_numbers(numbers):
+    """잘못된 번호 수정"""
+    try:
+        fixed = []
+        
+        # 유효한 번호만 추출
+        if isinstance(numbers, list):
+            for num in numbers:
+                try:
+                    n = int(num)
+                    if 1 <= n <= 45 and n not in fixed:
+                        fixed.append(n)
+                except:
+                    continue
+        
+        # 부족한 번호 랜덤 생성
+        while len(fixed) < 6:
+            rand_num = random.randint(1, 45)
+            if rand_num not in fixed:
+                fixed.append(rand_num)
+        
+        # 6개로 제한하고 정렬
+        return sorted(fixed[:6])
+        
+    except:
+        return generate_default_numbers()
+
+def generate_default_numbers():
+    """기본 번호 생성"""
+    numbers = random.sample(range(1, 46), 6)
+    return sorted(numbers)
+
 # 전역 변수
 predictor = None
+start_time = time.time()  # 앱 시작 시간 기록 (시스템 상태용)
 
 def get_predictor():
     global predictor
@@ -1579,6 +1614,7 @@ def get_predictor():
         print(f"✅ LottoPredictor 인스턴스 생성 완료")
     return predictor
 
+# 기본 라우트들
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -1588,6 +1624,7 @@ def algorithms():
     """알고리즘 상세 설명 페이지"""
     return render_template('algorithms.html')
 
+# 기존 API 엔드포인트들
 @app.route('/api/health')
 def health():
     """헬스체크 API"""
@@ -1675,293 +1712,4 @@ def get_algorithm_details():
                     'name': '신경망 분석',
                     'category': 'advanced',
                     'description': '다층 신경망 시뮬레이션을 통한 복합 패턴 학습 예측을 수행합니다.',
-                    'detailed_explanation': '인공신경망의 원리를 모방하여 다층 퍼셉트론 구조를 시뮬레이션합니다. 입력층, 은닉층, 출력층을 통해 복잡한 비선형 패턴을 학습하고, 활성화 함수와 가중치 조정을 통해 최적의 예측 모델을 구축합니다.',
-                    'technical_approach': '다층 퍼셉트론, 활성화 함수(시그모이드, ReLU), 역전파 시뮬레이션',
-                    'advantages': ['복잡한 패턴 인식', '비선형 관계 학습', '자동 특성 추출'],
-                    'limitations': ['블랙박스 모델', '계산 복잡도 높음', '과적합 위험'],
-                    'confidence': 79
-                },
-                {
-                    'id': 7,
-                    'name': '마르코프 체인',
-                    'category': 'advanced',
-                    'description': '상태 전이 확률을 이용한 연속성 패턴 예측을 수행합니다.',
-                    'detailed_explanation': '마르코프 체인 이론을 적용하여 이전 상태(과거 당첨번호)가 다음 상태(미래 당첨번호)에 미치는 영향을 분석합니다. 1차, 2차, 3차 마르코프 체인을 통해 다양한 시간 깊이의 의존성을 모델링합니다.',
-                    'technical_approach': '상태 전이 행렬, 확률 체인, N차 의존성 모델링',
-                    'advantages': ['시간적 연속성 고려', '확률적 접근', '다양한 차수 지원'],
-                    'limitations': ['마르코프 가정의 제약', '상태 공간 복잡성'],
-                    'confidence': 74
-                },
-                {
-                    'id': 8,
-                    'name': '유전자 알고리즘',
-                    'category': 'advanced',
-                    'description': '진화론적 최적화를 통한 적응형 번호 조합 예측을 수행합니다.',
-                    'detailed_explanation': '다윈의 진화론을 모방한 최적화 알고리즘으로, 선택, 교차, 돌연변이 과정을 통해 최적의 번호 조합을 찾습니다. 여러 세대에 걸쳐 적합도가 높은 개체들을 선별하고 발전시킵니다.',
-                    'technical_approach': '유전자 표현, 적합도 함수, 선택/교차/돌연변이 연산',
-                    'advantages': ['전역 최적화', '다양성 유지', '적응적 탐색'],
-                    'limitations': ['수렴 속도 느림', '매개변수 튜닝 필요'],
-                    'confidence': 77
-                },
-                {
-                    'id': 9,
-                    'name': '동반출현 분석',
-                    'category': 'advanced',
-                    'description': '번호 간 상관관계와 동시 출현 패턴을 분석하여 예측합니다.',
-                    'detailed_explanation': '여러 번호가 함께 당첨되는 패턴을 분석하여 번호 간의 상관관계를 발견합니다. 페어, 트리플렛, 조건부 확률 등 다양한 관점에서 번호 간의 연관성을 평가합니다.',
-                    'technical_approach': '상관관계 분석, 동시발생 행렬, 조건부 확률',
-                    'advantages': ['번호 간 관계 고려', '다양한 분석 방법', '패턴 발견'],
-                    'limitations': ['우연의 일치 가능성', '복잡한 해석'],
-                    'confidence': 75
-                },
-                {
-                    'id': 10,
-                    'name': '시계열 분석',
-                    'category': 'advanced',
-                    'description': '시간 흐름에 따른 패턴 변화를 분석하여 예측합니다.',
-                    'detailed_explanation': '시간 순서를 고려한 데이터 분석으로 트렌드, 계절성, 주기성 등을 파악합니다. 트렌드 분석, 계절 분해, 순환 패턴, 모멘텀 분석 등 다양한 시계열 기법을 활용합니다.',
-                    'technical_approach': '트렌드 분석, 계절성 분해, 자기회귀 모델, 이동평균',
-                    'advantages': ['시간적 패턴 고려', '다양한 분석 기법', '예측 정확도'],
-                    'limitations': ['긴 분석 기간 필요', '복잡한 모델'],
-                    'confidence': 72
-                }
-            ]
-        }
-        
-        return jsonify({
-            'success': True,
-            'data': algorithm_details
-        })
-        
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
-
-@app.route('/api/predictions')
-def get_predictions():
-    """10가지 알고리즘 예측 API - 랜덤성 개선"""
-    try:
-        print(f"📡 예측 API 호출 받음 - 동적 시드 시스템 활성화")
-        
-        # 추가 랜덤성을 위한 전역 시드 재설정
-        global_seed = get_dynamic_seed()
-        random.seed(global_seed)
-        np.random.seed(global_seed)
-        
-        pred = get_predictor()
-        
-        if pred.data is None:
-            print(f"⚠️ 데이터 없음 - 재로드 시도")
-            if not pred.load_data():
-                print(f"❌ 데이터 재로드 실패")
-                return jsonify({
-                    'success': False,
-                    'error': 'CSV 데이터를 로드할 수 없습니다.'
-                }), 500
-        
-        # 10가지 알고리즘 모두 실행
-        print(f"🎯 10가지 알고리즘 실행 시작 (글로벌 시드: {global_seed})")
-        results = pred.generate_all_predictions()
-        
-        # 최종 검증: 모든 알고리즘이 6개 번호를 반환하는지 확인
-        final_check_count = 0
-        for key, result in results.items():
-            if len(result['priority_numbers']) != 6:
-                print(f"🔧 최종 검증: {result['name']} 번호 보정 중...")
-                result['priority_numbers'] = ensure_six_numbers(result['priority_numbers'])
-                final_check_count += 1
-        
-        if final_check_count > 0:
-            print(f"🔧 최종 검증에서 {final_check_count}개 알고리즘 보정됨")
-        
-        # 결과 다양성 검증
-        all_results = [tuple(result['priority_numbers']) for result in results.values()]
-        unique_results = set(all_results)
-        duplicate_count = len(all_results) - len(unique_results)
-        
-        response_data = {
-            'success': True,
-            'data': results,
-            'total_algorithms': len(results),
-            'total_draws': safe_int(len(pred.data)) if pred.data is not None else 0,
-            'message': '10가지 AI 알고리즘이 각각 1개씩의 우선 번호를 생성했습니다.',
-            'randomness_info': {
-                'global_seed': global_seed,
-                'unique_results': len(unique_results),
-                'duplicate_results': duplicate_count,
-                'system_status': 'dynamic_seed_active'
-            }
-        }
-        
-        print(f"✅ 예측 API 응답 완료 - {len(results)}개 알고리즘, {len(unique_results)}개 고유 결과")
-        if duplicate_count > 0:
-            print(f"⚠️ {duplicate_count}개 중복 결과 발견 - 시드 시스템 점검 필요")
-            
-        return jsonify(response_data)
-        
-    except Exception as e:
-        print(f"❌ API 예측 에러: {e}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({
-            'success': False,
-            'error': f'예측 생성 중 오류가 발생했습니다: {str(e)}'
-        }), 500
-
-@app.route('/api/statistics')
-def get_statistics():
-    """통계 정보 API"""
-    try:
-        print(f"📊 통계 API 호출 받음")
-        pred = get_predictor()
-        
-        default_stats = {
-            'total_draws': 1190,
-            'algorithms_count': 10,
-            'last_draw_info': {
-                'round': 1190,
-                'date': '2024-01-01',
-                'numbers': [1, 7, 13, 19, 25, 31],
-                'bonus': 7
-            },
-            'most_frequent': [{'number': i, 'count': 50-i} for i in range(1, 11)],
-            'least_frequent': [{'number': i+35, 'count': i} for i in range(1, 11)],
-            'recent_hot': [{'number': i+10, 'count': 20-i} for i in range(1, 11)]
-        }
-        
-        if pred.data is not None and pred.numbers is not None:
-            try:
-                print(f"📈 실제 데이터로 통계 생성")
-                all_numbers = pred.numbers.flatten()
-                frequency = Counter(all_numbers)
-                
-                most_common = frequency.most_common(10)
-                least_common = frequency.most_common()[:-11:-1]
-                
-                last_row = pred.data.iloc[-1]
-                
-                stats = {
-                    'total_draws': safe_int(len(pred.data)),
-                    'algorithms_count': 10,
-                    'most_frequent': [{'number': safe_int(num), 'count': safe_int(count)} for num, count in most_common],
-                    'least_frequent': [{'number': safe_int(num), 'count': safe_int(count)} for num, count in least_common],
-                    'recent_hot': [{'number': safe_int(num), 'count': safe_int(count)} for num, count in most_common[:10]],
-                    'last_draw_info': {
-                        'round': safe_int(last_row.get('round', 1190)),
-                        'date': str(last_row.get('draw_date', '2024-01-01')),
-                        'numbers': safe_int_list(pred.numbers[-1].tolist()),
-                        'bonus': safe_int(last_row.get('bonus_num', 7)) if 'bonus_num' in last_row else 7
-                    }
-                }
-                print(f"✅ 실제 데이터 통계 생성 완료")
-            except Exception as e:
-                print(f"❌ 실제 데이터 통계 생성 실패: {e}")
-                stats = default_stats
-        else:
-            print(f"⚠️ 데이터 없음 - 기본 통계 사용")
-            stats = default_stats
-        
-        return jsonify({
-            'success': True,
-            'data': stats
-        })
-        
-    except Exception as e:
-        print(f"❌ API 통계 에러: {e}")
-        return jsonify({
-            'success': False,
-            'error': 'Statistics temporarily unavailable'
-        }), 500
-
-# 나머지 API 엔드포인트들...
-@app.route('/api/clear-cache', methods=['POST'])
-def clear_cache():
-    """캐시 강제 삭제 API - 랜덤성 초기화"""
-    try:
-        request_data = request.get_json() or {}
-        clear_algorithms = request_data.get('clear_algorithms', [])
-        reason = request_data.get('reason', 'manual_clear')
-        
-        print(f"🧹 캐시 클리어 요청: {reason}")
-        
-        # 전역 예측기 재생성 (중요!)
-        global predictor
-        predictor = None
-        gc.collect()  # 메모리 정리
-        
-        # 새로운 예측기 생성
-        predictor = get_predictor()
-        
-        cleared_count = 0
-        
-        # 특정 알고리즘 캐시 클리어
-        if clear_algorithms:
-            for algorithm in clear_algorithms:
-                cleared_count += 1
-                print(f"🗑️ {algorithm} 캐시 클리어됨")
-        
-        # 추가 초기화 작업
-        if hasattr(predictor, 'algorithm_cache'):
-            predictor.algorithm_cache = {}
-        
-        response_data = {
-            'success': True,
-            'cleared_algorithms': clear_algorithms,
-            'cleared_count': cleared_count,
-            'reason': reason,
-            'timestamp': datetime.now().isoformat(),
-            'message': '캐시가 성공적으로 클리어되었습니다.'
-        }
-        
-        print(f"✅ 캐시 클리어 완료: {cleared_count}개 항목")
-        return jsonify(response_data)
-        
-    except Exception as e:
-        print(f"❌ 캐시 클리어 실패: {e}")
-        return jsonify({
-            'success': False,
-            'error': f'캐시 클리어 중 오류가 발생했습니다: {str(e)}'
-        }), 500
-
-# 에러 핸들러
-@app.errorhandler(404)
-def not_found(error):
-    return jsonify({
-        'success': False,
-        'error': 'API 엔드포인트를 찾을 수 없습니다'
-    }), 404
-
-@app.errorhandler(500)
-def internal_error(error):
-    return jsonify({
-        'success': False,
-        'error': '서버 내부 오류가 발생했습니다'
-    }), 500
-
-# 메인 실행
-if __name__ == '__main__':
-    # 서버 시작 전 초기화
-    print("🚀 LottoPro AI v2.0 서버 시작 중... (랜덤성 개선 버전)")
-    
-    # 예측기 미리 로드
-    try:
-        initial_predictor = get_predictor()
-        print("✅ 예측기 초기화 완료")
-    except Exception as e:
-        print(f"⚠️ 예측기 초기화 실패: {e}")
-    
-    # 랜덤성 시스템 정보
-    print("🎲 랜덤성 개선 기능:")
-    print("  - 동적 시드 시스템 활성화")
-    print("  - 알고리즘별 개별 시드 적용")
-    print("  - 강제 새로고침 API 추가")
-    print("  - 캐시 버스팅 시스템 적용")
-    
-    # 서버 실행
-    app.run(
-        host='0.0.0.0',
-        port=int(os.environ.get('PORT', 5000)),
-        debug=os.environ.get('DEBUG', 'False').lower() == 'true'
-    )
+                    'detailed_explanation': '인공신경망의 원리를 모방하여 다층 퍼셉트론 구조를 시뮬레이션합니다. 입력층, 은닉층, 출력층을 통해 복잡한 비선형 패턴을 학습하고, 활성화 함수와 가중
