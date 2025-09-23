@@ -12,6 +12,13 @@
     <meta property="og:description" content="빈도분석부터 신경망까지, 10가지 최첨단 AI 기술로 로또 번호를 예측합니다">
     <meta property="og:type" content="website">
     
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="로또프로 AI">
+    
     <!-- Stylesheets -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
@@ -19,6 +26,7 @@
     
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/icon-192.png') }}">
     
     <!-- Preload critical resources -->
     <link rel="preload" href="{{ url_for('static', filename='css/style.css') }}" as="style">
@@ -26,7 +34,7 @@
 </head>
 <body>
     <div class="container">
-        <!-- 시스템 상태 알림 (새로 추가) -->
+        <!-- 시스템 상태 알림 -->
         <div id="systemStatus" class="system-status" style="display: none;">
             <div class="status-content">
                 <i class="fas fa-info-circle"></i>
@@ -40,12 +48,12 @@
             <div class="logo">
                 <h1><i class="fas fa-brain"></i> 로또프로 AI v2.0</h1>
                 <p>10가지 최첨단 AI 알고리즘으로 예측하는 프리미엄 로또 번호</p>
-                <!-- 시스템 상태 인디케이터 추가 -->
+                <!-- 시스템 건강 상태 표시 -->
                 <div class="system-health">
-                    <span class="health-indicator" id="healthIndicator">
+                    <div class="health-indicator" id="healthIndicator">
                         <i class="fas fa-circle"></i>
                         <span>시스템 상태: <span id="healthStatus">확인 중</span></span>
-                    </span>
+                    </div>
                 </div>
             </div>
             <div class="data-info">
@@ -119,7 +127,7 @@
             </div>
         </div>
 
-        <!-- 메인 컨트롤 -->
+        <!-- 메인 컨트롤 (새로운 버튼들 추가) -->
         <div class="main-controls">
             <button id="generateBtn" class="generate-btn">
                 <i class="fas fa-magic"></i>
@@ -129,11 +137,23 @@
                 <i class="fas fa-chart-bar"></i>
                 <span>통계 분석</span>
             </button>
+            <button id="backtestBtn" class="backtest-btn">
+                <i class="fas fa-chart-area"></i>
+                <span>백테스팅 실행</span>
+            </button>
+            <button id="monitoringBtn" class="monitoring-btn">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>모니터링 대시보드</span>
+            </button>
+            <button id="exportBtn" class="export-btn">
+                <i class="fas fa-download"></i>
+                <span>결과 내보내기</span>
+            </button>
         </div>
 
-        <!-- 성능 지표 -->
+        <!-- 성능 지표 섹션 (개선됨) -->
         <div class="performance-indicators" style="display: none;" id="performanceSection">
-            <h3><i class="fas fa-tachometer-alt"></i> AI 성능 지표</h3>
+            <h3><i class="fas fa-tachometer-alt"></i> 시스템 성능 지표</h3>
             <div class="indicators-grid">
                 <div class="indicator-card">
                     <div class="indicator-value" id="processingTime">-</div>
@@ -154,7 +174,33 @@
             </div>
         </div>
 
-        <!-- 로딩 인디케이터 -->
+        <!-- 검증 상태 표시 (새로 추가) -->
+        <div id="validationStatus" class="validation-status-enhanced" style="display: none;">
+            <div class="validation-header">
+                <i class="fas fa-check-shield"></i>
+                <h4>알고리즘 검증 결과</h4>
+            </div>
+            <div class="validation-summary">
+                <div class="validation-stat">
+                    <div class="validation-stat-value" id="totalAlgoCount">0</div>
+                    <div class="validation-stat-label">총 알고리즘</div>
+                </div>
+                <div class="validation-stat">
+                    <div class="validation-stat-value" id="basicAlgoCount">0</div>
+                    <div class="validation-stat-label">기본 AI</div>
+                </div>
+                <div class="validation-stat">
+                    <div class="validation-stat-value" id="advancedAlgoCount">0</div>
+                    <div class="validation-stat-label">고급 AI</div>
+                </div>
+                <div class="validation-stat">
+                    <div class="validation-stat-value" id="validationResult">완료</div>
+                    <div class="validation-stat-label">검증 상태</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 로딩 인디케이터 (개선됨) -->
         <div id="loadingIndicator" class="loading" style="display: none;">
             <div class="spinner"></div>
             <p>10개 AI 알고리즘이 번호를 분석하고 있습니다...</p>
@@ -164,7 +210,7 @@
                 </div>
                 <span class="progress-text" id="progressText">초기화 중...</span>
             </div>
-            <!-- 알고리즘별 진행 상태 표시 (새로 추가) -->
+            <!-- 알고리즘별 진행 상태 표시 -->
             <div class="algorithm-progress" id="algorithmProgress" style="display: none;">
                 <div class="progress-grid">
                     <div class="progress-item" data-algorithm="1">
@@ -211,6 +257,46 @@
             </div>
         </div>
 
+        <!-- 지연 로딩 플레이스홀더 요소들 (새로 추가) -->
+        <div class="lazy-load-predictions" style="display: none;">
+            <div class="lazy-loading-enhanced">
+                <div class="lazy-loading-content">
+                    <div class="lazy-loading-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <div class="lazy-loading-text">예측 결과 로딩 중...</div>
+                    <div class="lazy-loading-subtext">AI 알고리즘이 데이터를 분석하고 있습니다</div>
+                    <div class="lazy-loading-progress"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="lazy-load-statistics" style="display: none;">
+            <div class="lazy-loading-enhanced">
+                <div class="lazy-loading-content">
+                    <div class="lazy-loading-icon">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <div class="lazy-loading-text">통계 데이터 로딩 중...</div>
+                    <div class="lazy-loading-subtext">과거 당첨번호를 분석하고 있습니다</div>
+                    <div class="lazy-loading-progress"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="lazy-load-backtest" style="display: none;">
+            <div class="lazy-loading-enhanced">
+                <div class="lazy-loading-content">
+                    <div class="lazy-loading-icon">
+                        <i class="fas fa-chart-area"></i>
+                    </div>
+                    <div class="lazy-loading-text">백테스트 결과 로딩 중...</div>
+                    <div class="lazy-loading-subtext">알고리즘 성능을 분석하고 있습니다</div>
+                    <div class="lazy-loading-progress"></div>
+                </div>
+            </div>
+        </div>
+
         <!-- 알고리즘별 예측 결과 -->
         <div id="predictionsContainer" class="predictions-container" style="display: none;">
             <div class="predictions-header">
@@ -228,10 +314,10 @@
                         <i class="fas fa-trophy"></i>
                         <span>총 <span id="totalAlgoCount">10</span>개 우선 번호</span>
                     </span>
-                    <!-- 번호 검증 상태 표시 (새로 추가) -->
-                    <span class="summary-item validation-status" id="validationStatus" style="display: none;">
+                    <!-- 번호 검증 상태 표시 -->
+                    <span class="summary-item validation-status" id="validationStatusSummary" style="display: none;">
                         <i class="fas fa-shield-alt"></i>
-                        <span>번호 검증: <span id="validationResult">완료</span></span>
+                        <span>번호 검증: <span id="validationResultSummary">완료</span></span>
                     </span>
                 </div>
             </div>
@@ -615,7 +701,7 @@
         </footer>
     </div>
 
-    <!-- 모달 - 번호 세트 상세보기 -->
+    <!-- 모달 - 번호 세트 상세보기 (개선됨) -->
     <div id="numbersModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -623,14 +709,26 @@
                 <span class="close">&times;</span>
             </div>
             <div class="modal-body">
+                <!-- 알고리즘 배지 및 메타 정보 -->
                 <div class="modal-info">
-                    <div class="algorithm-badge-modal" id="modalAlgorithmBadge"></div>
-                    <div class="confidence-score" id="modalConfidence">
+                    <span id="modalAlgorithmBadge" class="algorithm-badge-modal basic">CLASSIC</span>
+                    <span id="modalConfidence" class="confidence-score">
                         <i class="fas fa-star"></i>
-                        <span>신뢰도: 높음</span>
-                    </div>
+                        <span>신뢰도: 높음 (85%)</span>
+                    </span>
                 </div>
-                <div id="modalNumbers" class="modal-numbers"></div>
+                
+                <!-- 번호 검증 상태 표시 -->
+                <div class="modal-validation-status">
+                    <i class="fas fa-check-circle validation-icon"></i>
+                    <span class="validation-text">번호 검증: </span>
+                    <span id="modalValidation">완료</span>
+                </div>
+                
+                <div class="modal-numbers" id="modalNumbers">
+                    <!-- JavaScript로 생성 -->
+                </div>
+                
                 <div class="modal-stats">
                     <div class="stat-item">
                         <span class="stat-label">예상 적중률:</span>
@@ -638,29 +736,23 @@
                     </div>
                     <div class="stat-item">
                         <span class="stat-label">알고리즘 타입:</span>
-                        <span class="stat-value" id="modalAlgoType">-</span>
+                        <span class="stat-value" id="modalAlgoType">기본 AI 알고리즘</span>
                     </div>
                     <div class="stat-item">
                         <span class="stat-label">분석 데이터:</span>
                         <span class="stat-value" id="modalDataSize">1,190회차</span>
                     </div>
-                    <!-- 번호 검증 상태 추가 -->
-                    <div class="stat-item">
-                        <span class="stat-label">번호 검증:</span>
-                        <span class="stat-value" id="modalValidation">
-                            <i class="fas fa-check-circle" style="color: #4ECDC4;"></i> 완료
-                        </span>
-                    </div>
                 </div>
+                
                 <div class="modal-actions">
                     <button id="copyNumbers" class="copy-btn">
-                        <i class="fas fa-copy"></i> 번호 복사
+                        <i class="fas fa-copy"></i> 복사
                     </button>
                     <button id="saveNumbers" class="save-btn">
-                        <i class="fas fa-save"></i> 저장하기
+                        <i class="fas fa-save"></i> 저장
                     </button>
                     <button id="analyzeNumbers" class="analyze-btn">
-                        <i class="fas fa-search"></i> 상세 분석
+                        <i class="fas fa-search"></i> 분석
                     </button>
                 </div>
             </div>
@@ -682,14 +774,51 @@
         </div>
     </div>
 
+    <!-- 모니터링 모달 (새로 추가) -->
+    <div id="monitoringModal" class="modal">
+        <div class="modal-content monitoring-modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-tachometer-alt"></i> 시스템 모니터링</h3>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="monitoringContent">
+                    <!-- JavaScript로 동적 생성 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 백테스트 모달 (새로 추가) -->
+    <div id="backtestModal" class="modal">
+        <div class="modal-content backtest-modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-chart-area"></i> 백테스팅 결과</h3>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="backtestContent">
+                    <!-- JavaScript로 동적 생성 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- PWA 설치 배너 -->
     <div id="installBanner" class="install-banner" style="display: none;">
         <div class="banner-content">
             <i class="fas fa-mobile-alt"></i>
             <span>앱으로 설치하여 더 빠르게 이용하세요!</span>
-            <button id="installBtn" class="install-btn">설치</button>
+            <button id="installBtn" class="install-btn">
+                <i class="fas fa-download"></i> 설치
+            </button>
             <button id="dismissBtn" class="dismiss-btn">&times;</button>
         </div>
+    </div>
+
+    <!-- 시스템 알림 컨테이너 (새로 추가) -->
+    <div class="system-notifications" id="systemNotifications">
+        <!-- 동적으로 생성되는 알림들 -->
     </div>
 
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
@@ -723,6 +852,14 @@
             if (window.performance) {
                 const loadTime = window.performance.timing.loadEventEnd - window.performance.timing.navigationStart;
                 console.log(`페이지 로드 시간: ${loadTime}ms`);
+                
+                // 성능 메트릭 기록
+                if (window.lottoApp && window.lottoApp.trackUserActivity) {
+                    window.lottoApp.trackUserActivity('page_load_complete', {
+                        loadTime: loadTime,
+                        timestamp: Date.now()
+                    });
+                }
             }
         });
 
@@ -730,6 +867,44 @@
         document.getElementById('dismissStatus')?.addEventListener('click', () => {
             document.getElementById('systemStatus').style.display = 'none';
         });
+
+        // 에러 모니터링
+        window.addEventListener('error', (e) => {
+            console.error('JavaScript 에러:', e.error);
+            if (window.lottoApp && window.lottoApp.trackUserActivity) {
+                window.lottoApp.trackUserActivity('javascript_error', {
+                    message: e.message,
+                    filename: e.filename,
+                    lineno: e.lineno,
+                    colno: e.colno
+                });
+            }
+        });
+
+        // 네트워크 상태 모니터링
+        window.addEventListener('online', () => {
+            if (window.lottoApp && window.lottoApp.showSuccess) {
+                window.lottoApp.showSuccess('네트워크 연결이 복구되었습니다.');
+            }
+        });
+
+        window.addEventListener('offline', () => {
+            if (window.lottoApp && window.lottoApp.showError) {
+                window.lottoApp.showError('네트워크 연결이 끊어졌습니다.');
+            }
+        });
+
+        // 서비스 워커 등록
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', async () => {
+                try {
+                    const registration = await navigator.serviceWorker.register('/sw.js');
+                    console.log('Service Worker 등록 성공:', registration);
+                } catch (error) {
+                    console.log('Service Worker 등록 실패:', error);
+                }
+            });
+        }
     </script>
 </body>
 </html>
