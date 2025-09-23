@@ -110,7 +110,7 @@ class AdvancedLottoPredictor:
     def load_data(self):
         """실제 CSV 데이터 로드 및 전처리"""
         try:
-            print(f"📊 로또프로 AI v2.0 - 실제 데이터 로딩 시작")
+            print(f"🚀 로또프로 AI v2.0 - 실제 데이터 로딩 시작")
             
             current_dir = os.getcwd()
             print(f"📁 현재 디렉토리: {current_dir}")
