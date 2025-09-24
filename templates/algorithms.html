@@ -448,7 +448,7 @@
                             <i class="fas fa-lightbulb"></i>
                             작동 원리
                         </div>
-                        <div class="detail-content">${algorithm.detailed_explanation}</div>
+                        <div class="detail-content">${algorithm.detailed_explanation || algorithm.description}</div>
                     </div>
                     
                     <div class="detail-section ${category}">
@@ -456,17 +456,17 @@
                             <i class="fas fa-cogs"></i>
                             기술적 접근법
                         </div>
-                        <div class="detail-content">${algorithm.technical_approach}</div>
+                        <div class="detail-content">${algorithm.technical_approach || '통계적 분석과 머신러닝 기법을 활용한 예측 모델입니다.'}</div>
                     </div>
                     
                     <div class="advantages-limitations">
                         <div class="advantage-list">
                             <h5><i class="fas fa-thumbs-up"></i> 장점</h5>
-                            ${algorithm.advantages.map(item => `<div class="advantage-item">• ${item}</div>`).join('')}
+                            ${algorithm.advantages ? algorithm.advantages.map(item => `<div class="advantage-item">• ${item}</div>`).join('') : '<div class="advantage-item">• 데이터 기반 예측</div><div class="advantage-item">• 객관적 분석</div>'}
                         </div>
                         <div class="limitation-list">
                             <h5><i class="fas fa-exclamation-triangle"></i> 한계</h5>
-                            ${algorithm.limitations.map(item => `<div class="limitation-item">• ${item}</div>`).join('')}
+                            ${algorithm.limitations ? algorithm.limitations.map(item => `<div class="limitation-item">• ${item}</div>`).join('') : '<div class="limitation-item">• 확률적 특성</div><div class="limitation-item">• 예측 불확실성</div>'}
                         </div>
                     </div>
                 </div>
