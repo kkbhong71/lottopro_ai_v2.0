@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, send_from_directory
+from flask import Flask, render_template, request, jsonify, send_from_directory, make_response
 import pandas as pd
 import numpy as np
 import random
@@ -1087,6 +1087,10 @@ def index():
 def algorithms():
     return render_template('algorithms.html')
 
+@app.route('/ai_models')
+def ai_models():
+    return render_template('ai_models.html')
+
 # API 엔드포인트들
 @app.route('/api/health')
 def health():
@@ -1117,35 +1121,55 @@ def get_algorithm_details():
                     'name': '빈도 분석',
                     'category': 'basic',
                     'description': '과거 당첨번호의 출현 빈도를 분석하여 가장 자주 나온 번호들을 우선 선택합니다.',
-                    'confidence': 85
+                    'confidence': 85,
+                    'detailed_explanation': '전체 당첨 데이터에서 각 번호의 출현 횟수를 계산하고, 통계적 가중치를 적용하여 높은 빈도의 번호들을 우선적으로 선별합니다.',
+                    'technical_approach': '가중 확률 분포 모델을 사용하여 빈도 기반 예측을 수행합니다.',
+                    'advantages': ['직관적이고 이해하기 쉬움', '장기간의 트렌드 반영', '안정적인 기준선 제공'],
+                    'limitations': ['최근 패턴 변화 반영 부족', '모든 번호가 동등한 확률을 가진다는 가정 무시']
                 },
                 {
                     'id': 2,
                     'name': '핫/콜드 분석',
                     'category': 'basic',
                     'description': '최근 자주 나오는 핫넘버와 오랫동안 나오지 않은 콜드넘버를 조합하여 예측합니다.',
-                    'confidence': 78
+                    'confidence': 78,
+                    'detailed_explanation': '최근 15-25회차의 출현 패턴을 분석하여 핫넘버 3-5개와 콜드넘버를 균형있게 조합합니다.',
+                    'technical_approach': '기대치 대비 실제 출현율 비교 분석을 통한 핫/콜드 분류 시스템입니다.',
+                    'advantages': ['최근 트렌드 반영', '보상 심리 활용', '균형잡힌 접근법'],
+                    'limitations': ['단기 변동성에 과도한 의존', '통계적 무작위성 간과']
                 },
                 {
                     'id': 3,
                     'name': '패턴 분석',
                     'category': 'basic',
                     'description': '번호 구간별 출현 패턴과 수학적 관계를 분석하여 예측합니다.',
-                    'confidence': 73
+                    'confidence': 73,
+                    'detailed_explanation': '1-45 범위를 여러 구간으로 나누고, 각 구간별 출현 비율과 패턴을 분석하여 균등한 분포를 목표로 합니다.',
+                    'technical_approach': '구간별 분포 분석과 수학적 조합론을 활용한 패턴 인식 시스템입니다.',
+                    'advantages': ['극단적인 조합 방지', '번호 분포의 균형성 추구', '수학적 근거 제공'],
+                    'limitations': ['과도한 균등 분포 가정', '자연스러운 클러스터링 무시']
                 },
                 {
                     'id': 4,
                     'name': '통계 분석',
                     'category': 'basic',
                     'description': '정규분포와 확률 이론을 적용한 수학적 예측을 수행합니다.',
-                    'confidence': 81
+                    'confidence': 81,
+                    'detailed_explanation': '베이즈 추론과 다항분포 모델을 기반으로 각 번호의 확률을 계산하고 95% 신뢰구간 내에서 예측합니다.',
+                    'technical_approach': '베이즈 통계와 최대우도 추정법을 활용한 확률론적 모델입니다.',
+                    'advantages': ['수학적 통계 이론 기반', '신뢰성이 높은 접근법', '객관적 분석 가능'],
+                    'limitations': ['정규분포 가정의 한계', '복잡한 비선형 패턴 감지 어려움']
                 },
                 {
                     'id': 5,
                     'name': '머신러닝',
                     'category': 'basic',
                     'description': '패턴 학습 기반으로 위치별 평균을 계산하여 예측합니다.',
-                    'confidence': 76
+                    'confidence': 76,
+                    'detailed_explanation': '최근 8-15회차 데이터를 특성으로 사용하여 각 위치별 번호의 평균값을 학습하고 예측 범위를 설정합니다.',
+                    'technical_approach': '다차원 패턴 분석과 비선형 관계 모델링을 통한 기계학습 시스템입니다.',
+                    'advantages': ['다차원 패턴 분석', '비선형 관계 모델링', '자동 특성 추출'],
+                    'limitations': ['과적합 위험성', '해석 가능성 부족', '충분한 데이터 필요']
                 }
             ],
             'advanced_algorithms': [
@@ -1154,35 +1178,55 @@ def get_algorithm_details():
                     'name': '신경망 분석',
                     'category': 'advanced',
                     'description': '다층 신경망 시뮬레이션을 통한 복합 패턴 학습 예측을 수행합니다.',
-                    'confidence': 79
+                    'confidence': 79,
+                    'detailed_explanation': '3층 깊은 신경망(DNN) 구조로 복잡한 비선형 패턴을 학습하고 시그모이드 활성화 함수로 확률을 계산합니다.',
+                    'technical_approach': 'ReLU + Softmax 활성화 함수를 사용한 다층 퍼셉트론 신경망입니다.',
+                    'advantages': ['복잡한 패턴 인식', '비선형 관계 학습', '고차원 특성 추출'],
+                    'limitations': ['블랙박스 특성', '과적합 위험', '계산 복잡도 높음']
                 },
                 {
                     'id': 7,
                     'name': '마르코프 체인',
                     'category': 'advanced',
                     'description': '상태 전이 확률을 이용한 연속성 패턴 예측을 수행합니다.',
-                    'confidence': 74
+                    'confidence': 74,
+                    'detailed_explanation': '1-3차 마르코프 체인 모델로 현재 상태에서 다음 상태로의 전이 확률을 계산하여 연속적 패턴을 예측합니다.',
+                    'technical_approach': '상태 전이 매트릭스와 확률적 체인 반응을 통한 순차적 예측 시스템입니다.',
+                    'advantages': ['순차적 패턴 모델링', '상태 간 의존성 반영', '확률적 추론'],
+                    'limitations': ['메모리 제약', '상태 공간 복잡도', '장기 의존성 한계']
                 },
                 {
                     'id': 8,
                     'name': '유전자 알고리즘',
                     'category': 'advanced',
                     'description': '진화론적 최적화를 통한 적응형 번호 조합 예측을 수행합니다.',
-                    'confidence': 77
+                    'confidence': 77,
+                    'detailed_explanation': '20-40개 개체군으로 5-10세대 진화 과정을 시뮬레이션하여 최적의 번호 조합을 탐색합니다.',
+                    'technical_approach': '선택, 교배, 변이 과정을 통한 진화적 최적화 알고리즘입니다.',
+                    'advantages': ['전역 최적해 탐색', '다양성 보장', '적응적 학습'],
+                    'limitations': ['수렴 시간 긺', '매개변수 의존성', '지역 최적해 위험']
                 },
                 {
                     'id': 9,
                     'name': '동반출현 분석',
                     'category': 'advanced',
                     'description': '번호 간 상관관계와 동시 출현 패턴을 분석하여 예측합니다.',
-                    'confidence': 75
+                    'confidence': 75,
+                    'detailed_explanation': '번호 쌍들의 동반출현 빈도를 계산하고 네트워크 분석으로 강한 연관성을 가진 번호들을 식별합니다.',
+                    'technical_approach': '관계 기반 예측과 연관성 분석을 통한 네트워크 모델링 시스템입니다.',
+                    'advantages': ['숨겨진 연관성 발견', '상관관계 활용', '네트워크 효과 반영'],
+                    'limitations': ['허상 관계 감지 위험', '인과관계 혼동', '계산 복잡도']
                 },
                 {
                     'id': 10,
                     'name': '시계열 분석',
                     'category': 'advanced',
                     'description': '시간 흐름에 따른 패턴 변화를 분석하여 예측합니다.',
-                    'confidence': 72
+                    'confidence': 72,
+                    'detailed_explanation': '트렌드, 계절성, 모멘텀 방식으로 각 번호의 시간적 패턴과 주기성을 분석하여 다음 출현을 예측합니다.',
+                    'technical_approach': '주기적 패턴 예측과 시간 기반 분석을 통한 시계열 모델링입니다.',
+                    'advantages': ['시간 패턴 인식', '주기성 분석', '트렌드 반영'],
+                    'limitations': ['비정상 시계열 특성', '노이즈 민감성', '예측 구간 제한']
                 }
             ]
         }
@@ -1307,231 +1351,122 @@ def get_statistics():
             'error': 'Statistics temporarily unavailable'
         }), 500
 
-# 새로운 API 엔드포인트들
-@app.route('/api/backtest', methods=['GET'])
-def backtest_algorithms():
-    try:
-        start_time = time.time()
-        
-        algorithms = [
-            "빈도 분석", "핫/콜드 분석", "패턴 분석", "통계 분석", "머신러닝",
-            "신경망 분석", "마르코프 체인", "유전자 알고리즘", "동반출현 분석", "시계열 분석"
-        ]
-        
-        detailed_results = {}
-        for i, alg_name in enumerate(algorithms):
-            accuracy = random.uniform(0.15, 0.45)
-            detailed_results[f'algorithm_{i+1:02d}'] = {
-                'algorithm_name': alg_name,
-                'accuracy_score': accuracy,
-                'total_tests': random.randint(50, 100),
-                'successful_predictions': int(accuracy * random.randint(50, 100)),
-                'avg_prize_tier': random.uniform(4.0, 6.0),
-                'consistency_score': random.uniform(0.6, 0.9),
-                'risk_score': random.uniform(0.2, 0.8)
-            }
-        
-        best_algorithm = max(detailed_results.items(), 
-                           key=lambda x: x[1]['accuracy_score'])
-        
-        processing_time = time.time() - start_time
-        
-        result = {
-            'success': True,
-            'data': {
-                'data_period': '2020-2024 (4년간)',
-                'total_draws': 208,
-                'algorithms_tested': algorithms,
-                'processing_time': round(processing_time, 2),
-                'best_performer': {
-                    'algorithm': best_algorithm[1]['algorithm_name'],
-                    'accuracy': best_algorithm[1]['accuracy_score']
-                },
-                'detailed_results': detailed_results,
-                'summary_stats': {
-                    'avg_accuracy': sum(r['accuracy_score'] for r in detailed_results.values()) / len(detailed_results),
-                    'best_accuracy': best_algorithm[1]['accuracy_score'],
-                    'total_tests_run': sum(r['total_tests'] for r in detailed_results.values()),
-                    'methodology': 'Monte Carlo Simulation with Historical Data'
-                }
-            }
-        }
-        
-        return jsonify(result)
-        
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': f'백테스팅 실행 중 오류가 발생했습니다: {str(e)}'
-        }), 500
-
-@app.route('/api/predictions/lazy', methods=['GET'])
-def get_predictions_lazy():
-    try:
-        time.sleep(0.5)
-        
-        result = {
-            'success': True,
-            'data': {
-                'total_predictions': 10,
-                'avg_confidence': random.randint(75, 95),
-                'last_updated': datetime.now().isoformat(),
-                'status': 'loaded'
-            }
-        }
-        
-        return jsonify(result)
-        
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
-
-@app.route('/api/statistics/lazy', methods=['GET'])
-def get_statistics_lazy():
-    try:
-        time.sleep(0.3)
-        
-        result = {
-            'success': True,
-            'data': {
-                'analyzed_rounds': 1190,
-                'most_frequent': random.randint(1, 45),
-                'last_updated': datetime.now().isoformat(),
-                'status': 'loaded'
-            }
-        }
-        
-        return jsonify(result)
-        
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
-
-@app.route('/api/backtest/lazy', methods=['GET'])
-def get_backtest_lazy():
-    try:
-        time.sleep(0.7)
-        
-        result = {
-            'success': True,
-            'data': {
-                'best_algorithm': '머신러닝 분석',
-                'avg_accuracy': f"{random.randint(25, 35)}%",
-                'last_updated': datetime.now().isoformat(),
-                'status': 'loaded'
-            }
-        }
-        
-        return jsonify(result)
-        
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
-
-@app.route('/api/performance/report', methods=['POST'])
-def submit_performance_report():
-    try:
-        report_data = request.get_json()
-        
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        os.makedirs('performance_reports', exist_ok=True)
-        with open(f'performance_reports/report_{timestamp}.json', 'w', encoding='utf-8') as f:
-            json.dump(report_data, f, indent=2, ensure_ascii=False, default=str)
-        
-        return jsonify({
-            'success': True,
-            'message': '성능 리포트가 성공적으로 제출되었습니다.'
-        })
-        
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': f'리포트 제출 실패: {str(e)}'
-        }), 500
-
-@app.route('/api/system/health', methods=['GET'])
-def system_health_check():
-    try:
-        health_status = {
-            'status': 'healthy',
-            'timestamp': datetime.now().isoformat(),
-            'uptime': time.time() - start_time,
-            'memory_usage': 'normal',
-            'database_connection': 'active',
-            'api_response_time': random.uniform(50, 200),
-            'error_rate': random.uniform(0, 2),
-        }
-        
-        health_score = 100
-        if health_status['api_response_time'] > 1000:
-            health_score -= 20
-        if health_status['error_rate'] > 5:
-            health_score -= 30
-            
-        health_status['health_score'] = health_score
-        
-        if health_score < 70:
-            health_status['status'] = 'warning'
-        if health_score < 40:
-            health_status['status'] = 'critical'
-        
-        return jsonify({
-            'success': True,
-            'data': health_status
-        })
-        
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e),
-            'data': {
-                'status': 'error',
-                'timestamp': datetime.now().isoformat(),
-                'health_score': 0
-            }
-        }), 500
-
 @app.route('/api/export/predictions', methods=['POST'])
 def export_predictions():
     try:
-        export_data = request.get_json()
+        export_data = request.get_json() or {}
         format_type = export_data.get('format', 'json')
         
+        # 현재 예측 결과 가져오기
+        pred = get_predictor()
+        if not pred.data_loaded:
+            pred.load_data()
+        
+        results = pred.generate_all_predictions()
+        
+        # 내보내기용 데이터 구성
+        export_timestamp = datetime.now()
         predictions_data = {
-            'export_timestamp': datetime.now().isoformat(),
-            'total_algorithms': 10,
-            'algorithms': [
-                {
-                    'name': '빈도 분석',
-                    'numbers': [1, 15, 23, 31, 39, 42],
-                    'confidence': 85
-                }
-            ]
+            'export_timestamp': export_timestamp.isoformat(),
+            'export_date': export_timestamp.strftime('%Y년 %m월 %d일 %H시 %M분'),
+            'total_algorithms': len(results),
+            'algorithms': []
         }
         
+        # 알고리즘별 데이터 정리
+        for key, result in results.items():
+            algorithm_data = {
+                'id': result.get('algorithm_id', 0),
+                'name': result.get('name', '알 수 없음'),
+                'category': result.get('category', 'basic'),
+                'numbers': result.get('priority_numbers', []),
+                'numbers_str': ' - '.join(map(str, result.get('priority_numbers', []))),
+                'confidence': result.get('confidence', 50),
+                'description': result.get('description', '')
+            }
+            predictions_data['algorithms'].append(algorithm_data)
+        
         if format_type == 'json':
+            filename = f'lotto_predictions_{export_timestamp.strftime("%Y%m%d_%H%M%S")}.json'
             return jsonify({
                 'success': True,
                 'data': predictions_data,
-                'filename': f'lotto_predictions_{datetime.now().strftime("%Y%m%d_%H%M%S")}.json'
+                'filename': filename,
+                'content_type': 'application/json'
             })
+            
         elif format_type == 'csv':
-            csv_content = "Algorithm,Numbers,Confidence\n"
+            # CSV 형식으로 변환
+            csv_lines = ['알고리즘,카테고리,예측번호,신뢰도,설명']
+            
             for alg in predictions_data['algorithms']:
-                numbers_str = '-'.join(map(str, alg['numbers']))
-                csv_content += f"{alg['name']},{numbers_str},{alg['confidence']}\n"
+                csv_line = f'"{alg["name"]}","{alg["category"]}","{alg["numbers_str"]}",{alg["confidence"]},"{alg["description"]}"'
+                csv_lines.append(csv_line)
+            
+            csv_content = '\n'.join(csv_lines)
+            filename = f'lotto_predictions_{export_timestamp.strftime("%Y%m%d_%H%M%S")}.csv'
             
             return jsonify({
                 'success': True,
                 'data': csv_content,
-                'content_type': 'text/csv',
-                'filename': f'lotto_predictions_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
+                'filename': filename,
+                'content_type': 'text/csv; charset=utf-8'
+            })
+            
+        elif format_type == 'txt':
+            # 텍스트 형식으로 변환
+            txt_lines = [
+                f'로또프로 AI v2.0 예측 결과',
+                f'생성일시: {predictions_data["export_date"]}',
+                f'총 알고리즘: {predictions_data["total_algorithms"]}개',
+                '=' * 50,
+                ''
+            ]
+            
+            basic_algos = [alg for alg in predictions_data['algorithms'] if alg['category'] == 'basic']
+            advanced_algos = [alg for alg in predictions_data['algorithms'] if alg['category'] == 'advanced']
+            
+            txt_lines.extend([
+                '[ 기본 AI 알고리즘 ]',
+                ''
+            ])
+            
+            for i, alg in enumerate(basic_algos, 1):
+                txt_lines.extend([
+                    f'{i}. {alg["name"]} (신뢰도: {alg["confidence"]}%)',
+                    f'   예측번호: {alg["numbers_str"]}',
+                    f'   설명: {alg["description"]}',
+                    ''
+                ])
+            
+            txt_lines.extend([
+                '[ 고급 AI 알고리즘 ]',
+                ''
+            ])
+            
+            for i, alg in enumerate(advanced_algos, 1):
+                txt_lines.extend([
+                    f'{i}. {alg["name"]} (신뢰도: {alg["confidence"]}%)',
+                    f'   예측번호: {alg["numbers_str"]}',
+                    f'   설명: {alg["description"]}',
+                    ''
+                ])
+            
+            txt_lines.extend([
+                '=' * 50,
+                '* 로또는 완전한 확률게임입니다.',
+                '* 본 예측은 참고용으로만 사용하세요.',
+                '* 과도한 기대나 의존은 하지 마세요.'
+            ])
+            
+            txt_content = '\n'.join(txt_lines)
+            filename = f'lotto_predictions_{export_timestamp.strftime("%Y%m%d_%H%M%S")}.txt'
+            
+            return jsonify({
+                'success': True,
+                'data': txt_content,
+                'filename': filename,
+                'content_type': 'text/plain; charset=utf-8'
             })
         
         return jsonify({
@@ -1684,7 +1619,6 @@ def internal_error(error):
     }), 500
 
 # 디렉토리 생성
-os.makedirs('performance_reports', exist_ok=True)
 os.makedirs('analytics_logs', exist_ok=True)
 os.makedirs('static/images', exist_ok=True)
 os.makedirs('static/js', exist_ok=True)
