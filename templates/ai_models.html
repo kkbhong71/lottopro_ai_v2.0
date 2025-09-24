@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI 모델 상세 설명 - LottoPro AI v2.0</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .models-container {
             max-width: 1200px;
@@ -23,6 +26,18 @@
             border-radius: 15px;
         }
         
+        .page-header h1 {
+            margin: 0 0 10px 0;
+            font-size: 2.5em;
+            font-weight: 700;
+        }
+        
+        .page-header p {
+            margin: 0;
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
         .transparency-notice {
             background: #e8f5e8;
             border: 2px solid #4caf50;
@@ -30,6 +45,16 @@
             padding: 20px;
             margin: 20px 0;
             text-align: center;
+        }
+        
+        .transparency-notice h3 {
+            color: #2e7d32;
+            margin-bottom: 10px;
+        }
+        
+        .transparency-notice p {
+            color: #388e3c;
+            margin: 0;
         }
         
         .model-grid {
@@ -108,6 +133,10 @@
             border-bottom: 1px solid #eee;
         }
         
+        .detail-item:last-child {
+            border-bottom: none;
+        }
+        
         .detail-label {
             font-weight: 600;
             color: #2c3e50;
@@ -121,12 +150,20 @@
             margin: 15px 0;
         }
         
+        .algorithm-steps h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1em;
+        }
+        
         .step {
             background: #ecf0f1;
             margin: 5px 0;
             padding: 10px;
             border-radius: 5px;
             border-left: 3px solid #3498db;
+            font-size: 0.9em;
+            color: #2c3e50;
         }
         
         .performance-section {
@@ -135,6 +172,18 @@
             padding: 30px;
             margin: 30px 0;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .performance-section h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .performance-section p {
+            color: #5a6c7d;
+            text-align: center;
+            margin-bottom: 30px;
         }
         
         .performance-grid {
@@ -172,6 +221,27 @@
             margin: 30px 0;
         }
         
+        .statistical-notice h3 {
+            color: #856404;
+            margin-bottom: 15px;
+        }
+        
+        .statistical-notice p {
+            color: #856404;
+            margin: 10px 0;
+        }
+        
+        .statistical-notice ul {
+            text-align: left;
+            max-width: 800px;
+            margin: 15px auto;
+            color: #856404;
+        }
+        
+        .statistical-notice li {
+            margin: 5px 0;
+        }
+        
         .nav-buttons {
             text-align: center;
             margin: 30px 0;
@@ -187,10 +257,14 @@
             border-radius: 25px;
             font-weight: 600;
             transition: transform 0.3s ease;
+            border: none;
+            cursor: pointer;
         }
         
         .btn:hover {
             transform: translateY(-2px);
+            text-decoration: none;
+            color: white;
         }
         
         .btn.secondary {
@@ -209,6 +283,14 @@
             
             .performance-grid {
                 grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .page-header h1 {
+                font-size: 2em;
+            }
+            
+            .page-header p {
+                font-size: 1em;
             }
         }
     </style>
@@ -231,7 +313,7 @@
                 <div class="model-header">
                     <span class="model-icon">📊</span>
                     <h3 class="model-title">빈도분석 모델</h3>
-                    <span class="accuracy-badge">정확도 참고용</span>
+                    <span class="accuracy-badge">분석용</span>
                 </div>
                 <p class="model-description">
                     과거 당첨번호의 출현 빈도를 통계적으로 분석하여 각 번호의 가중 확률을 계산합니다.
@@ -266,7 +348,7 @@
                 <div class="model-header">
                     <span class="model-icon">📈</span>
                     <h3 class="model-title">트렌드분석 모델</h3>
-                    <span class="accuracy-badge">정확도 참고용</span>
+                    <span class="accuracy-badge">분석용</span>
                 </div>
                 <p class="model-description">
                     최근 당첨 패턴과 시간적 트렌드를 분석하여 변화하는 패턴을 반영합니다.
@@ -301,7 +383,7 @@
                 <div class="model-header">
                     <span class="model-icon">🔢</span>
                     <h3 class="model-title">패턴분석 모델</h3>
-                    <span class="accuracy-badge">정확도 참고용</span>
+                    <span class="accuracy-badge">분석용</span>
                 </div>
                 <p class="model-description">
                     번호 조합 패턴과 수학적 관계를 분석하여 복합적인 예측을 수행합니다.
@@ -336,7 +418,7 @@
                 <div class="model-header">
                     <span class="model-icon">📏</span>
                     <h3 class="model-title">통계분석 모델</h3>
-                    <span class="accuracy-badge">정확도 참고용</span>
+                    <span class="accuracy-badge">분석용</span>
                 </div>
                 <p class="model-description">
                     고급 통계 기법과 확률 이론을 적용한 수학적 예측 모델입니다.
@@ -371,7 +453,7 @@
                 <div class="model-header">
                     <span class="model-icon">🧠</span>
                     <h3 class="model-title">머신러닝 모델</h3>
-                    <span class="accuracy-badge">정확도 참고용</span>
+                    <span class="accuracy-badge">분석용</span>
                 </div>
                 <p class="model-description">
                     딥러닝 신경망과 AI 알고리즘을 기반으로 한 고도화된 예측 시스템입니다.
@@ -402,54 +484,146 @@
             </div>
         </div>
         
-        <!-- 성능 지표 섹션 -->
+        <!-- 성능 정보 섹션 (수정됨 - 실제 성능 지표 제거) -->
         <div class="performance-section">
-            <h2>📊 모델 성능 지표</h2>
-            <p>지난 20회차 동안의 각 모델별 성능을 투명하게 공개합니다.</p>
+            <h2>📊 모델 분석 정보</h2>
+            <p>AI 모델들의 분석 범위와 처리 성능에 대한 투명한 정보를 제공합니다.</p>
             
             <div class="performance-grid">
                 <div class="metric-card">
-                    <div class="metric-value">23.5%</div>
-                    <div class="metric-label">평균 일치율<br>(1개 이상 맞춤)</div>
+                    <div class="metric-value">1,190회</div>
+                    <div class="metric-label">분석 회차<br>(전체 데이터)</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-value">4.2%</div>
-                    <div class="metric-label">정확 일치율<br>(3개 이상 맞춤)</div>
+                    <div class="metric-value">10개</div>
+                    <div class="metric-label">AI 알고리즘<br>(동시 분석)</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-value">0.8%</div>
-                    <div class="metric-label">고정확 일치율<br>(4개 이상 맞춤)</div>
+                    <div class="metric-value">2-3초</div>
+                    <div class="metric-label">평균 분석시간<br>(실시간 처리)</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-value">20회</div>
-                    <div class="metric-label">검증 기간<br>(회차)</div>
+                    <div class="metric-value">24/7</div>
+                    <div class="metric-label">서비스 가용성<br>(연중무휴)</div>
                 </div>
             </div>
         </div>
         
-        <!-- 통계적 유의성 설명 -->
+        <!-- 통계적 유의성 설명 (수정됨 - 더 명확한 경고) -->
         <div class="statistical-notice">
             <h3>📊 통계적 유의성에 대한 중요한 설명</h3>
             <p><strong>⚠️ 로또는 완전한 확률게임입니다.</strong></p>
             
             <div style="margin: 15px 0;">
                 <h4>핵심 사실:</h4>
-                <ul style="text-align: left; max-width: 800px; margin: 0 auto;">
+                <ul>
                     <li><strong>이론적 확률:</strong> 각 번호가 뽑힐 확률은 정확히 1/45 (2.22%)</li>
                     <li><strong>독립성:</strong> 각 회차의 추첨은 이전 회차와 완전히 독립적</li>
                     <li><strong>무작위성:</strong> 과거 패턴이 미래를 예측할 수 없음</li>
                     <li><strong>AI 한계:</strong> 어떤 AI도 완전한 무작위를 예측할 수 없음</li>
+                    <li><strong>분석 목적:</strong> 본 서비스는 데이터 분석 연구용입니다</li>
                 </ul>
             </div>
             
             <p><strong>따라서 본 AI 모델들은 통계적 분석 도구일 뿐, 실제 예측력은 없습니다.</strong><br>
             오락 목적으로만 사용하시고, 과도한 기대는 하지 마세요.</p>
+            
+            <p><strong style="color: #d32f2f;">도박 중독 예방을 위해 적정 금액 내에서만 이용해 주세요.</strong></p>
         </div>
         
         <div class="nav-buttons">
             <a href="/" class="btn">🏠 메인으로 돌아가기</a>
-            <a href="/prediction_history" class="btn secondary">📈 예측 결과 히스토리</a>
+            <a href="/algorithms" class="btn secondary">📈 알고리즘 상세보기</a>
         </div>
     </div>
+
+    <script>
+        // 페이지 로드 시 애니메이션
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.model-card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                
+                setTimeout(() => {
+                    card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        });
+
+        // 카드 호버 효과 강화
+        document.querySelectorAll('.model-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-5px) scale(1.02)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) scale(1)';
+            });
+        });
+
+        // 성능 지표 애니메이션
+        function animateMetrics() {
+            const metricValues = document.querySelectorAll('.metric-value');
+            metricValues.forEach(metric => {
+                const text = metric.textContent;
+                if (text.includes('1,190')) {
+                    animateNumber(metric, 0, 1190, '회');
+                } else if (text.includes('10')) {
+                    animateNumber(metric, 0, 10, '개');
+                }
+            });
+        }
+
+        function animateNumber(element, start, end, suffix) {
+            const duration = 2000;
+            const startTime = performance.now();
+            
+            function updateNumber(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                const current = Math.floor(start + (end - start) * progress);
+                element.textContent = current.toLocaleString() + suffix;
+                
+                if (progress < 1) {
+                    requestAnimationFrame(updateNumber);
+                }
+            }
+            
+            requestAnimationFrame(updateNumber);
+        }
+
+        // Intersection Observer로 스크롤 애니메이션
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting && entry.target.classList.contains('performance-section')) {
+                    animateMetrics();
+                    observer.unobserve(entry.target);
+                }
+            });
+        });
+
+        document.querySelectorAll('.performance-section').forEach(section => {
+            observer.observe(section);
+        });
+
+        // 인쇄 기능
+        function printPage() {
+            window.print();
+        }
+
+        // 에러 처리
+        window.addEventListener('error', function(e) {
+            console.warn('페이지 오류:', e.message);
+        });
+
+        // 리소스 로딩 확인
+        window.addEventListener('load', function() {
+            console.log('AI 모델 페이지 로드 완료');
+        });
+    </script>
 </body>
 </html>
