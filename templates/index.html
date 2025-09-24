@@ -12,7 +12,7 @@
     <meta property="og:description" content="빈도분석부터 신경망까지, 10가지 최첨단 AI 기술로 로또 번호를 예측합니다">
     <meta property="og:type" content="website">
     
-    <!-- PWA Manifest - 수정된 meta tags -->
+    <!-- PWA Manifest -->
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
     <meta name="theme-color" content="#667eea">
     <meta name="mobile-web-app-capable" content="yes">
@@ -128,7 +128,7 @@
             </div>
         </div>
 
-        <!-- 메인 컨트롤 (새로운 버튼들 추가) -->
+        <!-- 메인 컨트롤 (수정됨 - 백테스팅, 모니터링 버튼 제거) -->
         <div class="main-controls">
             <button id="generateBtn" class="generate-btn">
                 <i class="fas fa-magic"></i>
@@ -137,14 +137,6 @@
             <button id="statisticsBtn" class="stats-btn">
                 <i class="fas fa-chart-bar"></i>
                 <span>통계 분석</span>
-            </button>
-            <button id="backtestBtn" class="backtest-btn">
-                <i class="fas fa-chart-area"></i>
-                <span>백테스팅 실행</span>
-            </button>
-            <button id="monitoringBtn" class="monitoring-btn">
-                <i class="fas fa-tachometer-alt"></i>
-                <span>모니터링 대시보드</span>
             </button>
             <button id="exportBtn" class="export-btn">
                 <i class="fas fa-download"></i>
@@ -171,32 +163,6 @@
                 <div class="indicator-card">
                     <div class="indicator-value" id="systemReliability">99.9%</div>
                     <div class="indicator-label">시스템 안정성</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 검증 상태 표시 (새로 추가) -->
-        <div id="validationStatus" class="validation-status-enhanced" style="display: none;">
-            <div class="validation-header">
-                <i class="fas fa-check-shield"></i>
-                <h4>알고리즘 검증 결과</h4>
-            </div>
-            <div class="validation-summary">
-                <div class="validation-stat">
-                    <div class="validation-stat-value" id="totalAlgoCount">0</div>
-                    <div class="validation-stat-label">총 알고리즘</div>
-                </div>
-                <div class="validation-stat">
-                    <div class="validation-stat-value" id="basicAlgoCount">0</div>
-                    <div class="validation-stat-label">기본 AI</div>
-                </div>
-                <div class="validation-stat">
-                    <div class="validation-stat-value" id="advancedAlgoCount">0</div>
-                    <div class="validation-stat-label">고급 AI</div>
-                </div>
-                <div class="validation-stat">
-                    <div class="validation-stat-value" id="validationResult">완료</div>
-                    <div class="validation-stat-label">검증 상태</div>
                 </div>
             </div>
         </div>
@@ -258,46 +224,6 @@
             </div>
         </div>
 
-        <!-- 지연 로딩 플레이스홀더 요소들 (새로 추가) -->
-        <div class="lazy-load-predictions" style="display: none;">
-            <div class="lazy-loading-enhanced">
-                <div class="lazy-loading-content">
-                    <div class="lazy-loading-icon">
-                        <i class="fas fa-brain"></i>
-                    </div>
-                    <div class="lazy-loading-text">예측 결과 로딩 중...</div>
-                    <div class="lazy-loading-subtext">AI 알고리즘이 데이터를 분석하고 있습니다</div>
-                    <div class="lazy-loading-progress"></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="lazy-load-statistics" style="display: none;">
-            <div class="lazy-loading-enhanced">
-                <div class="lazy-loading-content">
-                    <div class="lazy-loading-icon">
-                        <i class="fas fa-chart-bar"></i>
-                    </div>
-                    <div class="lazy-loading-text">통계 데이터 로딩 중...</div>
-                    <div class="lazy-loading-subtext">과거 당첨번호를 분석하고 있습니다</div>
-                    <div class="lazy-loading-progress"></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="lazy-load-backtest" style="display: none;">
-            <div class="lazy-loading-enhanced">
-                <div class="lazy-loading-content">
-                    <div class="lazy-loading-icon">
-                        <i class="fas fa-chart-area"></i>
-                    </div>
-                    <div class="lazy-loading-text">백테스트 결과 로딩 중...</div>
-                    <div class="lazy-loading-subtext">알고리즘 성능을 분석하고 있습니다</div>
-                    <div class="lazy-loading-progress"></div>
-                </div>
-            </div>
-        </div>
-
         <!-- 알고리즘별 예측 결과 -->
         <div id="predictionsContainer" class="predictions-container" style="display: none;">
             <div class="predictions-header">
@@ -314,11 +240,6 @@
                     <span class="summary-item">
                         <i class="fas fa-trophy"></i>
                         <span>총 <span id="totalAlgoCount">10</span>개 우선 번호</span>
-                    </span>
-                    <!-- 번호 검증 상태 표시 -->
-                    <span class="summary-item validation-status" id="validationStatusSummary" style="display: none;">
-                        <i class="fas fa-shield-alt"></i>
-                        <span>번호 검증: <span id="validationResultSummary">완료</span></span>
                     </span>
                 </div>
             </div>
@@ -719,13 +640,6 @@
                     </span>
                 </div>
                 
-                <!-- 번호 검증 상태 표시 -->
-                <div class="modal-validation-status">
-                    <i class="fas fa-check-circle validation-icon"></i>
-                    <span class="validation-text">번호 검증: </span>
-                    <span id="modalValidation">완료</span>
-                </div>
-                
                 <div class="modal-numbers" id="modalNumbers">
                     <!-- JavaScript로 생성 -->
                 </div>
@@ -775,31 +689,44 @@
         </div>
     </div>
 
-    <!-- 모니터링 모달 (새로 추가) -->
-    <div id="monitoringModal" class="modal">
-        <div class="modal-content monitoring-modal">
+    <!-- 내보내기 모달 (새로 추가) -->
+    <div id="exportModal" class="modal">
+        <div class="modal-content export-modal">
             <div class="modal-header">
-                <h3><i class="fas fa-tachometer-alt"></i> 시스템 모니터링</h3>
+                <h3><i class="fas fa-download"></i> 예측 결과 내보내기</h3>
                 <span class="close">&times;</span>
             </div>
             <div class="modal-body">
-                <div id="monitoringContent">
-                    <!-- JavaScript로 동적 생성 -->
+                <div class="export-options">
+                    <h4>내보내기 형식을 선택하세요:</h4>
+                    <div class="format-options">
+                        <button class="format-btn" data-format="json">
+                            <i class="fas fa-code"></i>
+                            <span>JSON 형식</span>
+                            <small>개발자용 구조화된 데이터</small>
+                        </button>
+                        <button class="format-btn" data-format="csv">
+                            <i class="fas fa-table"></i>
+                            <span>CSV 형식</span>
+                            <small>엑셀에서 열 수 있는 표</small>
+                        </button>
+                        <button class="format-btn" data-format="txt">
+                            <i class="fas fa-file-alt"></i>
+                            <span>텍스트 형식</span>
+                            <small>읽기 쉬운 텍스트</small>
+                        </button>
+                    </div>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 백테스트 모달 (새로 추가) -->
-    <div id="backtestModal" class="modal">
-        <div class="modal-content backtest-modal">
-            <div class="modal-header">
-                <h3><i class="fas fa-chart-area"></i> 백테스팅 결과</h3>
-                <span class="close">&times;</span>
-            </div>
-            <div class="modal-body">
-                <div id="backtestContent">
-                    <!-- JavaScript로 동적 생성 -->
+                <div class="export-actions">
+                    <button id="executeExport" class="export-execute-btn" disabled>
+                        <i class="fas fa-download"></i> 내보내기 실행
+                    </button>
+                    <button id="cancelExport" class="export-cancel-btn">
+                        취소
+                    </button>
+                </div>
+                <div id="exportStatus" class="export-status" style="display: none;">
+                    <!-- 내보내기 상태 표시 -->
                 </div>
             </div>
         </div>
@@ -817,14 +744,14 @@
         </div>
     </div>
 
-    <!-- 시스템 알림 컨테이너 (새로 추가) -->
+    <!-- 시스템 알림 컨테이너 -->
     <div class="system-notifications" id="systemNotifications">
         <!-- 동적으로 생성되는 알림들 -->
     </div>
 
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     
-    <!-- Analytics and PWA (수정된 오류 처리 로직 적용) -->
+    <!-- Analytics and PWA -->
     <script>
         // PWA 설치 지원
         let deferredPrompt;
@@ -848,17 +775,14 @@
             document.getElementById('installBanner').style.display = 'none';
         });
         
-        // 수정된 성능 모니터링 - 페이지 로드 시간 계산 개선
+        // 성능 모니터링
         window.addEventListener('load', () => {
             if (window.performance && window.performance.timing) {
-                // 올바른 페이지 로드 시간 계산
                 const loadTime = window.performance.timing.loadEventEnd - window.performance.timing.navigationStart;
                 
-                // 음수값 방지 및 유효성 검증
-                if (loadTime > 0 && loadTime < 60000) { // 60초 이내만 유효한 값으로 간주
+                if (loadTime > 0 && loadTime < 60000) {
                     console.log(`페이지 로드 시간: ${loadTime}ms`);
                     
-                    // 성능 메트릭 기록
                     if (window.lottoApp && window.lottoApp.trackUserActivity) {
                         window.lottoApp.trackUserActivity('page_load_complete', {
                             loadTime: loadTime,
@@ -876,7 +800,7 @@
             document.getElementById('systemStatus').style.display = 'none';
         });
 
-        // 개선된 에러 모니터링
+        // 에러 모니터링
         window.addEventListener('error', (e) => {
             console.error('JavaScript 에러:', e.error);
             if (window.lottoApp && window.lottoApp.trackUserActivity) {
@@ -889,12 +813,10 @@
             }
         });
 
-        // Promise rejection 오류 처리 개선
         window.addEventListener('unhandledrejection', function(event) {
             console.warn('Unhandled promise rejection:', event.reason);
-            event.preventDefault(); // 콘솔 오류 방지
+            event.preventDefault();
             
-            // 오류 추적
             if (window.lottoApp && window.lottoApp.trackUserActivity) {
                 window.lottoApp.trackUserActivity('promise_rejection', {
                     reason: event.reason?.toString() || 'Unknown',
@@ -916,11 +838,10 @@
             }
         });
 
-        // 개선된 서비스 워커 등록 - 파일 존재 확인 및 오류 처리
+        // 서비스 워커 등록
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', async () => {
                 try {
-                    // 파일 존재 확인
                     const swResponse = await fetch('/static/js/sw.js', { 
                         method: 'HEAD',
                         cache: 'no-cache'
@@ -930,7 +851,6 @@
                         const registration = await navigator.serviceWorker.register('/static/js/sw.js');
                         console.log('✅ Service Worker 등록 성공:', registration);
                         
-                        // 등록 성공 추적
                         if (window.lottoApp && window.lottoApp.trackUserActivity) {
                             window.lottoApp.trackUserActivity('sw_registration_success', {
                                 scope: registration.scope,
@@ -942,9 +862,7 @@
                     }
                 } catch (error) {
                     console.log('ℹ️ Service Worker 등록을 건너뜁니다. 오류:', error.message);
-                    // 오류를 throw하지 않고 조용히 처리
                     
-                    // 선택적 오류 추적 (개발 모드에서만)
                     if (window.location.hostname === 'localhost' && window.lottoApp && window.lottoApp.trackUserActivity) {
                         window.lottoApp.trackUserActivity('sw_registration_failed', {
                             error: error.message,
@@ -955,17 +873,16 @@
             });
         }
 
-        // 추가적인 안정성 개선 - 전역 오류 핸들러
+        // 전역 오류 핸들러
         window.onerror = function(message, source, lineno, colno, error) {
             console.error('전역 오류 핸들러:', { message, source, lineno, colno, error });
-            return true; // 기본 오류 처리 방지
+            return true;
         };
         
         // 리소스 로딩 오류 감지
         window.addEventListener('error', function(e) {
             if (e.target !== window) {
                 console.warn('리소스 로딩 오류:', e.target.src || e.target.href);
-                // 리소스 오류는 무시하고 계속 진행
             }
         }, true);
     </script>
