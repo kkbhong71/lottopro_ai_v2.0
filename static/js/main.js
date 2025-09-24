@@ -8,6 +8,10 @@ class LottoApp {
         this.maxRetries = 3;
         this.algorithmProgress = {};
         
+        // 내보내기 관련 속성 추가
+        this.currentPredictions = null;
+        this.selectedExportFormat = null;
+        
         // 성능 최적화 관련 속성
         this.debouncedFunctions = new Map();
         this.performanceMetrics = {
@@ -16,21 +20,6 @@ class LottoApp {
             renderTime: 0,
             userInteractions: 0
         };
-        
-        // 모니터링 관련 속성
-        this.userActivity = [];
-        this.sessionStartTime = Date.now();
-        this.analyticsData = {
-            totalRequests: 0,
-            algorithmUsage: {},
-            hourlyDistribution: {},
-            errorRate: 0,
-            avgResponseTime: 0
-        };
-        
-        // 백테스팅 관련 속성
-        this.backtestResults = {};
-        this.backtestInProgress = false;
         
         this.init();
     }
@@ -42,12 +31,10 @@ class LottoApp {
         this.loadInitialDataWithRetry();
         this.checkForWeeklyUpdate();
         this.initializeSystemHealth();
-        this.initializeAnalytics();
         this.setupIntersectionObserver(); // 지연 로딩 설정
         
         this.performanceMetrics.loadTime = performance.now() - startTime;
         console.log(`🎰 로또프로 AI v2.0 초기화 완료 (${this.performanceMetrics.loadTime.toFixed(2)}ms)`);
-        console.log('✅ 성능 모니터링, 백테스팅 시스템 활성화');
     }
 
     // 성능 최적화: 교차 관찰자 설정
@@ -67,8 +54,6 @@ class LottoApp {
                         this.loadPredictionsLazy();
                     } else if (target.classList.contains('lazy-load-statistics')) {
                         this.loadStatisticsLazy();
-                    } else if (target.classList.contains('lazy-load-backtest')) {
-                        this.loadBacktestLazy();
                     }
                     
                     this.observer.unobserve(target);
@@ -91,86 +76,12 @@ class LottoApp {
         this.debouncedFunctions.set(key, timeoutId);
     }
 
-    // 모니터링: 분석 시스템 초기화
-    initializeAnalytics() {
-        // 페이지 성능 측정
-        if (window.performance && window.performance.navigation) {
-            const perfData = performance.getEntriesByType('navigation')[0];
-            this.analyticsData.pageLoadTime = perfData.loadEventEnd - perfData.fetchStart;
-        }
-        
-        // 사용자 활동 추적
-        this.trackUserActivity('app_initialized', {
-            userAgent: navigator.userAgent,
-            screenResolution: `${screen.width}x${screen.height}`,
-            sessionId: this.generateSessionId()
-        });
-        
-        // 주기적 성능 리포트
-        setInterval(() => {
-            this.sendPerformanceReport();
-        }, 60000); // 1분마다
-    }
-
-    // 모니터링: 세션 ID 생성
-    generateSessionId() {
-        return Date.now().toString(36) + Math.random().toString(36).substr(2);
-    }
-
-    // 모니터링: 사용자 활동 추적
-    trackUserActivity(action, details = {}) {
-        const activity = {
-            timestamp: Date.now(),
-            action: action,
-            details: details,
-            sessionDuration: Date.now() - this.sessionStartTime
-        };
-        
-        this.userActivity.push(activity);
-        this.performanceMetrics.userInteractions++;
-        
-        // 최대 1000개 활동만 저장 (메모리 관리)
-        if (this.userActivity.length > 1000) {
-            this.userActivity = this.userActivity.slice(-500);
-        }
-    }
-
-    // 모니터링: 성능 리포트 전송
-    sendPerformanceReport() {
-        const report = {
-            sessionId: this.sessionId,
-            performanceMetrics: this.performanceMetrics,
-            analyticsData: this.analyticsData,
-            userActivity: this.userActivity.slice(-10), // 최근 10개 활동만
-            timestamp: Date.now()
-        };
-        
-        // 실제 환경에서는 서버로 전송
-        console.log('📊 성능 리포트:', report);
-        
-        // 로컬 스토리지에 저장 (개발용)
-        try {
-            const existingReports = JSON.parse(localStorage.getItem('performanceReports') || '[]');
-            existingReports.push(report);
-            
-            // 최대 50개 리포트만 저장
-            if (existingReports.length > 50) {
-                existingReports.splice(0, existingReports.length - 50);
-            }
-            
-            localStorage.setItem('performanceReports', JSON.stringify(existingReports));
-        } catch (error) {
-            console.error('성능 리포트 저장 실패:', error);
-        }
-    }
-
     bindEvents() {
         // 메인 버튼 이벤트 - 디바운싱 적용
         document.getElementById('generateBtn').addEventListener('click', () => {
             if (!this.isLoading) {
                 this.debounce(() => {
                     this.generatePredictions();
-                    this.trackUserActivity('generate_predictions');
                 }, 300, 'generatePredictions');
             }
         });
@@ -179,28 +90,67 @@ class LottoApp {
             if (!this.isLoading) {
                 this.debounce(() => {
                     this.toggleStatistics();
-                    this.trackUserActivity('view_statistics');
                 }, 300, 'toggleStatistics');
             }
         });
 
-        // 백테스팅 버튼 추가
-        const backtestBtn = document.getElementById('backtestBtn');
-        if (backtestBtn) {
-            backtestBtn.addEventListener('click', () => {
-                if (!this.isLoading && !this.backtestInProgress) {
-                    this.runBacktest();
-                    this.trackUserActivity('run_backtest');
+        // 내보내기 버튼 이벤트 추가
+        const exportBtn = document.getElementById('exportBtn');
+        if (exportBtn) {
+            exportBtn.addEventListener('click', () => {
+                console.log('내보내기 버튼 클릭됨');
+                
+                // 예측 결과 확인
+                if (!this.currentPredictions) {
+                    this.showError('먼저 "10개 AI 알고리즘 실행" 버튼을 클릭하여 예측 결과를 생성해주세요.');
+                    return;
+                }
+                
+                // 내보내기 모달 열기
+                const modal = document.getElementById('exportModal');
+                if (modal) {
+                    modal.style.display = 'flex';
+                    this.selectedExportFormat = null;
+                    
+                    const executeBtn = document.getElementById('executeExport');
+                    if (executeBtn) executeBtn.disabled = true;
                 }
             });
         }
 
-        // 모니터링 대시보드 버튼 추가
-        const monitoringBtn = document.getElementById('monitoringBtn');
-        if (monitoringBtn) {
-            monitoringBtn.addEventListener('click', () => {
-                this.showMonitoringDashboard();
-                this.trackUserActivity('view_monitoring');
+        // 내보내기 모달 닫기 버튼들
+        const closeButtons = document.querySelectorAll('#exportModal .close, #cancelExport');
+        closeButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const modal = document.getElementById('exportModal');
+                if (modal) modal.style.display = 'none';
+            });
+        });
+
+        // 내보내기 형식 선택 버튼들
+        const formatBtns = document.querySelectorAll('.format-btn');
+        formatBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // 기존 선택 해제
+                formatBtns.forEach(b => b.classList.remove('selected'));
+                
+                // 새 선택 표시
+                btn.classList.add('selected');
+                this.selectedExportFormat = btn.dataset.format;
+                
+                console.log('선택된 형식:', this.selectedExportFormat);
+                
+                // 실행 버튼 활성화
+                const executeBtn = document.getElementById('executeExport');
+                if (executeBtn) executeBtn.disabled = false;
+            });
+        });
+
+        // 내보내기 실행 버튼
+        const executeExportBtn = document.getElementById('executeExport');
+        if (executeExportBtn) {
+            executeExportBtn.addEventListener('click', () => {
+                this.executeExport();
             });
         }
 
@@ -208,7 +158,6 @@ class LottoApp {
         document.addEventListener('click', (e) => {
             if (e.target.classList.contains('category-filter')) {
                 this.filterAlgorithms(e.target.dataset.category);
-                this.trackUserActivity('filter_algorithms', { category: e.target.dataset.category });
             }
         });
 
@@ -216,45 +165,47 @@ class LottoApp {
         document.addEventListener('click', (e) => {
             if (e.target.classList.contains('tab-btn')) {
                 this.switchTab(e.target.dataset.tab);
-                this.trackUserActivity('switch_tab', { tab: e.target.dataset.tab });
             }
         });
 
         // 모달 이벤트
-        const closeButtons = document.querySelectorAll('.close');
-        closeButtons.forEach(btn => {
+        const closeModalButtons = document.querySelectorAll('.close');
+        closeModalButtons.forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const modalParent = e.target.closest('.modal');
                 if (modalParent && modalParent.id === 'analysisModal') {
                     this.closeAnalysisModal();
-                } else if (modalParent && modalParent.id === 'monitoringModal') {
-                    this.closeMonitoringModal();
-                } else if (modalParent && modalParent.id === 'backtestModal') {
-                    this.closeBacktestModal();
                 } else {
                     this.closeModal();
                 }
             });
         });
 
-        document.getElementById('copyNumbers').addEventListener('click', () => {
-            this.copyNumbers();
-            this.trackUserActivity('copy_numbers');
-        });
+        // 번호 모달 기능 버튼들
+        const copyBtn = document.getElementById('copyNumbers');
+        if (copyBtn) {
+            copyBtn.addEventListener('click', () => {
+                this.copyNumbers();
+            });
+        }
 
-        document.getElementById('saveNumbers').addEventListener('click', () => {
-            this.saveNumbers();
-            this.trackUserActivity('save_numbers');
-        });
+        const saveBtn = document.getElementById('saveNumbers');
+        if (saveBtn) {
+            saveBtn.addEventListener('click', () => {
+                this.saveNumbers();
+            });
+        }
 
-        document.getElementById('analyzeNumbers').addEventListener('click', () => {
-            this.analyzeNumbers();
-            this.trackUserActivity('analyze_numbers');
-        });
+        const analyzeBtn = document.getElementById('analyzeNumbers');
+        if (analyzeBtn) {
+            analyzeBtn.addEventListener('click', () => {
+                this.analyzeNumbers();
+            });
+        }
 
         // 모달 외부 클릭시 닫기
         window.addEventListener('click', (event) => {
-            const modals = ['numbersModal', 'analysisModal', 'monitoringModal', 'backtestModal'];
+            const modals = ['numbersModal', 'analysisModal', 'exportModal'];
             modals.forEach(modalId => {
                 const modal = document.getElementById(modalId);
                 if (event.target === modal) {
@@ -267,13 +218,11 @@ class LottoApp {
         window.addEventListener('online', () => {
             this.updateSystemHealth('healthy');
             this.showSuccess('네트워크 연결이 복구되었습니다.');
-            this.trackUserActivity('network_online');
         });
 
         window.addEventListener('offline', () => {
             this.updateSystemHealth('error');
             this.showError('네트워크 연결이 끊어졌습니다.');
-            this.trackUserActivity('network_offline');
         });
 
         // 시스템 상태 알림 닫기
@@ -281,428 +230,176 @@ class LottoApp {
         if (dismissStatus) {
             dismissStatus.addEventListener('click', () => {
                 document.getElementById('systemStatus').style.display = 'none';
-                this.trackUserActivity('dismiss_status');
             });
         }
-
-        // 성능 모니터링을 위한 이벤트 리스너
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden) {
-                this.trackUserActivity('page_hidden');
-            } else {
-                this.trackUserActivity('page_visible');
-            }
-        });
     }
 
-    // 백테스팅: 백테스트 실행
-    async runBacktest() {
-        if (this.backtestInProgress) return;
-        
-        try {
-            this.backtestInProgress = true;
-            this.showNotification('백테스팅 시작 중...', 'info');
-            
-            const backtestBtn = document.getElementById('backtestBtn');
-            if (backtestBtn) {
-                backtestBtn.disabled = true;
-                backtestBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 백테스팅 중...';
-            }
-            
-            // 백테스트 API 호출
-            const response = await this.fetchWithTimeout('/api/backtest', { timeout: 120000 });
-            const data = await response.json();
-            
-            if (data.success) {
-                this.backtestResults = data.data;
-                this.showBacktestResults();
-                this.showSuccess('백테스팅이 완료되었습니다!');
-            } else {
-                throw new Error(data.error || '백테스트 실행에 실패했습니다.');
-            }
-        } catch (error) {
-            console.error('백테스트 실행 실패:', error);
-            this.showError(`백테스트 실행 실패: ${error.message}`);
-        } finally {
-            this.backtestInProgress = false;
-            const backtestBtn = document.getElementById('backtestBtn');
-            if (backtestBtn) {
-                backtestBtn.disabled = false;
-                backtestBtn.innerHTML = '<i class="fas fa-chart-area"></i> 백테스팅 실행';
-            }
-        }
-    }
-
-    // 백테스팅: 결과 표시
-    showBacktestResults() {
-        const modal = document.getElementById('backtestModal');
-        const content = document.getElementById('backtestContent');
-        
-        if (!modal || !content || !this.backtestResults) return;
-        
-        const results = this.backtestResults;
-        
-        content.innerHTML = `
-            <div class="backtest-summary">
-                <h4><i class="fas fa-chart-line"></i> 백테스팅 요약</h4>
-                <div class="summary-grid">
-                    <div class="summary-item">
-                        <span class="label">테스트 기간:</span>
-                        <span class="value">${results.data_period}</span>
-                    </div>
-                    <div class="summary-item">
-                        <span class="label">총 추첨 수:</span>
-                        <span class="value">${results.total_draws}회</span>
-                    </div>
-                    <div class="summary-item">
-                        <span class="label">테스트 알고리즘:</span>
-                        <span class="value">${results.algorithms_tested?.length || 0}개</span>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="backtest-results">
-                <h4><i class="fas fa-trophy"></i> 알고리즘 성능 순위</h4>
-                <div class="results-list">
-                    ${this.renderBacktestRankings(results.detailed_results)}
-                </div>
-            </div>
-            
-            <div class="backtest-charts">
-                <h4><i class="fas fa-chart-bar"></i> 성능 분석</h4>
-                <canvas id="backtestChart" width="400" height="200"></canvas>
-            </div>
-        `;
-        
-        modal.style.display = 'block';
-        
-        // 차트 렌더링
-        setTimeout(() => {
-            this.renderBacktestChart(results);
-        }, 100);
-    }
-
-    // 백테스팅: 순위 렌더링
-    renderBacktestRankings(results) {
-        if (!results) return '<p>결과 데이터가 없습니다.</p>';
-        
-        const sortedResults = Object.entries(results)
-            .sort(([,a], [,b]) => b.accuracy_score - a.accuracy_score);
-        
-        return sortedResults.map(([algorithmName, result], index) => `
-            <div class="result-item ${index === 0 ? 'best-performer' : ''}">
-                <div class="result-rank">${index + 1}</div>
-                <div class="result-info">
-                    <div class="algorithm-name">${result.algorithm_name || algorithmName}</div>
-                    <div class="result-stats">
-                        <span>정확도: ${(result.accuracy_score * 100).toFixed(2)}%</span>
-                        <span>테스트 수: ${result.total_tests}회</span>
-                    </div>
-                </div>
-                <div class="result-score">
-                    <div class="score-bar">
-                        <div class="score-fill" style="width: ${result.accuracy_score * 100}%"></div>
-                    </div>
-                </div>
-            </div>
-        `).join('');
-    }
-
-    // 백테스팅: 차트 렌더링
-    renderBacktestChart(results) {
-        const canvas = document.getElementById('backtestChart');
-        if (!canvas || !results.detailed_results) return;
-        
-        const ctx = canvas.getContext('2d');
-        const algorithms = Object.keys(results.detailed_results);
-        const accuracyScores = algorithms.map(alg => 
-            (results.detailed_results[alg].accuracy_score * 100).toFixed(2)
-        );
-        
-        // 간단한 바 차트 그리기
-        this.drawBarChart(ctx, algorithms, accuracyScores);
-    }
-
-    // 백테스팅: 바 차트 그리기
-    drawBarChart(ctx, labels, data) {
-        const canvas = ctx.canvas;
-        const width = canvas.width;
-        const height = canvas.height;
-        const padding = 40;
-        
-        ctx.clearRect(0, 0, width, height);
-        
-        const maxValue = Math.max(...data);
-        const barWidth = (width - padding * 2) / labels.length;
-        const barMaxHeight = height - padding * 2;
-        
-        // 배경
-        ctx.fillStyle = '#f8f9fa';
-        ctx.fillRect(0, 0, width, height);
-        
-        // 바 그리기
-        labels.forEach((label, index) => {
-            const value = data[index];
-            const barHeight = (value / maxValue) * barMaxHeight;
-            const x = padding + index * barWidth;
-            const y = height - padding - barHeight;
-            
-            // 바 색상 (성능에 따라)
-            const hue = (value / maxValue) * 120; // 빨강에서 초록으로
-            ctx.fillStyle = `hsl(${hue}, 70%, 60%)`;
-            
-            ctx.fillRect(x + 5, y, barWidth - 10, barHeight);
-            
-            // 값 표시
-            ctx.fillStyle = '#333';
-            ctx.font = '12px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText(`${value}%`, x + barWidth/2, y - 5);
-            
-            // 라벨 표시 (짧게)
-            const shortLabel = label.length > 8 ? label.substring(0, 8) + '...' : label;
-            ctx.save();
-            ctx.translate(x + barWidth/2, height - 10);
-            ctx.rotate(-Math.PI/4);
-            ctx.textAlign = 'center';
-            ctx.fillText(shortLabel, 0, 0);
-            ctx.restore();
-        });
-    }
-
-    // 모니터링: 대시보드 표시
-    showMonitoringDashboard() {
-        const modal = document.getElementById('monitoringModal');
-        const content = document.getElementById('monitoringContent');
-        
-        if (!modal || !content) {
-            console.error('모니터링 모달 요소를 찾을 수 없습니다.');
+    // 내보내기 기능 실행
+    async executeExport() {
+        if (!this.selectedExportFormat || !this.currentPredictions) {
+            this.showError('형식을 선택해주세요.');
             return;
         }
         
-        // 실시간 데이터 계산
-        const totalRequests = this.userActivity.length;
-        const successRate = this.calculateSuccessRate();
-        const avgResponseTime = this.calculateAverageResponseTime();
-        const hourlyData = this.getHourlyDistribution();
+        console.log('내보내기 실행:', this.selectedExportFormat);
         
-        content.innerHTML = `
-            <div class="monitoring-summary">
-                <h4><i class="fas fa-tachometer-alt"></i> 시스템 현황</h4>
-                <div class="metrics-grid">
-                    <div class="metric-card">
-                        <div class="metric-value">${totalRequests}</div>
-                        <div class="metric-label">총 요청 수</div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-value">${successRate.toFixed(1)}%</div>
-                        <div class="metric-label">성공률</div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-value">${avgResponseTime.toFixed(0)}ms</div>
-                        <div class="metric-label">평균 응답시간</div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-value">${this.performanceMetrics.userInteractions}</div>
-                        <div class="metric-label">사용자 상호작용</div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="monitoring-charts">
-                <div class="chart-container">
-                    <h5><i class="fas fa-chart-line"></i> 시간별 활동</h5>
-                    <canvas id="hourlyChart" width="400" height="150"></canvas>
-                </div>
-                
-                <div class="chart-container">
-                    <h5><i class="fas fa-chart-pie"></i> 알고리즘 사용 빈도</h5>
-                    <canvas id="algorithmChart" width="400" height="150"></canvas>
-                </div>
-            </div>
-            
-            <div class="monitoring-logs">
-                <h5><i class="fas fa-list"></i> 최근 활동 로그</h5>
-                <div class="log-list">
-                    ${this.renderRecentLogs()}
-                </div>
-            </div>
-        `;
-        
-        modal.style.display = 'block';
-        
-        // 차트 렌더링
-        setTimeout(() => {
-            this.renderMonitoringCharts(hourlyData);
-        }, 100);
-    }
-
-    // 모니터링: 성공률 계산
-    calculateSuccessRate() {
-        const apiCalls = this.userActivity.filter(a => 
-            a.action.includes('predictions') || a.action.includes('statistics')
-        );
-        
-        if (apiCalls.length === 0) return 100;
-        
-        // 에러 없이 완료된 호출의 비율 (간단히 90-99% 사이로 시뮬레이션)
-        return 95 + Math.random() * 4;
-    }
-
-    // 모니터링: 평균 응답시간 계산
-    calculateAverageResponseTime() {
-        // 실제로는 API 호출 시간을 측정해야 하지만, 여기서는 시뮬레이션
-        return 800 + Math.random() * 500;
-    }
-
-    // 모니터링: 시간별 분포 계산
-    getHourlyDistribution() {
-        const hourlyData = new Array(24).fill(0);
-        
-        this.userActivity.forEach(activity => {
-            const hour = new Date(activity.timestamp).getHours();
-            hourlyData[hour]++;
-        });
-        
-        return hourlyData;
-    }
-
-    // 모니터링: 최근 로그 렌더링
-    renderRecentLogs() {
-        const recentLogs = this.userActivity.slice(-10).reverse();
-        
-        return recentLogs.map(log => {
-            const time = new Date(log.timestamp).toLocaleTimeString('ko-KR');
-            const actionText = this.getActionText(log.action);
-            
-            return `
-                <div class="log-item">
-                    <div class="log-time">${time}</div>
-                    <div class="log-action">${actionText}</div>
-                    <div class="log-details">${JSON.stringify(log.details || {})}</div>
-                </div>
-            `;
-        }).join('');
-    }
-
-    // 모니터링: 액션 텍스트 변환
-    getActionText(action) {
-        const actionMap = {
-            'app_initialized': '앱 초기화',
-            'generate_predictions': '예측 생성',
-            'view_statistics': '통계 조회',
-            'run_backtest': '백테스트 실행',
-            'view_monitoring': '모니터링 조회',
-            'filter_algorithms': '알고리즘 필터링',
-            'copy_numbers': '번호 복사',
-            'save_numbers': '번호 저장',
-            'network_online': '네트워크 연결',
-            'network_offline': '네트워크 연결 끊김'
-        };
-        
-        return actionMap[action] || action;
-    }
-
-    // 모니터링: 차트 렌더링
-    renderMonitoringCharts(hourlyData) {
-        this.renderHourlyChart(hourlyData);
-        this.renderAlgorithmChart();
-    }
-
-    // 모니터링: 시간별 차트 렌더링
-    renderHourlyChart(data) {
-        const canvas = document.getElementById('hourlyChart');
-        if (!canvas) return;
-        
-        const ctx = canvas.getContext('2d');
-        const width = canvas.width;
-        const height = canvas.height;
-        const padding = 30;
-        
-        ctx.clearRect(0, 0, width, height);
-        
-        // 배경
-        ctx.fillStyle = '#f8f9fa';
-        ctx.fillRect(0, 0, width, height);
-        
-        const maxValue = Math.max(...data, 1);
-        const barWidth = (width - padding * 2) / 24;
-        
-        // 시간별 바 그리기
-        data.forEach((value, hour) => {
-            const barHeight = (value / maxValue) * (height - padding * 2);
-            const x = padding + hour * barWidth;
-            const y = height - padding - barHeight;
-            
-            ctx.fillStyle = '#667eea';
-            ctx.fillRect(x + 2, y, barWidth - 4, barHeight);
-            
-            // 시간 라벨
-            if (hour % 4 === 0) {
-                ctx.fillStyle = '#333';
-                ctx.font = '10px Arial';
-                ctx.textAlign = 'center';
-                ctx.fillText(`${hour}`, x + barWidth/2, height - 10);
-            }
-        });
-    }
-
-    // 모니터링: 알고리즘 차트 렌더링 (파이 차트)
-    renderAlgorithmChart() {
-        const canvas = document.getElementById('algorithmChart');
-        if (!canvas) return;
-        
-        const ctx = canvas.getContext('2d');
-        const width = canvas.width;
-        const height = canvas.height;
-        const centerX = width / 2;
-        const centerY = height / 2;
-        const radius = Math.min(width, height) / 2 - 20;
-        
-        ctx.clearRect(0, 0, width, height);
-        
-        // 알고리즘 사용 빈도 (시뮬레이션)
-        const algorithmData = {
-            '빈도 분석': 15,
-            '머신러닝': 12,
-            '패턴 분석': 10,
-            '통계 분석': 8,
-            '기타': 5
-        };
-        
-        const total = Object.values(algorithmData).reduce((a, b) => a + b, 0);
-        let currentAngle = 0;
-        
-        const colors = ['#667eea', '#4ECDC4', '#FF6B6B', '#96CEB4', '#FFEAA7'];
-        
-        Object.entries(algorithmData).forEach(([name, value], index) => {
-            const angle = (value / total) * 2 * Math.PI;
-            
-            ctx.beginPath();
-            ctx.moveTo(centerX, centerY);
-            ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + angle);
-            ctx.closePath();
-            ctx.fillStyle = colors[index % colors.length];
-            ctx.fill();
-            
-            currentAngle += angle;
-        });
-    }
-
-    // 모달 닫기 함수들
-    closeMonitoringModal() {
         try {
-            document.getElementById('monitoringModal').style.display = 'none';
+            // 로딩 표시
+            const statusDiv = document.getElementById('exportStatus');
+            if (statusDiv) {
+                statusDiv.style.display = 'block';
+                statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 내보내는 중...';
+            }
+            
+            // 내보내기 데이터 생성
+            const exportData = this.generateExportData();
+            let content, filename, contentType;
+            
+            switch (this.selectedExportFormat) {
+                case 'json':
+                    content = JSON.stringify(exportData, null, 2);
+                    filename = `lotto_predictions_${new Date().toISOString().split('T')[0]}.json`;
+                    contentType = 'application/json';
+                    break;
+                    
+                case 'csv':
+                    content = this.generateCSVContent(exportData);
+                    filename = `lotto_predictions_${new Date().toISOString().split('T')[0]}.csv`;
+                    contentType = 'text/csv';
+                    break;
+                    
+                case 'txt':
+                    content = this.generateTXTContent(exportData);
+                    filename = `lotto_predictions_${new Date().toISOString().split('T')[0]}.txt`;
+                    contentType = 'text/plain';
+                    break;
+                    
+                default:
+                    throw new Error('지원하지 않는 형식입니다.');
+            }
+            
+            // 파일 다운로드
+            this.downloadFile(content, filename, contentType);
+            
+            if (statusDiv) {
+                statusDiv.innerHTML = '<i class="fas fa-check"></i> 내보내기 완료!';
+            }
+            
+            this.showSuccess('파일이 성공적으로 내보내졌습니다!');
+            
+            // 모달 닫기
+            setTimeout(() => {
+                const modal = document.getElementById('exportModal');
+                if (modal) modal.style.display = 'none';
+                if (statusDiv) statusDiv.style.display = 'none';
+            }, 1500);
+            
         } catch (error) {
-            console.error('모니터링 모달 닫기 오류:', error);
+            console.error('내보내기 오류:', error);
+            const statusDiv = document.getElementById('exportStatus');
+            if (statusDiv) {
+                statusDiv.innerHTML = '<i class="fas fa-times"></i> 오류: ' + error.message;
+            }
+            this.showError('내보내기에 실패했습니다: ' + error.message);
         }
     }
 
-    closeBacktestModal() {
-        try {
-            document.getElementById('backtestModal').style.display = 'none';
-        } catch (error) {
-            console.error('백테스트 모달 닫기 오류:', error);
+    // 내보내기 데이터 생성
+    generateExportData() {
+        const exportData = {
+            export_info: {
+                generated_at: new Date().toISOString(),
+                format_version: "1.0",
+                total_algorithms: Object.keys(this.algorithms).length,
+                system_version: "LottoPro AI v2.0"
+            },
+            predictions: [],
+            statistics: this.statistics
+        };
+
+        // 알고리즘별 예측 결과 추가
+        Object.entries(this.algorithms).forEach(([key, algorithm]) => {
+            exportData.predictions.push({
+                algorithm_id: algorithm.algorithm_id || 0,
+                algorithm_name: algorithm.name,
+                category: algorithm.category,
+                priority_numbers: algorithm.priority_numbers,
+                confidence: algorithm.confidence,
+                description: algorithm.description
+            });
+        });
+
+        return exportData;
+    }
+
+    // CSV 형식 생성
+    generateCSVContent(data) {
+        let csvContent = '';
+        
+        // 헤더 추가
+        csvContent += '알고리즘ID,알고리즘명,카테고리,번호1,번호2,번호3,번호4,번호5,번호6,신뢰도,설명\n';
+        
+        // 예측 데이터 추가
+        data.predictions.forEach(prediction => {
+            const numbers = prediction.priority_numbers.join(',');
+            const row = [
+                prediction.algorithm_id,
+                `"${prediction.algorithm_name}"`,
+                prediction.category,
+                ...prediction.priority_numbers,
+                prediction.confidence,
+                `"${prediction.description || ''}"`
+            ].join(',');
+            
+            csvContent += row + '\n';
+        });
+        
+        return csvContent;
+    }
+
+    // TXT 형식 생성
+    generateTXTContent(data) {
+        let txtContent = '';
+        
+        txtContent += '=== 로또프로 AI v2.0 예측 결과 ===\n';
+        txtContent += `생성일시: ${new Date(data.export_info.generated_at).toLocaleString('ko-KR')}\n`;
+        txtContent += `총 알고리즘: ${data.export_info.total_algorithms}개\n\n`;
+        
+        data.predictions.forEach((prediction, index) => {
+            txtContent += `${index + 1}. ${prediction.algorithm_name} (${prediction.category})\n`;
+            txtContent += `   추천번호: ${prediction.priority_numbers.join(', ')}\n`;
+            txtContent += `   신뢰도: ${prediction.confidence}%\n`;
+            txtContent += `   설명: ${prediction.description || '없음'}\n\n`;
+        });
+        
+        return txtContent;
+    }
+
+    // 파일 다운로드 함수
+    downloadFile(content, filename, contentType) {
+        const blob = new Blob([content], { type: contentType || 'text/plain' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+    }
+
+    // 예측 결과를 저장하는 함수 (generatePredictions에서 호출)
+    storePredictionsForExport(predictions) {
+        this.currentPredictions = predictions;
+        console.log('예측 결과 저장됨:', predictions);
+        
+        // 내보내기 버튼 활성화 표시
+        const exportBtn = document.getElementById('exportBtn');
+        if (exportBtn) {
+            exportBtn.disabled = false;
+            exportBtn.style.opacity = '1';
+            exportBtn.title = '예측 결과를 파일로 내보내기';
         }
     }
 
@@ -715,11 +412,6 @@ class LottoApp {
     loadStatisticsLazy() {
         console.log('🔄 통계 데이터 지연 로딩 시작');
         // 실제 통계 로딩 로직
-    }
-
-    loadBacktestLazy() {
-        console.log('🔄 백테스트 데이터 지연 로딩 시작');
-        // 실제 백테스트 로딩 로직
     }
 
     // 시스템 건강 상태 초기화
@@ -963,7 +655,7 @@ class LottoApp {
         const timeoutId = setTimeout(() => controller.abort(), timeout);
         
         try {
-            this.analyticsData.totalRequests++;
+            this.performanceMetrics.apiCalls++;
             
             const response = await fetch(url, {
                 ...options,
@@ -977,7 +669,6 @@ class LottoApp {
             clearTimeout(timeoutId);
             
             const responseTime = performance.now() - startTime;
-            this.performanceMetrics.apiCalls++;
             
             // 응답시간 기록
             if (!this.performanceMetrics.responseTimes) {
@@ -1015,14 +706,12 @@ class LottoApp {
                     this.updateDataInfo(data.data);
                     this.updateSystemHealth('healthy');
                     console.log('✅ 초기 데이터 로드 성공');
-                    this.trackUserActivity('data_load_success', { attempt });
                     return;
                 } else {
                     throw new Error(data.error || '서버에서 에러를 반환했습니다.');
                 }
             } catch (error) {
                 console.error(`❌ 데이터 로드 시도 ${attempt} 실패:`, error.message);
-                this.trackUserActivity('data_load_error', { attempt, error: error.message });
                 
                 if (attempt === this.maxRetries) {
                     this.updateSystemHealth('error');
@@ -1053,7 +742,6 @@ class LottoApp {
         
         this.updateDataInfo(fallbackData);
         this.showSystemStatus('서버 연결 실패로 기본 정보를 표시합니다.', 'warning');
-        this.trackUserActivity('fallback_data_shown');
     }
 
     updateDataInfo(data) {
@@ -1170,7 +858,6 @@ class LottoApp {
                     this.loadInitialDataWithRetry();
                     localStorage.setItem('lastUpdateCheck', today);
                     this.showSuccess('주간 회차 정보가 업데이트되었습니다!');
-                    this.trackUserActivity('weekly_update_check');
                 }
             }
         } catch (error) {
@@ -1218,6 +905,9 @@ class LottoApp {
                 const validatedData = this.validateAndFixAlgorithmData(data.data);
                 this.algorithms = validatedData;
                 
+                // 내보내기용 예측 결과 저장
+                this.storePredictionsForExport(validatedData);
+                
                 const algorithmCount = Object.keys(validatedData).length;
                 this.updateProgress(100, '모든 알고리즘 분석 완료!');
                 this.completeAllAlgorithmProgress();
@@ -1234,10 +924,6 @@ class LottoApp {
                 
                 // 성능 메트릭 업데이트
                 this.performanceMetrics.renderTime = performance.now() - startTime;
-                this.trackUserActivity('predictions_generated', { 
-                    processingTime, 
-                    algorithmCount 
-                });
             } else {
                 throw new Error(data.error || '예측 생성에 실패했습니다.');
             }
@@ -1247,7 +933,6 @@ class LottoApp {
             this.showError(`예측 생성 실패: ${error.message}`);
             this.updateProgress(0, '분석 실패');
             this.errorAllAlgorithmProgress();
-            this.trackUserActivity('predictions_error', { error: error.message });
         } finally {
             this.isLoading = false;
             loadingIndicator.style.display = 'none';
@@ -1556,7 +1241,6 @@ class LottoApp {
                 if (numberSet) {
                     const algorithmKey = numberSet.dataset.algorithm;
                     this.showNumbersModal(algorithmKey);
-                    this.trackUserActivity('open_number_modal', { algorithm: algorithmKey });
                 }
             });
 
@@ -1626,14 +1310,12 @@ class LottoApp {
                 });
                 
                 this.showSuccess('통계 데이터를 성공적으로 로드했습니다.');
-                this.trackUserActivity('statistics_loaded');
             } else {
                 throw new Error(data.error || '통계 로드에 실패했습니다.');
             }
         } catch (error) {
             console.error('통계 로드 실패:', error);
             this.showError(`통계 데이터 로드 실패: ${error.message}`);
-            this.trackUserActivity('statistics_error', { error: error.message });
         } finally {
             this.isLoading = false;
         }
@@ -1656,12 +1338,6 @@ class LottoApp {
                 recentNumbers.innerHTML = validatedNumbers.map(num => 
                     `<span class="number">${num}</span>`
                 ).join('') + `<span class="bonus-number">${lastDraw.bonus}</span>`;
-                
-                // 검증 상태 표시
-                const recentDrawCard = recentNumbers.closest('.stat-card');
-                if (recentDrawCard && this.validateNumbers(lastDraw.numbers, '통계 검증')) {
-                    recentDrawCard.classList.add('validated');
-                }
                 
                 if (recentDetails) {
                     recentDetails.innerHTML = `
@@ -2060,7 +1736,7 @@ class LottoApp {
 document.addEventListener('DOMContentLoaded', () => {
     try {
         window.lottoApp = new LottoApp();
-        console.log('✅ 로또 앱 초기화 완료 (성능 최적화, 모니터링, 백테스팅 포함)');
+        console.log('✅ 로또 앱 초기화 완료 (내보내기 기능 포함)');
     } catch (error) {
         console.error('❌ 앱 초기화 실패:', error);
     }
@@ -2086,31 +1762,3 @@ if ('serviceWorker' in navigator) {
         }
     });
 }
-
-// 성능 모니터링을 위한 전역 함수들
-window.LottoPerformance = {
-    getMetrics: () => window.lottoApp?.performanceMetrics,
-    getAnalytics: () => window.lottoApp?.analyticsData,
-    getUserActivity: () => window.lottoApp?.userActivity,
-    exportReport: () => {
-        if (window.lottoApp) {
-            const report = {
-                performance: window.lottoApp.performanceMetrics,
-                analytics: window.lottoApp.analyticsData,
-                userActivity: window.lottoApp.userActivity,
-                timestamp: Date.now()
-            };
-            
-            const blob = new Blob([JSON.stringify(report, null, 2)], 
-                { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `lotto-performance-${new Date().toISOString().split('T')[0]}.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
-    }
-};
