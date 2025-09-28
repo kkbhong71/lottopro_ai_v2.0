@@ -87,7 +87,7 @@ def generate_default_numbers():
     return sorted(numbers)
 
 class AdvancedLottoPredictor:
-    def __init__(self, csv_file_path='new_1190.csv'):
+    def __init__(self, csv_file_path='new_1191.csv'):
         self.csv_file_path = csv_file_path
         self.data = None
         self.numbers = None
@@ -117,10 +117,10 @@ class AdvancedLottoPredictor:
             
             # 실제 CSV 파일 경로들 (GitHub에 업로드된 파일 기준)
             possible_paths = [
-                'new_1190.csv',
-                './new_1190.csv',
-                os.path.join(current_dir, 'new_1190.csv'),
-                'data/new_1190.csv'
+                'new_1191.csv',
+                './new_1191.csv',
+                os.path.join(current_dir, 'new_1191.csv'),
+                'data/new_1191.csv'
             ]
             
             found_file = None
@@ -199,7 +199,7 @@ class AdvancedLottoPredictor:
                     print(f"❌ 필요한 컬럼이 부족합니다: {number_cols}")
                     return self._create_fallback_data()
             else:
-                print(f"❌ new_1190.csv 파일을 찾을 수 없습니다")
+                print(f"❌ new_1191.csv 파일을 찾을 수 없습니다")
                 # 파일 목록 확인
                 try:
                     files_in_dir = [f for f in os.listdir('.') if f.endswith('.csv')]
@@ -220,7 +220,7 @@ class AdvancedLottoPredictor:
         try:
             print("🔄 샘플 로또 데이터 생성 중...")
             
-            # 1190회차 샘플 데이터 생성
+            # 1191회차 샘플 데이터 생성
             sample_data = []
             for round_num in range(1, 1191):
                 # 현실적인 로또 번호 생성 (완전 랜덤이 아닌 가중치 적용)
