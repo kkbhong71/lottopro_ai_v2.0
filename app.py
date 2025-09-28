@@ -1298,10 +1298,10 @@ def get_statistics():
         pred = get_predictor()
         
         default_stats = {
-            'total_draws': 1190,
+            'total_draws': 1191,
             'algorithms_count': 10,
             'last_draw_info': {
-                'round': 1190,
+                'round': 1191,
                 'date': '2024-01-01',
                 'numbers': [1, 7, 13, 19, 25, 31],
                 'bonus': 7
@@ -1328,7 +1328,7 @@ def get_statistics():
                     'least_frequent': [{'number': safe_int(num), 'count': safe_int(count)} for num, count in least_common],
                     'recent_hot': [{'number': safe_int(num), 'count': safe_int(count)} for num, count in most_common[:10]],
                     'last_draw_info': {
-                        'round': safe_int(last_row.get('round', 1190)),
+                        'round': safe_int(last_row.get('round', 1191)),
                         'date': str(last_row.get('draw_date', '2024-01-01')),
                         'numbers': safe_int_list(pred.numbers[-1].tolist()),
                         'bonus': safe_int(last_row.get('bonus_num', 7)) if 'bonus_num' in last_row else 7
