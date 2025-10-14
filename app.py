@@ -1302,9 +1302,9 @@ def get_statistics():
             'algorithms_count': 10,
             'last_draw_info': {
                 'round': 1193,
-                'date': '2024-01-01',
-                'numbers': [1, 7, 13, 19, 25, 31],
-                'bonus': 7
+                'date': '2025-10-11',
+                'numbers': [6, 9, 16, 19, 24, 28],
+                'bonus': 17
             },
             'most_frequent': [{'number': i, 'count': 50-i} for i in range(1, 11)],
             'least_frequent': [{'number': i+35, 'count': i} for i in range(1, 11)],
