@@ -734,9 +734,9 @@ class LottoApp {
             algorithms_count: 10,
             last_draw_info: {
                 round: 1194,
-                date: '알 수 없음',
-                numbers: [1, 2, 3, 4, 5, 6],
-                bonus: 7
+                date: '2025년 10월 18일',
+                numbers: [3, 13, 15, 24, 33, 37],
+                bonus: 2
             }
         };
         
