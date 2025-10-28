@@ -1329,7 +1329,7 @@ def get_statistics():
                     'recent_hot': [{'number': safe_int(num), 'count': safe_int(count)} for num, count in most_common[:10]],
                     'last_draw_info': {
                         'round': safe_int(last_row.get('round', 1195)),
-                        'date': str(last_row.get('draw_date', '2024-01-01')),
+                        'date': str(last_row.get('draw_date', '2025-10-25')),
                         'numbers': safe_int_list(pred.numbers[-1].tolist()),
                         'bonus': safe_int(last_row.get('bonus_num', 7)) if 'bonus_num' in last_row else 7
                     }
