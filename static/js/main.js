@@ -730,10 +730,10 @@ class LottoApp {
     showFallbackData() {
         // 네트워크 실패 시 기본 데이터 표시
         const fallbackData = {
-            total_draws: 1194,
+            total_draws: 1195,
             algorithms_count: 10,
             last_draw_info: {
-                round: 1194,
+                round: 1195,
                 date: '2025년 10월 18일',
                 numbers: [3, 13, 15, 24, 33, 37],
                 bonus: 2
