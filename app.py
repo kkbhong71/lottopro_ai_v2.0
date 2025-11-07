@@ -87,7 +87,7 @@ def generate_default_numbers():
     return sorted(numbers)
 
 class AdvancedLottoPredictor:
-    def __init__(self, csv_file_path='new_1195.csv'):
+    def __init__(self, csv_file_path='new_1196.csv'):
         self.csv_file_path = csv_file_path
         self.data = None
         self.numbers = None
@@ -117,10 +117,10 @@ class AdvancedLottoPredictor:
             
             # 실제 CSV 파일 경로들 (GitHub에 업로드된 파일 기준)
             possible_paths = [
-                'new_1195.csv',
-                './new_1195.csv',
-                os.path.join(current_dir, 'new_1195.csv'),
-                'data/new_1195.csv'
+                'new_1196.csv',
+                './new_1196.csv',
+                os.path.join(current_dir, 'new_1196.csv'),
+                'data/new_1196.csv'
             ]
             
             found_file = None
@@ -199,7 +199,7 @@ class AdvancedLottoPredictor:
                     print(f"❌ 필요한 컬럼이 부족합니다: {number_cols}")
                     return self._create_fallback_data()
             else:
-                print(f"❌ new_1195.csv 파일을 찾을 수 없습니다")
+                print(f"❌ new_1196.csv 파일을 찾을 수 없습니다")
                 # 파일 목록 확인
                 try:
                     files_in_dir = [f for f in os.listdir('.') if f.endswith('.csv')]
@@ -220,9 +220,9 @@ class AdvancedLottoPredictor:
         try:
             print("🔄 샘플 로또 데이터 생성 중...")
             
-            # 1195회차 샘플 데이터 생성
+            # 1196회차 샘플 데이터 생성
             sample_data = []
-            for round_num in range(1, 1195):
+            for round_num in range(1, 1196):
                 # 현실적인 로또 번호 생성 (완전 랜덤이 아닌 가중치 적용)
                 numbers = []
                 while len(numbers) < 6:
@@ -1298,10 +1298,10 @@ def get_statistics():
         pred = get_predictor()
         
         default_stats = {
-            'total_draws': 1195,
+            'total_draws': 1196,
             'algorithms_count': 10,
             'last_draw_info': {
-                'round': 1195,
+                'round': 1196,
                 'date': '2025-10-25',
                 'numbers': [3, 15, 27, 33, 34, 36],
                 'bonus': 37
@@ -1328,7 +1328,7 @@ def get_statistics():
                     'least_frequent': [{'number': safe_int(num), 'count': safe_int(count)} for num, count in least_common],
                     'recent_hot': [{'number': safe_int(num), 'count': safe_int(count)} for num, count in most_common[:10]],
                     'last_draw_info': {
-                        'round': safe_int(last_row.get('round', 1195)),
+                        'round': safe_int(last_row.get('round', 1196)),
                         'date': str(last_row.get('draw_date', '2025-10-25')),
                         'numbers': safe_int_list(pred.numbers[-1].tolist()),
                         'bonus': safe_int(last_row.get('bonus_num', 7)) if 'bonus_num' in last_row else 7
