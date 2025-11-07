@@ -1302,9 +1302,9 @@ def get_statistics():
             'algorithms_count': 10,
             'last_draw_info': {
                 'round': 1196,
-                'date': '2025-10-25',
-                'numbers': [3, 15, 27, 33, 34, 36],
-                'bonus': 37
+                'date': '2025-11-01',
+                'numbers': [8, 12, 15, 29, 40, 45],
+                'bonus': 14
             },
             'most_frequent': [{'number': i, 'count': 50-i} for i in range(1, 11)],
             'least_frequent': [{'number': i+35, 'count': i} for i in range(1, 11)],
@@ -1329,7 +1329,7 @@ def get_statistics():
                     'recent_hot': [{'number': safe_int(num), 'count': safe_int(count)} for num, count in most_common[:10]],
                     'last_draw_info': {
                         'round': safe_int(last_row.get('round', 1196)),
-                        'date': str(last_row.get('draw_date', '2025-10-25')),
+                        'date': str(last_row.get('draw_date', '2025-11-01')),
                         'numbers': safe_int_list(pred.numbers[-1].tolist()),
                         'bonus': safe_int(last_row.get('bonus_num', 7)) if 'bonus_num' in last_row else 7
                     }
